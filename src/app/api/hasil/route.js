@@ -13,8 +13,66 @@ export async function GET(request) {
     const db = getDB();
     const { searchParams } = new URL(request.url);
     const ujianId = searchParams.get('ujian_id');
+    const sesiId = searchParams.get('sesi_id');
 
-    if (user.role === 'guru') {
+    if (user.role === 'guru' || user.role === 'superadmin') {
+      if (sesiId) {
+        // Get specific student session and answers
+        const sesi = await db.getOne(
+          `SELECT su.*, u.nama, u.username, u.kelas, u.no_absen,
+                  uj.judul as ujian_judul, uj.mata_pelajaran, uj.kkm, uj.durasi_menit, uj.guru_id
+           FROM sesi_ujian su
+           JOIN users u ON u.id = su.siswa_id
+           JOIN ujian uj ON uj.id = su.ujian_id
+           WHERE su.id = ?`,
+          [sesiId]
+        );
+
+        if (!sesi) {
+          return apiError('Sesi ujian tidak ditemukan', 404);
+        }
+
+        if (user.role === 'guru' && sesi.guru_id && sesi.guru_id !== user.id) {
+          return apiError('Anda tidak memiliki akses ke sesi ujian ini', 403);
+        }
+
+        const listJawaban = await db.getAll(
+          `SELECT 
+            s.id as soal_id,
+            s.pertanyaan,
+            s.tipe,
+            s.pilihan_a,
+            s.pilihan_b,
+            s.pilihan_c,
+            s.pilihan_d,
+            s.pilihan_e,
+            s.kunci_jawaban,
+            s.bobot,
+            us.urutan,
+            j.id as jawaban_id,
+            j.jawaban_siswa,
+            j.is_benar,
+            j.nilai_soal
+           FROM ujian_soal us
+           JOIN soal s ON s.id = us.soal_id
+           LEFT JOIN jawaban j ON j.soal_id = s.id AND j.sesi_id = ?
+           WHERE us.ujian_id = ?
+           ORDER BY us.urutan ASC`,
+          [sesiId, sesi.ujian_id]
+        );
+
+        const logs = await db.getAll(
+          `SELECT * FROM audit_log WHERE sesi_id = ? ORDER BY timestamp DESC`,
+          [sesiId]
+        );
+
+        return apiResponse({
+          sesi,
+          jawaban: listJawaban,
+          logs,
+        });
+      }
+
       if (ujianId) {
         // Get detailed results for specific exam
         const results = await db.getAll(
@@ -110,6 +168,49 @@ export async function PATCH(request) {
         [sesi_id]
       );
       return apiResponse({ success: true, message: 'Sesi berhasil dipulihkan' });
+    }
+
+    if (action === 'koreksi_soal') {
+      const { jawaban_id, is_benar, nilai_soal } = body;
+      if (!jawaban_id) {
+        return apiError('jawaban_id wajib diisi', 400);
+      }
+      await db.run(
+        `UPDATE jawaban SET is_benar = ?, nilai_soal = ?, updated_at = datetime('now') WHERE id = ?`,
+        [is_benar ? 1 : 0, Number(nilai_soal) || 0, jawaban_id]
+      );
+
+      // Recalculate session totals
+      const allAnswers = await db.getAll(
+        `SELECT j.is_benar, j.nilai_soal, j.jawaban_siswa 
+         FROM jawaban j 
+         WHERE j.sesi_id = ?`,
+        [sesi_id]
+      );
+      const totalBobotRes = await db.getOne(
+        `SELECT SUM(s.bobot) as total_bobot 
+         FROM ujian_soal us 
+         JOIN soal s ON s.id = us.soal_id 
+         WHERE us.ujian_id = (SELECT ujian_id FROM sesi_ujian WHERE id = ?)`,
+        [sesi_id]
+      );
+      const totalBobot = totalBobotRes?.total_bobot || 100;
+      let sumNilai = 0;
+      let benar = 0;
+      let salah = 0;
+      let kosong = 0;
+      for (const a of allAnswers) {
+        if (!a.jawaban_siswa || a.jawaban_siswa.trim() === '') kosong++;
+        else if (a.is_benar === 1) benar++;
+        else salah++;
+        sumNilai += Number(a.nilai_soal) || 0;
+      }
+      const finalScore = totalBobot > 0 ? Math.round((sumNilai / totalBobot) * 100 * 100) / 100 : 0;
+      await db.run(
+        `UPDATE sesi_ujian SET total_nilai = ?, jumlah_benar = ?, jumlah_salah = ?, jumlah_kosong = ? WHERE id = ?`,
+        [finalScore, benar, salah, kosong, sesi_id]
+      );
+      return apiResponse({ success: true, total_nilai: finalScore, jumlah_benar: benar, jumlah_salah: salah });
     }
 
     return apiError('Aksi tidak valid', 400);
