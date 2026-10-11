@@ -54,6 +54,6 @@ export async function POST(request) {
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    return apiError('Terjadi kesalahan saat login', 500);
+    return apiError(error.message || 'Terjadi kesalahan saat login', 500);
   }
 }

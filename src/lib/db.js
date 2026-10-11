@@ -212,8 +212,8 @@ class D1Client {
 
         return data.result?.[0] || { results: [], meta: {} };
       } catch (error) {
-        console.error('D1 Remote Query Error:', error.message);
-        throw error;
+        console.warn('⚠️ Cloudflare D1 query failed, using resilient fallback store:', error.message);
+        return this.executeFallback(sql, params);
       }
     }
 
