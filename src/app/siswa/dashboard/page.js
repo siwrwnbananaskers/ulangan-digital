@@ -224,8 +224,14 @@ export default function SiswaDashboard() {
                   <p style={{ fontSize: 12, color: '#666666' }}>Memuat daftar ujian...</p>
                 </div>
               ) : activeExams.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px 16px', color: '#666666' }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>☕</div>
+                <div style={{ textAlign: 'center', padding: '28px 16px', color: '#666666' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  </div>
                   <h4 style={{ fontSize: 14, fontWeight: 700, color: '#191919' }}>Tidak Ada Ujian Aktif Saat Ini</h4>
                   <p style={{ fontSize: 12, marginTop: 4 }}>
                     Belum ada asesmen yang dijadwalkan aktif untuk kelas Anda saat ini.
@@ -259,10 +265,31 @@ export default function SiswaDashboard() {
                         <h4 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: '4px 0' }}>
                           {exam.judul}
                         </h4>
-                        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#666666', marginTop: 4 }}>
-                          <span>⏱️ {exam.durasi_menit} Menit</span>
-                          <span>📝 {exam.jumlah_soal} Soal</span>
-                          <span>🎯 KKM: {exam.kkm}</span>
+                        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#666666', marginTop: 4, alignItems: 'center' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {exam.durasi_menit} Menit
+                          </span>
+                          <span>•</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                            {exam.jumlah_soal} Soal
+                          </span>
+                          <span>•</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <circle cx="12" cy="12" r="6" />
+                              <circle cx="12" cy="12" r="2" />
+                            </svg>
+                            KKM: {exam.kkm}
+                          </span>
                         </div>
                         <div style={{ marginTop: 6 }}>
                           <code
@@ -299,7 +326,12 @@ export default function SiswaDashboard() {
         <aside className="linkedin-col-right">
           <div className="linkedin-card">
             <div className="linkedin-widget-header">
-              <span className="linkedin-widget-title">🛡️ Peraturan Integritas Siswa</span>
+              <span className="linkedin-widget-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Peraturan Integritas Siswa
+              </span>
             </div>
             <div className="linkedin-widget-body" style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
               <div style={{ marginBottom: 12 }}>

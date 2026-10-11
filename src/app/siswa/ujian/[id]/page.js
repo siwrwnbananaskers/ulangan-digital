@@ -563,7 +563,7 @@ export default function LembarUjianPage() {
                     className="btn btn-success"
                     onClick={() => setShowSubmitModal(true)}
                   >
-                    Kumpulkan Ujian ✓
+                    Kumpulkan Ujian
                   </button>
                 )}
               </div>

@@ -62,7 +62,7 @@ export default function GuruDashboard() {
     <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={logout} role="guru" />
 
-      {/* 3-Column LinkedIn Style Layout */}
+      {/* 3-Column LinkedIn Grid Layout */}
       <main className="linkedin-grid-layout">
         {/* === LEFT COLUMN: Profile & Quick Nav === */}
         <aside className="linkedin-col-left">
@@ -75,54 +75,58 @@ export default function GuruDashboard() {
               </div>
               <h3 className="linkedin-profile-name">{user?.nama || 'Guru Pengawas'}</h3>
               <p className="linkedin-profile-headline">
-                Pendidik & Pengawas Asesmen Digital
+                Pendidik & Pengawas Asesmen
               </p>
             </div>
 
             <div style={{ borderTop: '1px solid #f3f2ef', padding: '12px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 }}>
                 <span style={{ color: '#666666' }}>Total Ujian Dibuat</span>
-                <strong style={{ color: '#0a66c2' }}>{stats.ujian}</strong>
+                <strong style={{ color: '#191919' }}>{stats.ujian}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 }}>
                 <span style={{ color: '#666666' }}>Bank Butir Soal</span>
-                <strong style={{ color: '#0a66c2' }}>{stats.soal}</strong>
+                <strong style={{ color: '#191919' }}>{stats.soal}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ color: '#666666' }}>Peserta Mengikuti</span>
-                <strong style={{ color: '#057642' }}>{stats.siswa_aktif}</strong>
+                <strong style={{ color: '#0f172a' }}>{stats.siswa_aktif}</strong>
               </div>
             </div>
 
             <div style={{ borderTop: '1px solid #f3f2ef', padding: '10px 16px', background: '#fafafa' }}>
-              <a href="/guru/ujian" style={{ fontSize: 12, fontWeight: 600, color: '#0a66c2', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <a href="/guru/ujian" style={{ fontSize: 12, fontWeight: 600, color: '#0a66c2', display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
                 <span>Kelola Lembar Ujian</span>
                 <span>→</span>
               </a>
             </div>
           </div>
 
-          {/* Quick Menu List */}
+          {/* Quick Menu List (Clean Monochrome Icons) */}
           <div className="linkedin-card">
             <div className="linkedin-widget-header">
               <span className="linkedin-widget-title">Pintasan Menu</span>
             </div>
-            <div style={{ padding: '8px 0' }}>
+            <div style={{ padding: '6px 0' }}>
               <a
                 href="/guru/bank-soal"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '8px 16px',
+                  padding: '9px 16px',
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#475569',
+                  color: '#334155',
                   textDecoration: 'none',
                 }}
-                className="hover-bg-link"
               >
-                <span style={{ color: '#0a66c2' }}>📝</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
                 <span>Bank Soal ({stats.soal})</span>
               </a>
 
@@ -132,15 +136,18 @@ export default function GuruDashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '8px 16px',
+                  padding: '9px 16px',
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#475569',
+                  color: '#334155',
                   textDecoration: 'none',
                 }}
-                className="hover-bg-link"
               >
-                <span style={{ color: '#057642' }}>📊</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
                 <span>Rekap Hasil & Nilai KKM</span>
               </a>
 
@@ -150,16 +157,17 @@ export default function GuruDashboard() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '8px 16px',
+                  padding: '9px 16px',
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#475569',
+                  color: '#334155',
                   textDecoration: 'none',
                 }}
-                className="hover-bg-link"
               >
-                <span style={{ color: '#b91c1c' }}>🛡️</span>
-                <span>Log Integritas & Kiosk Mode</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Log Integritas & Kiosk</span>
               </a>
             </div>
           </div>
@@ -167,13 +175,12 @@ export default function GuruDashboard() {
 
         {/* === CENTER COLUMN: Hero Card & Exams List === */}
         <section className="linkedin-col-main">
-          {/* Hero Banner Card (Softr / LinkedIn style profile hero card) */}
+          {/* Hero Banner Card */}
           <div className="linkedin-card">
-            {/* Visual Cover Header */}
             <div
               style={{
-                height: 120,
-                background: 'linear-gradient(135deg, #0a66c2 0%, #004182 50%, #1e3a8a 100%)',
+                height: 100,
+                background: '#0a66c2',
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
@@ -182,23 +189,22 @@ export default function GuruDashboard() {
               }}
             >
               <div style={{ textAlign: 'center', padding: '0 20px' }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', margin: 0 }}>
                   Platform Asesmen Digital & Kiosk Security
                 </h2>
-                <p style={{ fontSize: 12, opacity: 0.9, marginTop: 4 }}>
-                  Ujian berbasis web terproteksi, responsif, dan terintegrasi Cloudflare D1
+                <p style={{ fontSize: 12, opacity: 0.85, marginTop: 4, margin: '4px 0 0' }}>
+                  Ujian berbasis web terproteksi terintegrasi Cloudflare D1
                 </p>
               </div>
             </div>
 
-            {/* Profile Bar below banner */}
             <div style={{ padding: '16px 20px', position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                  <h1 style={{ fontSize: 20, fontWeight: 800, color: '#191919' }}>
-                    Selamat Datang, {user?.nama} 👋
+                  <h1 style={{ fontSize: 18, fontWeight: 700, color: '#191919', margin: 0 }}>
+                    Selamat Datang, {user?.nama}
                   </h1>
-                  <p style={{ fontSize: 13, color: '#666666', marginTop: 2 }}>
+                  <p style={{ fontSize: 13, color: '#666666', marginTop: 2, margin: '2px 0 0' }}>
                     Kelola lembar asesmen, pantau kepatuhan Kiosk Mode, dan rekapitulasi nilai siswa
                   </p>
                 </div>
@@ -214,14 +220,14 @@ export default function GuruDashboard() {
                   <a
                     href="/guru/bank-soal"
                     className="btn btn-secondary btn-sm"
-                    style={{ borderRadius: 9999, padding: '6px 16px', fontWeight: 600, border: '1px solid #0a66c2', color: '#0a66c2' }}
+                    style={{ borderRadius: 9999, padding: '6px 16px', fontWeight: 600, border: '1px solid #cbd5e1', color: '#1e293b' }}
                   >
                     + Tambah Soal
                   </a>
                 </div>
               </div>
 
-              {/* Tab Navigation row inside card */}
+              {/* Tab Navigation row */}
               <div style={{ display: 'flex', gap: 6, marginTop: 16, paddingTop: 12, borderTop: '1px solid #f3f2ef', overflowX: 'auto' }}>
                 {[
                   { key: 'semua', label: `Semua Ujian (${stats.ujian})` },
@@ -241,50 +247,49 @@ export default function GuruDashboard() {
             </div>
           </div>
 
-          {/* Exam Post Cards (Feed items style) */}
+          {/* Exam Cards */}
           {loading ? (
-            <div className="linkedin-card" style={{ padding: 40, textAlign: 'center' }}>
-              <div className="spinner" style={{ margin: '0 auto 12px' }} />
-              <p style={{ fontSize: 13, color: '#666666' }}>Memuat daftar ujian...</p>
+            <div className="linkedin-card" style={{ padding: 36, textAlign: 'center' }}>
+              <div className="spinner" style={{ margin: '0 auto 10px' }} />
+              <p style={{ fontSize: 13, color: '#666666', margin: 0 }}>Memuat daftar ujian...</p>
             </div>
           ) : filteredExams.length === 0 ? (
-            <div className="linkedin-card" style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#191919', marginBottom: 6 }}>
+            <div className="linkedin-card" style={{ padding: 36, textAlign: 'center' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#191919', marginBottom: 6 }}>
                 Belum Ada Ujian {activeTab !== 'semua' ? `(${activeTab})` : ''}
               </h3>
-              <p style={{ fontSize: 13, color: '#666666', marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: '#666666', marginBottom: 14 }}>
                 Mulai susun lembar asesmen pertama Anda dengan butir soal yang sudah ada.
               </p>
-              <a href="/guru/ujian" className="btn btn-primary btn-sm" style={{ borderRadius: 9999 }}>
+              <a href="/guru/ujian" className="btn btn-primary btn-sm" style={{ borderRadius: 9999, background: '#0a66c2' }}>
                 Buat Ujian Sekarang
               </a>
             </div>
           ) : (
             filteredExams.map((exam) => (
-              <div key={exam.id} className="linkedin-card" style={{ transition: 'box-shadow 150ms ease' }}>
+              <div key={exam.id} className="linkedin-card">
                 <div style={{ padding: '16px 20px' }}>
                   {/* Card Header with Badges */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div
                         style={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: 8,
-                          background: '#edf3f8',
+                          width: 40,
+                          height: 40,
+                          borderRadius: 6,
+                          background: '#f1f5f9',
                           color: '#0a66c2',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontWeight: 800,
-                          fontSize: 16,
+                          fontWeight: 700,
+                          fontSize: 15,
                         }}
                       >
                         {exam.mata_pelajaran?.charAt(0) || 'U'}
                       </div>
                       <div>
-                        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#191919', margin: 0 }}>
+                        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: 0 }}>
                           {exam.judul}
                         </h3>
                         <p style={{ fontSize: 12, color: '#666666', margin: 0 }}>
@@ -301,30 +306,30 @@ export default function GuruDashboard() {
                           ? 'badge-gray'
                           : 'badge-warning'
                       }`}
-                      style={{ padding: '4px 10px', fontSize: 11 }}
+                      style={{ padding: '3px 10px', fontSize: 11 }}
                     >
                       {exam.status === 'aktif' ? 'Sedang Aktif' : exam.status === 'selesai' ? 'Selesai' : 'Draft'}
                     </span>
                   </div>
 
-                  {/* Description / Instructions */}
+                  {/* Description */}
                   {exam.deskripsi && (
-                    <p style={{ fontSize: 13, color: '#475569', marginBottom: 14, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 13, color: '#475569', marginBottom: 12, lineHeight: 1.5 }}>
                       {exam.deskripsi}
                     </p>
                   )}
 
-                  {/* Meta Chips */}
+                  {/* Meta Information (Clean Monochrome Icons) */}
                   <div
                     style={{
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: 8,
+                      gap: 12,
                       alignItems: 'center',
                       background: '#f8fafc',
-                      padding: '10px 14px',
-                      borderRadius: 8,
-                      marginBottom: 14,
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      marginBottom: 12,
                       border: '1px solid #f1f5f9',
                     }}
                   >
@@ -332,8 +337,8 @@ export default function GuruDashboard() {
                       <span style={{ color: '#666666' }}>Kode Token:</span>
                       <code
                         style={{
-                          background: '#dbeafe',
-                          color: '#1d4ed8',
+                          background: '#e0f2fe',
+                          color: '#0369a1',
                           padding: '2px 8px',
                           borderRadius: 4,
                           fontWeight: 700,
@@ -346,30 +351,43 @@ export default function GuruDashboard() {
 
                     <span style={{ color: '#cbd5e1' }}>•</span>
 
-                    <span style={{ fontSize: 12, color: '#475569' }}>
-                      ⏱️ {exam.durasi_menit} Menit
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      {exam.durasi_menit} Menit
                     </span>
 
                     <span style={{ color: '#cbd5e1' }}>•</span>
 
-                    <span style={{ fontSize: 12, color: '#475569' }}>
-                      📝 {exam.jumlah_soal} Soal
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                      {exam.jumlah_soal} Soal
                     </span>
 
                     <span style={{ color: '#cbd5e1' }}>•</span>
 
-                    <span style={{ fontSize: 12, color: '#475569' }}>
-                      🎯 KKM: {exam.kkm}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+                      </svg>
+                      KKM: {exam.kkm}
                     </span>
 
                     <span style={{ color: '#cbd5e1' }}>•</span>
 
-                    <span style={{ fontSize: 12, color: '#475569' }}>
-                      🛡️ Batas Pelanggaran: {exam.batas_pelanggaran}x
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                      Batas Pelanggaran: {exam.batas_pelanggaran}x
                     </span>
                   </div>
 
-                  {/* Action buttons (LinkedIn style interaction bar) */}
+                  {/* Actions Bar */}
                   <div
                     style={{
                       display: 'flex',
@@ -390,16 +408,22 @@ export default function GuruDashboard() {
                       <a
                         href={`/guru/hasil?ujian_id=${exam.id}`}
                         className="btn btn-secondary btn-sm"
-                        style={{ borderRadius: 9999, fontSize: 12, fontWeight: 600 }}
+                        style={{ borderRadius: 9999, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
                       >
-                        📊 Rekap Nilai
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        Rekap Nilai
                       </a>
                       <a
                         href={`/guru/audit?ujian_id=${exam.id}`}
                         className="btn btn-secondary btn-sm"
-                        style={{ borderRadius: 9999, fontSize: 12, fontWeight: 600 }}
+                        style={{ borderRadius: 9999, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
                       >
-                        🛡️ Log Pelanggaran
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        Log Pelanggaran
                       </a>
                       <a
                         href="/guru/ujian"
@@ -416,9 +440,8 @@ export default function GuruDashboard() {
           )}
         </section>
 
-        {/* === RIGHT COLUMN: Widgets & Guidelines (Softr / LinkedIn Right Rail) === */}
+        {/* === RIGHT COLUMN: Clean Enterprise Widgets === */}
         <aside className="linkedin-col-right">
-          {/* Widget 1: System Health & Stats (Like "Products people also use") */}
           <div className="linkedin-card">
             <div className="linkedin-widget-header">
               <span className="linkedin-widget-title">Ringkasan Sistem</span>
@@ -426,18 +449,20 @@ export default function GuruDashboard() {
             </div>
             <div className="linkedin-widget-body" style={{ padding: '12px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 6, background: '#e0f2fe', color: '#0369a1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 6, background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12 }}>
                   D1
                 </div>
                 <div>
                   <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Cloudflare D1</h4>
-                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Database Serverless SQL Terkoneksi</p>
+                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Database SQL Terkoneksi</p>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 6, background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                  ⏱️
+                <div style={{ width: 34, height: 34, borderRadius: 6, background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                  </svg>
                 </div>
                 <div>
                   <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Sinkronisasi Waktu</h4>
@@ -446,32 +471,33 @@ export default function GuruDashboard() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 6, background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                  🛡️
+                <div style={{ width: 34, height: 34, borderRadius: 6, background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
                 </div>
                 <div>
                   <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Kiosk & Integrity Mode</h4>
-                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Fullscreen & Tab Switch Detection</p>
+                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Fullscreen & Focus Detection</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Widget 2: Security Guidelines */}
           <div className="linkedin-card">
             <div className="linkedin-widget-header">
               <span className="linkedin-widget-title">Panduan Pengawas</span>
             </div>
             <div className="linkedin-widget-body" style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
               <p style={{ marginBottom: 10 }}>
-                💡 <strong>Tips Kode Ujian:</strong> Bagikan kode token (misal: <code>{ujianList[0]?.kode_ujian || 'MAT123'}</code>) kepada siswa sesaat sebelum asesmen dimulai.
+                <strong>Kode Ujian:</strong> Bagikan kode token kepada siswa sesaat sebelum asesmen dimulai.
               </p>
               <p style={{ marginBottom: 10 }}>
-                ⚠️ <strong>Penangguhan Otomatis:</strong> Siswa yang berpindah tab atau keluar fullscreen lebih dari batas akan otomatis ditangguhkan. Anda dapat membuka kembali statusnya di menu <strong>Audit Log</strong>.
+                <strong>Penangguhan Otomatis:</strong> Siswa yang melanggar fullscreen atau berpindah tab melebihi batas akan ditangguhkan otomatis dan dapat dipulihkan di menu Audit Log.
               </p>
               <div style={{ paddingTop: 8, borderTop: '1px solid #f3f2ef' }}>
-                <a href="/guru/audit" style={{ fontSize: 12, fontWeight: 600, color: '#0a66c2' }}>
-                  Pantau Pelanggaran Real-time →
+                <a href="/guru/audit" style={{ fontSize: 12, fontWeight: 600, color: '#0a66c2', textDecoration: 'none' }}>
+                  Lihat Audit Integritas →
                 </a>
               </div>
             </div>

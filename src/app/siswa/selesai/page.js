@@ -89,7 +89,7 @@ function SelesaiContent() {
 
                 <div style={{ marginBottom: 'var(--space-xl)' }}>
                   <span className={`badge ${isLulus ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 'var(--font-size-sm)', padding: '6px 16px' }}>
-                    {isLulus ? '🎉 Tuntas Melampaui KKM' : '⚠️ Belum Mencapai KKM (Perlu Remedial)'}
+                    {isLulus ? 'Tuntas Melampaui KKM' : 'Belum Mencapai KKM (Perlu Remedial)'}
                   </span>
                 </div>
               </>
