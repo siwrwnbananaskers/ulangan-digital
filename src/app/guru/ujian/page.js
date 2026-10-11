@@ -481,8 +481,9 @@ export default function UjianPage() {
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
         )}
       </main>
 
