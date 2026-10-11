@@ -61,14 +61,17 @@ export async function GET(request, { params }) {
       }
 
       // Check if exam is active and within schedule
-      const now = new Date().toISOString();
+      const nowTime = Date.now();
+      const mulaiTime = new Date(ujian.jadwal_mulai).getTime();
+      const selesaiTime = new Date(ujian.jadwal_selesai).getTime();
+
       if (ujian.status !== 'aktif') {
         return apiError('Ujian belum aktif', 403);
       }
-      if (now < ujian.jadwal_mulai) {
+      if (!isNaN(mulaiTime) && nowTime < mulaiTime - 10 * 60 * 1000) {
         return apiError('Ujian belum dimulai', 403);
       }
-      if (now > ujian.jadwal_selesai) {
+      if (!isNaN(selesaiTime) && nowTime > selesaiTime) {
         return apiError('Ujian sudah berakhir', 403);
       }
 

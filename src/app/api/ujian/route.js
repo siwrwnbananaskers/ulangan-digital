@@ -75,9 +75,7 @@ export async function GET(request) {
          FROM ujian u
          WHERE u.status = 'aktif' 
          AND u.guru_id = ?
-         AND datetime(u.jadwal_mulai) <= datetime('now') 
-         AND datetime(u.jadwal_selesai) >= datetime('now')
-         ORDER BY u.jadwal_mulai ASC`,
+         ORDER BY u.created_at DESC`,
         [studentGuruId]
       );
     } else {
@@ -86,11 +84,19 @@ export async function GET(request) {
                 (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
          FROM ujian u
          WHERE u.status = 'aktif' 
-         AND datetime(u.jadwal_mulai) <= datetime('now') 
-         AND datetime(u.jadwal_selesai) >= datetime('now')
-         ORDER BY u.jadwal_mulai ASC`
+         ORDER BY u.created_at DESC`
       );
     }
+
+    // Filter by student schedule with buffer and class
+    const nowTime = Date.now();
+    ujianList = ujianList.filter(u => {
+      const mulai = new Date(u.jadwal_mulai).getTime();
+      const selesai = new Date(u.jadwal_selesai).getTime();
+      if (!isNaN(mulai) && nowTime < mulai - 10 * 60 * 1000) return false;
+      if (!isNaN(selesai) && nowTime > selesai) return false;
+      return true;
+    });
 
     // Filter by student class if kelas_target is set and student has a class
     if (studentKelas) {

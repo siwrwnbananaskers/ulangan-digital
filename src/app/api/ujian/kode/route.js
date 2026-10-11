@@ -56,11 +56,16 @@ export async function POST(request) {
       return apiError('Ujian belum diaktifkan atau sudah ditutup oleh guru.', 403);
     }
 
-    const now = new Date().toISOString();
-    if (now < ujian.jadwal_mulai) {
+    // Parse schedule with timezone tolerance (give 5-minute buffer before scheduled time)
+    const nowTime = Date.now();
+    const mulaiTime = new Date(ujian.jadwal_mulai).getTime();
+    const selesaiTime = new Date(ujian.jadwal_selesai).getTime();
+
+    // If started within 10 minutes from now or already passed
+    if (!isNaN(mulaiTime) && nowTime < mulaiTime - 10 * 60 * 1000) {
       return apiError(`Ujian belum dimulai. Jadwal mulai: ${new Date(ujian.jadwal_mulai).toLocaleString('id-ID')}`, 403);
     }
-    if (now > ujian.jadwal_selesai) {
+    if (!isNaN(selesaiTime) && nowTime > selesaiTime) {
       return apiError('Waktu ujian sudah berakhir.', 403);
     }
 

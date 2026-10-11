@@ -45,11 +45,14 @@ export async function POST(request, { params }) {
       return apiError('Ujian tidak aktif', 403);
     }
 
-    const now = new Date().toISOString();
-    if (now < ujian.jadwal_mulai) {
+    const nowTime = Date.now();
+    const mulaiTime = new Date(ujian.jadwal_mulai).getTime();
+    const selesaiTime = new Date(ujian.jadwal_selesai).getTime();
+
+    if (!isNaN(mulaiTime) && nowTime < mulaiTime - 10 * 60 * 1000) {
       return apiError('Ujian belum dimulai', 403);
     }
-    if (now > ujian.jadwal_selesai) {
+    if (!isNaN(selesaiTime) && nowTime > selesaiTime) {
       return apiError('Ujian sudah berakhir', 403);
     }
 
