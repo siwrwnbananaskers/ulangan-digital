@@ -5,83 +5,165 @@ import { usePathname } from 'next/navigation';
 
 export default function Navbar({ user, onLogout, role }) {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const guruLinks = [
-    { href: '/guru/dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
-    { href: '/guru/bank-soal', label: 'Bank Soal', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-    { href: '/guru/ujian', label: 'Ujian', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { href: '/guru/hasil', label: 'Hasil', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-    { href: '/guru/audit', label: 'Audit Log', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+    {
+      href: '/guru/dashboard',
+      label: 'Beranda',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/guru/bank-soal',
+      label: 'Bank Soal',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/guru/ujian',
+      label: 'Ujian',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/guru/hasil',
+      label: 'Hasil',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/guru/audit',
+      label: 'Integritas',
+      badge: 'Audit',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+        </svg>
+      ),
+    },
   ];
 
   const siswaLinks = [
-    { href: '/siswa/dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
-    { href: '/siswa/hasil', label: 'Hasil Ujian', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+    {
+      href: '/siswa/dashboard',
+      label: 'Beranda',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/siswa/hasil',
+      label: 'Nilai Saya',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+        </svg>
+      ),
+    },
   ];
 
   const links = role === 'guru' ? guruLinks : siswaLinks;
 
-  const renderLink = (link, onClick) => (
-    <a
-      key={link.href}
-      href={link.href}
-      className={`nav-link ${pathname === link.href ? 'active' : ''}`}
-      onClick={onClick}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d={link.icon} />
-      </svg>
-      {link.label}
-    </a>
-  );
-
   return (
     <>
-      <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-        <div className="navbar-inner">
-          <a href={role === 'guru' ? '/guru/dashboard' : '/siswa/dashboard'} className="navbar-brand">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            Ulangan Digital
-          </a>
+      <header className="linkedin-header">
+        <div className="linkedin-header-inner">
+          {/* Logo & Search Bar */}
+          <div className="linkedin-brand-section">
+            <a href={role === 'guru' ? '/guru/dashboard' : '/siswa/dashboard'} className="linkedin-logo">
+              <div className="linkedin-logo-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                  <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                </svg>
+              </div>
+              <span className="linkedin-brand-name">Ulangan Digital</span>
+            </a>
 
-          <div className="navbar-nav" style={{ flex: 1, justifyContent: 'center' }}>
-            {links.map(link => renderLink(link))}
+            <div className="linkedin-search-container">
+              <svg className="linkedin-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                className="linkedin-search-input"
+                placeholder={role === 'guru' ? "Cari soal, ujian, peserta..." : "Cari kode ujian..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="navbar-user">
-            <div className="user-badge">
-              <div className="user-avatar">
+          {/* Center Navigation Icons (LinkedIn style: icon on top, text on bottom) */}
+          <nav className="linkedin-nav-links">
+            {links.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={`linkedin-nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <div className="linkedin-nav-icon-wrapper">
+                    {link.icon}
+                    {link.badge && <span className="linkedin-nav-dot" />}
+                  </div>
+                  <span className="linkedin-nav-label">{link.label}</span>
+                </a>
+              );
+            })}
+          </nav>
+
+          {/* User Profile & Logout section on the Right */}
+          <div className="linkedin-right-section">
+            <div className="linkedin-user-profile">
+              <div className="linkedin-avatar">
                 {user?.nama?.charAt(0)?.toUpperCase() || 'U'}
               </div>
-              <span>{user?.nama || 'User'}</span>
-              <span className="badge badge-primary" style={{ marginLeft: 4 }}>
-                {role === 'guru' ? 'Guru' : 'Siswa'}
-              </span>
+              <div className="linkedin-user-text">
+                <span className="linkedin-user-name">
+                  {user?.nama ? user.nama.split(',')[0].split(' ')[0] : 'Akun'}
+                </span>
+                <span className="linkedin-user-role-badge">
+                  {role === 'guru' ? 'Guru' : 'Siswa'}
+                </span>
+              </div>
             </div>
-            <button className="btn btn-ghost btn-sm" onClick={onLogout} title="Logout">
+
+            <div className="linkedin-divider" />
+
+            <button
+              onClick={onLogout}
+              className="linkedin-logout-btn"
+              title="Keluar / Logout"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
+              <span className="linkedin-logout-text">Keluar</span>
             </button>
 
-            {/* Mobile menu button */}
-            <button 
-              className="mobile-menu-btn" 
+            {/* Mobile Hamburger */}
+            <button
+              className="linkedin-mobile-trigger"
               onClick={() => setMobileOpen(true)}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -92,26 +174,48 @@ export default function Navbar({ user, onLogout, role }) {
             </button>
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="mobile-drawer">
           <div className="mobile-drawer-overlay" onClick={() => setMobileOpen(false)} />
           <div className="mobile-drawer-content">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
-              <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)' }}>Menu</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="linkedin-avatar">
+                  {user?.nama?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <strong style={{ fontSize: 14 }}>{user?.nama}</strong>
+                  <span className="badge badge-primary" style={{ display: 'block', fontSize: 10, width: 'fit-content' }}>
+                    {role === 'guru' ? 'Guru Pengawas' : 'Siswa'}
+                  </span>
+                </div>
+              </div>
               <button className="btn btn-ghost btn-icon" onClick={() => setMobileOpen(false)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                ✕
               </button>
             </div>
-            {links.map(link => renderLink(link, () => setMobileOpen(false)))}
-            <div style={{ marginTop: 'auto', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--gray-200)' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 12 }}>
+              {links.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={`nav-link ${pathname === link.href ? 'active' : ''}`}
+                  onClick={() => setMobileOpen(false)}
+                  style={{ padding: '10px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}
+                >
+                  <div style={{ width: 22, height: 22 }}>{link.icon}</div>
+                  <span>{link.label}</span>
+                </a>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--gray-200)' }}>
               <button className="btn btn-danger btn-block" onClick={onLogout}>
-                Logout
+                Keluar / Logout
               </button>
             </div>
           </div>

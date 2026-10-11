@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
-import { formatTanggal, formatDurasi } from '@/lib/utils';
 
 export default function SiswaDashboard() {
   const router = useRouter();
@@ -25,8 +24,7 @@ export default function SiswaDashboard() {
       const res = await authFetch('/api/ujian');
       const data = await res.json();
       const list = data.ujian || [];
-      // Filter active exams
-      setActiveExams(list.filter(u => u.status === 'aktif'));
+      setActiveExams(list.filter((u) => u.status === 'aktif'));
     } catch (err) {
       console.error('Error loading exams', err);
     } finally {
@@ -64,220 +62,269 @@ export default function SiswaDashboard() {
   };
 
   if (authLoading) {
-    return <div className="loading-page"><div className="spinner" /><p>Memuat profil siswa...</p></div>;
+    return (
+      <div className="loading-page">
+        <div className="spinner" />
+        <p>Memuat profil siswa...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={logout} role="siswa" />
 
-      <main className="main-content">
-        {/* Welcome Header */}
-        <div className="page-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-            <div className="user-avatar" style={{ width: 48, height: 48, fontSize: '1.25rem' }}>
-              {user?.nama?.charAt(0)?.toUpperCase() || 'S'}
-            </div>
-            <div>
-              <h1>Halo, {user?.nama}! 👋</h1>
-              <p>
-                Kelas: <strong>{user?.kelas || 'Belum diatur'}</strong> • No. Absen:{' '}
-                <strong>{user?.no_absen || '-'}</strong>
+      {/* 3-Column LinkedIn Grid Layout */}
+      <main className="linkedin-grid-layout">
+        {/* === LEFT COLUMN: Student Profile Card === */}
+        <aside className="linkedin-col-left">
+          <div className="linkedin-card">
+            <div className="linkedin-cover-banner" style={{ background: 'linear-gradient(135deg, #057642 0%, #0a66c2 100%)' }} />
+            <div className="linkedin-profile-header">
+              <div className="linkedin-profile-avatar-large" style={{ background: '#057642' }}>
+                {user?.nama?.charAt(0)?.toUpperCase() || 'S'}
+              </div>
+              <h3 className="linkedin-profile-name">{user?.nama || 'Siswa'}</h3>
+              <p className="linkedin-profile-headline">
+                Kelas: <strong>{user?.kelas || '-'}</strong> • Absen: <strong>{user?.no_absen || '-'}</strong>
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* Enter Exam Code Card */}
-        <div
-          className="card"
-          style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, var(--primary-50) 100%)',
-            border: '2px solid var(--primary-200)',
-            marginBottom: 'var(--space-2xl)',
-            padding: 'var(--space-2xl)',
-            boxShadow: 'var(--shadow-lg)',
-          }}
-        >
-          <div style={{ textAlign: 'center', maxWidth: 500, margin: '0 auto' }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: '50%',
-                background: 'var(--primary-100)',
-                color: 'var(--primary-600)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto var(--space-md)',
-              }}
-            >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
+            <div style={{ borderTop: '1px solid #f3f2ef', padding: '12px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 }}>
+                <span style={{ color: '#666666' }}>Status Asesmen</span>
+                <span className="badge badge-success" style={{ fontSize: 10 }}>Siap Ujian</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                <span style={{ color: '#666666' }}>Ujian Aktif Tersedia</span>
+                <strong style={{ color: '#0a66c2' }}>{activeExams.length} Sesi</strong>
+              </div>
             </div>
 
-            <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--gray-900)', marginBottom: 'var(--space-xs)' }}>
-              Masuk Ujian / Asesmen
-            </h2>
-            <p className="text-sm text-muted" style={{ marginBottom: 'var(--space-lg)' }}>
-              Masukkan 6 digit Kode Ujian atau Token yang diberikan oleh guru pengawas
-            </p>
+            <div style={{ borderTop: '1px solid #f3f2ef', padding: '10px 16px', background: '#fafafa' }}>
+              <a href="/siswa/hasil" style={{ fontSize: 12, fontWeight: 600, color: '#0a66c2', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>Lihat Riwayat Nilai Saya</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+        </aside>
 
-            {errorMsg && (
-              <div className="alert alert-danger" style={{ textAlign: 'left', marginBottom: 'var(--space-md)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                {errorMsg}
+        {/* === CENTER COLUMN: Exam Code Input & Active Exams List === */}
+        <section className="linkedin-col-main">
+          {/* Main Hero Card: Input Exam Code */}
+          <div className="linkedin-card">
+            <div
+              style={{
+                padding: '24px',
+                background: '#ffffff',
+                borderBottom: '1px solid #f3f2ef',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 10,
+                    background: '#edf3f8',
+                    color: '#0a66c2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#191919', margin: 0 }}>
+                    Masuk ke Lembar Ujian
+                  </h2>
+                  <p style={{ fontSize: 13, color: '#666666', margin: 0 }}>
+                    Masukkan 6 digit Kode Ujian / Token yang diumumkan oleh guru pengawas
+                  </p>
+                </div>
               </div>
-            )}
 
-            <form onSubmit={handleKodeSubmit}>
-              <div className="code-input-group" style={{ marginBottom: 'var(--space-md)' }}>
+              {errorMsg && (
+                <div className="alert alert-danger" style={{ marginBottom: 16, fontSize: 13 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleKodeSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <input
                   type="text"
                   maxLength={6}
-                  placeholder="KODE"
+                  placeholder="KODE UJIAN (cth: MAT123)"
                   value={kodeUjian}
                   onChange={(e) => setKodeUjian(e.target.value.toUpperCase())}
-                  className="code-input"
+                  className="form-input"
+                  style={{
+                    flex: '1 1 200px',
+                    fontSize: 16,
+                    fontWeight: 700,
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    textAlign: 'center',
+                    borderRadius: 8,
+                    border: '2px solid #cbd5e1',
+                    padding: '10px 16px',
+                  }}
                   autoFocus
                   required
                 />
-              </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary btn-lg btn-block"
-                disabled={checkingCode || kodeUjian.length < 4}
-              >
-                {checkingCode ? (
-                  <>
-                    <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
-                    Memeriksa Kode...
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                    Lanjutkan ke Lembar Ujian
-                  </>
-                )}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg"
+                  disabled={checkingCode || kodeUjian.length < 4}
+                  style={{
+                    borderRadius: 8,
+                    background: '#0a66c2',
+                    padding: '10px 24px',
+                    fontWeight: 700,
+                  }}
+                >
+                  {checkingCode ? (
+                    <>
+                      <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                      Memeriksa...
+                    </>
+                  ) : (
+                    'Buka Lembar Ujian →'
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
 
-        {/* Active Exams & Quick Links */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-xl)' }}>
-          {/* Active Exams for class */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Ujian Aktif Saat Ini</h2>
-              <span className="badge badge-success">{activeExams.length} Aktif</span>
+          {/* Active Exams for Student's Class */}
+          <div className="linkedin-card">
+            <div className="linkedin-widget-header">
+              <span className="linkedin-widget-title">Ujian Aktif untuk Kelas Anda</span>
+              <span className="badge badge-success" style={{ fontSize: 11 }}>
+                {activeExams.length} Tersedia
+              </span>
             </div>
 
-            {loadingExams ? (
-              <div className="loading-page" style={{ minHeight: 150 }}>
-                <div className="spinner" />
-              </div>
-            ) : activeExams.length === 0 ? (
-              <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
-                <p>Tidak ada ujian aktif saat ini untuk kelas Anda.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                {activeExams.map((exam) => (
-                  <div
-                    key={exam.id}
-                    style={{
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: 'var(--radius-lg)',
-                      padding: 'var(--space-md)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: 'white',
-                    }}
-                  >
-                    <div>
-                      <h4 style={{ fontWeight: 700, fontSize: 'var(--font-size-md)', color: 'var(--gray-900)' }}>
-                        {exam.judul}
-                      </h4>
-                      <p className="text-xs text-muted">
-                        {exam.mata_pelajaran} • {exam.durasi_menit} Menit • {exam.jumlah_soal} Soal
-                      </p>
-                      <div style={{ marginTop: 'var(--space-xs)' }}>
-                        <code style={{ background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', fontSize: 11, fontWeight: 700 }}>
-                          Kode: {exam.kode_ujian}
-                        </code>
-                      </div>
-                    </div>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => router.push(`/siswa/ujian/${exam.id}/instruksi`)}
+            <div style={{ padding: '16px 20px' }}>
+              {loadingExams ? (
+                <div style={{ textAlign: 'center', padding: 20 }}>
+                  <div className="spinner" style={{ margin: '0 auto 8px' }} />
+                  <p style={{ fontSize: 12, color: '#666666' }}>Memuat daftar ujian...</p>
+                </div>
+              ) : activeExams.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 16px', color: '#666666' }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>☕</div>
+                  <h4 style={{ fontSize: 14, fontWeight: 700, color: '#191919' }}>Tidak Ada Ujian Aktif Saat Ini</h4>
+                  <p style={{ fontSize: 12, marginTop: 4 }}>
+                    Belum ada asesmen yang dijadwalkan aktif untuk kelas Anda saat ini.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {activeExams.map((exam) => (
+                    <div
+                      key={exam.id}
+                      style={{
+                        border: '1px solid #e0dfdc',
+                        borderRadius: 8,
+                        padding: '14px 16px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: '#ffffff',
+                        transition: 'border-color 150ms ease',
+                      }}
                     >
-                      Buka Ujian
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span className="badge badge-primary" style={{ fontSize: 11 }}>
+                            {exam.mata_pelajaran}
+                          </span>
+                          <span className="badge badge-gray" style={{ fontSize: 11 }}>
+                            {exam.kelas_target}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: '4px 0' }}>
+                          {exam.judul}
+                        </h4>
+                        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#666666', marginTop: 4 }}>
+                          <span>⏱️ {exam.durasi_menit} Menit</span>
+                          <span>📝 {exam.jumlah_soal} Soal</span>
+                          <span>🎯 KKM: {exam.kkm}</span>
+                        </div>
+                        <div style={{ marginTop: 6 }}>
+                          <code
+                            style={{
+                              background: '#edf3f8',
+                              color: '#0a66c2',
+                              padding: '2px 8px',
+                              borderRadius: 4,
+                              fontSize: 11,
+                              fontWeight: 700,
+                            }}
+                          >
+                            Kode: {exam.kode_ujian}
+                          </code>
+                        </div>
+                      </div>
 
-          {/* Quick Menu & Safety Rules */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Petunjuk Integritas Siswa</h2>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => router.push(`/siswa/ujian/${exam.id}/instruksi`)}
+                        style={{ borderRadius: 9999, padding: '8px 18px', fontWeight: 600, background: '#0a66c2' }}
+                      >
+                        Ikuti Ujian
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-              <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: 24 }}>🛡️</div>
-                <div>
-                  <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>Exam Mode & Layar Penuh</h4>
-                  <p className="text-xs text-muted">
-                    Ujian berlangsung dalam mode Fullscreen. Dilarang keluar fullscreen atau membuka aplikasi lain.
-                  </p>
-                </div>
+          </div>
+        </section>
+
+        {/* === RIGHT COLUMN: Kiosk Mode & Integrity Guidelines === */}
+        <aside className="linkedin-col-right">
+          <div className="linkedin-card">
+            <div className="linkedin-widget-header">
+              <span className="linkedin-widget-title">🛡️ Peraturan Integritas Siswa</span>
+            </div>
+            <div className="linkedin-widget-body" style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+              <div style={{ marginBottom: 12 }}>
+                <strong style={{ color: '#191919', display: 'block', marginBottom: 2 }}>1. Mode Layar Penuh (Fullscreen)</strong>
+                <span>Ujian wajib dikerjakan dalam layar penuh. Keluar fullscreen akan dihitung sebagai pelanggaran.</span>
               </div>
 
-              <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: 24 }}>⚡</div>
-                <div>
-                  <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>Penyimpanan Otomatis (Autosave)</h4>
-                  <p className="text-xs text-muted">
-                    Jawaban Anda tersimpan otomatis ke server secara berkala. Jika internet terputus, Anda dapat melanjutkan kembali.
-                  </p>
-                </div>
+              <div style={{ marginBottom: 12 }}>
+                <strong style={{ color: '#191919', display: 'block', marginBottom: 2 }}>2. Dilarang Berpindah Tab / Window</strong>
+                <span>Sistem mendeteksi saat Anda beralih ke tab browser atau aplikasi lain secara otomatis.</span>
               </div>
 
-              <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: 24 }}>⏱️</div>
-                <div>
-                  <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700 }}>Batas Waktu Otomatis</h4>
-                  <p className="text-xs text-muted">
-                    Waktu ujian dihitung dari waktu server. Saat timer habis, lembar jawaban akan terkunci dan terkirim otomatis.
-                  </p>
-                </div>
+              <div style={{ marginBottom: 12 }}>
+                <strong style={{ color: '#191919', display: 'block', marginBottom: 2 }}>3. Penyimpanan Otomatis (Autosave)</strong>
+                <span>Jawaban Anda disimpan otomatis ke server setiap 20 detik secara aman.</span>
               </div>
 
-              <div style={{ marginTop: 'var(--space-sm)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--gray-200)' }}>
-                <a href="/siswa/hasil" className="btn btn-secondary btn-block">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10" />
-                  </svg>
-                  Lihat Riwayat Hasil Ujian Saya
+              <div style={{ paddingTop: 8, borderTop: '1px solid #f3f2ef' }}>
+                <a href="/siswa/hasil" style={{ fontSize: 12, fontWeight: 600, color: '#0a66c2' }}>
+                  Lihat Riwayat Asesmen Saya →
                 </a>
               </div>
             </div>
           </div>
-        </div>
+        </aside>
       </main>
     </div>
   );
