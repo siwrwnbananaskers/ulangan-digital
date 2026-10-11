@@ -207,7 +207,7 @@ export default function Navbar({ user, onLogout, role }) {
                   {currentUser?.nama ? currentUser.nama.split(',')[0].split(' ')[0] : 'Akun'}
                 </span>
                 <span className="linkedin-user-role-badge">
-                  {currentUser?.role === 'superadmin' ? 'Super' : role === 'guru' ? 'Guru' : 'Siswa'} • Edit ✏️
+                  {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru' : 'Siswa'}
                 </span>
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function Navbar({ user, onLogout, role }) {
                 <div>
                   <strong style={{ fontSize: 14 }}>{currentUser?.nama}</strong>
                   <span className="badge badge-primary" style={{ display: 'block', fontSize: 10, width: 'fit-content', marginTop: 2 }}>
-                    {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru Pengawas' : 'Siswa'} • Edit Profil ✏️
+                    {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru Pengawas' : 'Siswa'} • Edit Profil
                   </span>
                 </div>
               </div>

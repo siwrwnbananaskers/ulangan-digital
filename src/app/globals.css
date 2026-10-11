@@ -1597,40 +1597,45 @@ img {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
+  gap: 12px;
 }
 
 .linkedin-brand-section {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .linkedin-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .linkedin-logo-box {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   background: #0a66c2;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(10, 102, 194, 0.25);
+  flex-shrink: 0;
 }
 
 .linkedin-brand-name {
   font-weight: 700;
-  font-size: 17px;
+  font-size: 16px;
   color: #191919;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .linkedin-brand-name {
     display: none;
   }
@@ -1639,13 +1644,14 @@ img {
 .linkedin-search-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: #edf3f8;
   border-radius: 9999px;
-  height: 36px;
-  padding: 0 14px;
-  margin-left: 10px;
+  height: 34px;
+  padding: 0 12px;
+  margin-left: 6px;
   transition: all 150ms ease;
+  flex-shrink: 1;
 }
 
 .linkedin-search-container:focus-within {
@@ -1663,12 +1669,12 @@ img {
   background: transparent;
   outline: none;
   font-size: 13px;
-  width: 220px;
+  width: clamp(100px, 9vw, 170px);
   color: #191919;
   font-family: inherit;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1150px) {
   .linkedin-search-container {
     display: none;
   }
@@ -1678,9 +1684,11 @@ img {
 .linkedin-nav-links {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 24px;
+  gap: 3px;
+  margin: 0 8px;
   height: 100%;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .linkedin-nav-item {
@@ -1688,15 +1696,16 @@ img {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 70px;
-  height: 50px;
-  padding: 6px 14px;
-  border-radius: 10px;
+  min-width: 58px;
+  height: 48px;
+  padding: 4px 8px;
+  border-radius: 8px;
   color: #52616b;
   text-decoration: none;
   position: relative;
   cursor: pointer;
   transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
 
 .linkedin-nav-item:hover {
@@ -1714,8 +1723,8 @@ img {
   content: '';
   position: absolute;
   bottom: 2px;
-  left: 14px;
-  right: 14px;
+  left: 10px;
+  right: 10px;
   height: 3px;
   border-radius: 3px 3px 0 0;
   background: #0a66c2;
@@ -1733,8 +1742,8 @@ img {
   position: absolute;
   top: -2px;
   right: -5px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #057642;
   border: 1.5px solid white;
@@ -1756,18 +1765,22 @@ img {
 .linkedin-right-section {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .linkedin-user-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 150ms ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .linkedin-user-profile:hover {
@@ -1775,8 +1788,8 @@ img {
 }
 
 .linkedin-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #0a66c2;
   color: white;
@@ -1784,7 +1797,7 @@ img {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
   border: 1.5px solid #cbd5e1;
   overflow: hidden;
@@ -1793,38 +1806,44 @@ img {
 .linkedin-user-text {
   display: flex;
   flex-direction: column;
+  white-space: nowrap;
 }
 
 .linkedin-user-name {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #191919;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .linkedin-user-role-badge {
   font-size: 10px;
   color: #0a66c2;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .linkedin-divider {
   width: 1px;
-  height: 30px;
+  height: 28px;
   background: #e2e8f0;
+  flex-shrink: 0;
 }
 
 .linkedin-logout-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: #fee2e2;
   border: 1px solid #fecaca;
   color: #dc2626;
   cursor: pointer;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
   transition: all 150ms ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .linkedin-logout-btn:hover {
@@ -1844,6 +1863,7 @@ img {
   color: #666666;
   cursor: pointer;
   padding: 6px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

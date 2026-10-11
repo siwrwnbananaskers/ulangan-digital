@@ -87,7 +87,7 @@ export default function GuruDashboard() {
             <div className="linkedin-profile-header">
               <div
                 className="linkedin-profile-avatar-large"
-                style={{ position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
+                style={{ cursor: 'pointer', overflow: 'hidden' }}
                 onClick={() => setShowEditProfile(true)}
                 title="Klik untuk ganti foto & nama profil"
               >
@@ -100,23 +100,6 @@ export default function GuruDashboard() {
                 ) : (
                   currentUser?.nama?.charAt(0)?.toUpperCase() || 'G'
                 )}
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 20,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: 10
-                  }}
-                >
-                  📷
-                </div>
               </div>
               <h3 className="linkedin-profile-name">{currentUser?.nama || 'Guru Pengawas'}</h3>
               <p className="linkedin-profile-headline">
@@ -126,9 +109,9 @@ export default function GuruDashboard() {
                 type="button"
                 onClick={() => setShowEditProfile(true)}
                 className="btn btn-secondary btn-sm"
-                style={{ marginTop: 8, fontSize: 11, padding: '3px 12px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}
+                style={{ marginTop: 8, fontSize: 11, padding: '4px 14px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}
               >
-                <span>✏️ Edit Profil</span>
+                <span>Edit Profil</span>
               </button>
             </div>
 

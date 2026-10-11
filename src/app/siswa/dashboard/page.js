@@ -98,7 +98,7 @@ export default function SiswaDashboard() {
             <div className="linkedin-profile-header">
               <div
                 className="linkedin-profile-avatar-large"
-                style={{ background: '#057642', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
+                style={{ background: '#057642', cursor: 'pointer', overflow: 'hidden' }}
                 onClick={() => setShowEditProfile(true)}
                 title="Klik untuk ganti foto & nama profil"
               >
@@ -111,23 +111,6 @@ export default function SiswaDashboard() {
                 ) : (
                   currentUser?.nama?.charAt(0)?.toUpperCase() || 'S'
                 )}
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 20,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: 10
-                  }}
-                >
-                  📷
-                </div>
               </div>
               <h3 className="linkedin-profile-name">{currentUser?.nama || 'Siswa'}</h3>
               <p className="linkedin-profile-headline">
@@ -137,9 +120,9 @@ export default function SiswaDashboard() {
                 type="button"
                 onClick={() => setShowEditProfile(true)}
                 className="btn btn-secondary btn-sm"
-                style={{ marginTop: 8, fontSize: 11, padding: '3px 12px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}
+                style={{ marginTop: 8, fontSize: 11, padding: '4px 14px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}
               >
-                <span>✏️ Edit Profil</span>
+                <span>Edit Profil</span>
               </button>
             </div>
 
