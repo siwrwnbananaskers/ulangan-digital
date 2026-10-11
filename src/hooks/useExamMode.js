@@ -85,21 +85,42 @@ export function useExamMode({
     enterFullscreen();
   }, [isSuspended, enterFullscreen]);
 
+  // Grace period ref to prevent false positives when entering the page
+  const readyRef = useRef(false);
+
+  // Keep latest recordViolation in a ref to avoid re-attaching listeners
+  const recordViolationRef = useRef(recordViolation);
+  recordViolationRef.current = recordViolation;
+
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      readyRef.current = false;
+      return;
+    }
+
+    // Allow 2 seconds for browser transition and fullscreen prompt to settle
+    const graceTimer = setTimeout(() => {
+      readyRef.current = true;
+    }, 2000);
+
+    // Check initial fullscreen state
+    const currentFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    setIsFullscreen(currentFS);
 
     // === Page Visibility API ===
     const handleVisibilityChange = () => {
+      if (!readyRef.current) return;
       if (document.hidden) {
-        recordViolation('tab_switch', 'Siswa berpindah tab/window (Page Visibility API)');
+        recordViolationRef.current('tab_switch', 'Siswa berpindah tab/window (Page Visibility API)');
       }
     };
 
     // === Blur/Focus Detection ===
     const handleBlur = () => {
+      if (!readyRef.current) return;
       if (isActiveRef.current) {
         isActiveRef.current = false;
-        recordViolation('window_blur', 'Window kehilangan fokus (blur detection)');
+        recordViolationRef.current('window_blur', 'Window kehilangan fokus (blur detection)');
       }
     };
 
@@ -112,14 +133,14 @@ export function useExamMode({
       const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
       setIsFullscreen(isFS);
       
+      if (!readyRef.current) return;
       if (!isFS && enabled && !isSuspended) {
-        recordViolation('exit_fullscreen', 'Siswa keluar dari mode fullscreen');
+        recordViolationRef.current('exit_fullscreen', 'Siswa keluar dari mode fullscreen');
       }
     };
 
     // === Prevent keyboard shortcuts ===
     const handleKeyDown = (e) => {
-      // Block common escape keys
       if (e.key === 'F11' || 
           (e.ctrlKey && e.key === 'Tab') ||
           (e.altKey && e.key === 'Tab') ||
@@ -153,10 +174,13 @@ export function useExamMode({
     document.addEventListener('copy', handleCopy);
     document.addEventListener('cut', handleCopy);
 
-    // Enter fullscreen on mount
-    enterFullscreen();
+    // Only attempt fullscreen if not already fullscreen
+    if (!currentFS) {
+      enterFullscreen();
+    }
 
     return () => {
+      clearTimeout(graceTimer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('focus', handleFocus);
@@ -167,7 +191,7 @@ export function useExamMode({
       document.removeEventListener('copy', handleCopy);
       document.removeEventListener('cut', handleCopy);
     };
-  }, [enabled, isSuspended, recordViolation, enterFullscreen]);
+  }, [enabled, isSuspended, enterFullscreen]);
 
   return {
     isFullscreen,

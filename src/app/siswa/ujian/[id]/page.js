@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useExamMode } from '@/hooks/useExamMode';
+import { parseWaktuWIB } from '@/lib/utils';
 
 export default function LembarUjianPage() {
   const params = useParams();
@@ -123,10 +124,15 @@ export default function LembarUjianPage() {
 
       // Compute initial remaining time
       if (data.sesi?.waktu_mulai && data.ujian?.durasi_menit) {
-        const mulai = new Date(data.sesi.waktu_mulai).getTime();
-        const batasDurasi = mulai + data.ujian.durasi_menit * 60 * 1000;
-        const batasJadwal = new Date(data.ujian.jadwal_selesai).getTime();
-        const batasAkhir = Math.min(batasDurasi, batasJadwal);
+        // SQLite datetime('now') is UTC (e.g. "2026-10-11 14:25:03")
+        let waktuMulaiStr = String(data.sesi.waktu_mulai).trim().replace(' ', 'T');
+        if (!waktuMulaiStr.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(waktuMulaiStr)) {
+          waktuMulaiStr += 'Z';
+        }
+        const mulai = new Date(waktuMulaiStr).getTime();
+        const batasDurasi = (isNaN(mulai) ? Date.now() : mulai) + (Number(data.ujian.durasi_menit) || 60) * 60 * 1000;
+        const batasJadwal = parseWaktuWIB(data.ujian.jadwal_selesai);
+        const batasAkhir = isNaN(batasJadwal) ? batasDurasi : Math.min(batasDurasi, batasJadwal);
         const remaining = Math.max(0, Math.floor((batasAkhir - Date.now()) / 1000));
         setTimeLeft(remaining);
       }
@@ -239,6 +245,11 @@ export default function LembarUjianPage() {
   // Submit Handler
   const handleSubmitExam = async (isForce = false) => {
     if (isSubmitting) return;
+    const currentSesiId = sesi?.id;
+    if (!currentSesiId) {
+      console.warn('Session ID not found yet');
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -251,7 +262,7 @@ export default function LembarUjianPage() {
       const res = await authFetch(`/api/ujian/${examId}/submit`, {
         method: 'POST',
         body: JSON.stringify({
-          sesi_id: sesi.id,
+          sesi_id: currentSesiId,
           jawaban: payload,
           force: isForce,
         }),
@@ -262,9 +273,9 @@ export default function LembarUjianPage() {
       if (res.ok) {
         // Clear local backup
         try {
-          localStorage.removeItem(`exam_answers_${sesi.id}`);
+          localStorage.removeItem(`exam_answers_${currentSesiId}`);
         } catch {}
-        router.push(`/siswa/selesai?ujian_id=${examId}&sesi_id=${sesi.id}`);
+        router.push(`/siswa/selesai?ujian_id=${examId}&sesi_id=${currentSesiId}`);
       } else {
         alert(data.error || 'Gagal mengumpulkan ujian');
         setIsSubmitting(false);
@@ -276,7 +287,6 @@ export default function LembarUjianPage() {
   };
 
   const handleAutoSubmit = () => {
-    alert('Waktu ujian telah habis! Jawaban Anda akan otomatis dikirim ke server.');
     handleSubmitExam(true);
   };
 
