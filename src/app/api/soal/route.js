@@ -10,6 +10,9 @@ import { getDB } from '@/lib/db';
 import { requireRole, authErrorResponse, sanitizeInput } from '@/lib/auth';
 import { apiResponse, apiError, generateId, validateRequired } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
   try {
     const user = await requireRole(request, 'guru');
@@ -17,20 +20,50 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const mapel = searchParams.get('mapel');
     const tipe = searchParams.get('tipe');
+    const guruIdParam = searchParams.get('guru_id');
 
-    let sql = 'SELECT * FROM soal WHERE guru_id = ?';
-    const params = [user.id];
+    let sql = '';
+    const params = [];
 
-    if (mapel) {
-      sql += ' AND mata_pelajaran = ?';
-      params.push(mapel);
+    if (user.role === 'superadmin') {
+      // Super Admin has god-mode access: can see all bank soal across all teachers!
+      sql = `SELECT s.*, u.nama as nama_guru, u.username as username_guru 
+             FROM soal s 
+             LEFT JOIN users u ON s.guru_id = u.id`;
+      const conditions = [];
+      if (guruIdParam) {
+        conditions.push('s.guru_id = ?');
+        params.push(guruIdParam);
+      }
+      if (mapel) {
+        conditions.push('s.mata_pelajaran = ?');
+        params.push(mapel);
+      }
+      if (tipe) {
+        conditions.push('s.tipe = ?');
+        params.push(tipe);
+      }
+      if (conditions.length > 0) {
+        sql += ' WHERE ' + conditions.join(' AND ');
+      }
+      sql += ' ORDER BY s.created_at DESC';
+    } else {
+      // Regular teacher MUST strictly ONLY see their own questions!
+      // Teachers CANNOT see demo questions or other teachers' questions.
+      sql = 'SELECT * FROM soal WHERE guru_id = ?';
+      params.push(user.id);
+
+      if (mapel) {
+        sql += ' AND mata_pelajaran = ?';
+        params.push(mapel);
+      }
+      if (tipe) {
+        sql += ' AND tipe = ?';
+        params.push(tipe);
+      }
+
+      sql += ' ORDER BY created_at DESC';
     }
-    if (tipe) {
-      sql += ' AND tipe = ?';
-      params.push(tipe);
-    }
-
-    sql += ' ORDER BY created_at DESC';
 
     const soalList = await db.getAll(sql, params);
     return apiResponse({ soal: soalList });

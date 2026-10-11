@@ -145,21 +145,4 @@ VALUES
   ('usr_siswa_002', 'siswa2', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Siti Nurhaliza', 'siswa', 'usr_guru_001', 'XII-IPA-1', 2),
   ('usr_siswa_003', 'siswa3', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Budi Santoso', 'siswa', 'usr_guru_001', 'XII-IPA-1', 3);
 
--- Seed initial questions for Novisa
-INSERT OR IGNORE INTO soal (id, guru_id, mata_pelajaran, tipe, pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, pilihan_e, kunci_jawaban, bobot)
-VALUES
-  ('soal_novisa_001', 'usr_guru_002', 'Matematika', 'pg', 'Hasil dari 15 + (25 x 4) - 50 adalah...', '65', '75', '85', '90', '100', 'a', 1),
-  ('soal_novisa_002', 'usr_guru_002', 'Matematika', 'pg', 'Faktor Persekutuan Terbesar (FPB) dari 24 dan 36 adalah...', '6', '12', '18', '24', '72', 'b', 1),
-  ('soal_novisa_003', 'usr_guru_002', 'Matematika', 'isian', 'Berapakah nilai dari akar kuadrat 144?', null, null, null, null, null, '12', 1);
-
--- Seed initial exam for Novisa
-INSERT OR IGNORE INTO ujian (id, guru_id, judul, mata_pelajaran, kelas_target, kode_ujian, deskripsi, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, kkm, acak_soal, acak_jawaban, tampilkan_nilai, batas_pelanggaran, status)
-VALUES
-  ('ujn_novisa_001', 'usr_guru_002', 'Penilaian Tengah Semester Matematika', 'Matematika', 'XII-IPA-1', 'NOV789', 'Kerjakan secara mandiri dan jujur.', 60, datetime('now', '-1 day'), datetime('now', '+7 days'), 3, 75, 0, 0, 1, 3, 'draft');
-
-INSERT OR IGNORE INTO ujian_soal (id, ujian_id, soal_id, urutan)
-VALUES
-  ('us_nov_1', 'ujn_novisa_001', 'soal_novisa_001', 1),
-  ('us_nov_2', 'ujn_novisa_001', 'soal_novisa_002', 2),
-  ('us_nov_3', 'ujn_novisa_001', 'soal_novisa_003', 3);
 

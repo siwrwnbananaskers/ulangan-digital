@@ -7,6 +7,9 @@ import { getDB } from '@/lib/db';
 import { requireAuth, authErrorResponse } from '@/lib/auth';
 import { apiResponse, apiError, shuffleArray } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request, { params }) {
   try {
     const user = await requireAuth(request);

@@ -32,8 +32,10 @@ function savePersistedStore(store) {
   }
 }
 
-// In-memory fallback database state
-const fallbackStore = {
+// Initial in-memory fallback database state
+// NOTE: Demo questions and demo exams belong ONLY to Demo Guru (usr_guru_001).
+// Teacher Novisa (usr_guru_002) and newly created teachers start with a clean slate!
+const initialStore = {
   users: [
     {
       id: 'usr_superadmin_001',
@@ -186,54 +188,6 @@ const fallbackStore = {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
-    {
-      id: 'soal_novisa_001',
-      guru_id: 'usr_guru_002',
-      mata_pelajaran: 'Matematika',
-      tipe: 'pg',
-      pertanyaan: 'Hasil dari 15 + (25 x 4) - 50 adalah...',
-      pilihan_a: '65',
-      pilihan_b: '75',
-      pilihan_c: '85',
-      pilihan_d: '90',
-      pilihan_e: '100',
-      kunci_jawaban: 'a',
-      bobot: 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: 'soal_novisa_002',
-      guru_id: 'usr_guru_002',
-      mata_pelajaran: 'Matematika',
-      tipe: 'pg',
-      pertanyaan: 'Faktor Persekutuan Terbesar (FPB) dari 24 dan 36 adalah...',
-      pilihan_a: '6',
-      pilihan_b: '12',
-      pilihan_c: '18',
-      pilihan_d: '24',
-      pilihan_e: '72',
-      kunci_jawaban: 'b',
-      bobot: 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: 'soal_novisa_003',
-      guru_id: 'usr_guru_002',
-      mata_pelajaran: 'Matematika',
-      tipe: 'isian',
-      pertanyaan: 'Berapakah nilai dari akar kuadrat 144?',
-      pilihan_a: null,
-      pilihan_b: null,
-      pilihan_c: null,
-      pilihan_d: null,
-      pilihan_e: null,
-      kunci_jawaban: '12',
-      bobot: 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
   ],
   ujian: [
     {
@@ -257,27 +211,6 @@ const fallbackStore = {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
-    {
-      id: 'ujn_novisa_001',
-      guru_id: 'usr_guru_002',
-      judul: 'Penilaian Tengah Semester Matematika',
-      mata_pelajaran: 'Matematika',
-      kelas_target: 'XII-IPA-1',
-      kode_ujian: 'NOV789',
-      deskripsi: 'Kerjakan secara mandiri dan jujur.',
-      durasi_menit: 60,
-      jadwal_mulai: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-      jadwal_selesai: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
-      jumlah_soal: 3,
-      kkm: 75,
-      acak_soal: 0,
-      acak_jawaban: 0,
-      tampilkan_nilai: 1,
-      batas_pelanggaran: 3,
-      status: 'draft',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
   ],
   ujian_soal: [
     { id: 'us_1', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_001', urutan: 1 },
@@ -285,14 +218,39 @@ const fallbackStore = {
     { id: 'us_3', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_003', urutan: 3 },
     { id: 'us_4', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_004', urutan: 4 },
     { id: 'us_5', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_005', urutan: 5 },
-    { id: 'us_nov_1', ujian_id: 'ujn_novisa_001', soal_id: 'soal_novisa_001', urutan: 1 },
-    { id: 'us_nov_2', ujian_id: 'ujn_novisa_001', soal_id: 'soal_novisa_002', urutan: 2 },
-    { id: 'us_nov_3', ujian_id: 'ujn_novisa_001', soal_id: 'soal_novisa_003', urutan: 3 },
   ],
   sesi_ujian: [],
   jawaban: [],
   audit_log: [],
 };
+
+// Use globalThis singleton to prevent memory resets across lambda executions in Node
+if (!globalThis.__ULANGAN_DIGITAL_STORE__) {
+  const disk = loadPersistedStore();
+  globalThis.__ULANGAN_DIGITAL_STORE__ = disk || initialStore;
+}
+const fallbackStore = globalThis.__ULANGAN_DIGITAL_STORE__;
+
+function extractD1Results(data) {
+  if (!data) return { results: [], meta: {} };
+  if (Array.isArray(data.result) && data.result.length > 0) {
+    const first = data.result[0];
+    if (first && Array.isArray(first.results)) {
+      return { results: first.results, meta: first.meta || {} };
+    }
+    if (Array.isArray(first)) {
+      return { results: first, meta: {} };
+    }
+    return { results: data.result, meta: {} };
+  }
+  if (data.result && Array.isArray(data.result.results)) {
+    return { results: data.result.results, meta: data.result.meta || {} };
+  }
+  if (Array.isArray(data.results)) {
+    return { results: data.results, meta: data.meta || {} };
+  }
+  return { results: [], meta: {} };
+}
 
 class D1Client {
   constructor() {
@@ -300,10 +258,6 @@ class D1Client {
     this.databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
     this.apiToken = process.env.CLOUDFLARE_API_TOKEN;
     this.isCloudflare = !!(this.accountId && this.databaseId && this.apiToken);
-
-    if (!this.isCloudflare) {
-      // In-memory fallback
-    }
   }
 
   normalizeRow(row) {
@@ -311,10 +265,18 @@ class D1Client {
     const clean = {};
     for (const [key, value] of Object.entries(row)) {
       clean[key] = value;
+      // Handle table prefix e.g. "u.judul"
       if (key.includes('.')) {
         const shortKey = key.split('.').pop();
         if (clean[shortKey] === undefined) {
           clean[shortKey] = value;
+        }
+      }
+      // Handle alias artifact e.g. "u.judul as judul"
+      if (key.toLowerCase().includes(' as ')) {
+        const aliasKey = key.split(/\s+as\s+/i).pop().trim();
+        if (clean[aliasKey] === undefined) {
+          clean[aliasKey] = value;
         }
       }
     }
@@ -348,7 +310,7 @@ class D1Client {
           throw new Error(`D1 query failed: ${JSON.stringify(data.errors)}`);
         }
 
-        const res = data.result?.[0] || { results: [], meta: {} };
+        const res = extractD1Results(data);
         if (Array.isArray(res.results)) {
           res.results = res.results.map(r => this.normalizeRow(r));
         }
@@ -384,8 +346,10 @@ class D1Client {
 
     // 1. SELECT queries
     if (upper.startsWith('SELECT')) {
-      // 1.1 COUNT queries
-      if (upper.includes('COUNT(')) {
+      // 1.1 Dedicated COUNT queries (MUST ONLY match outer SELECT COUNT(...) statements!)
+      // DO NOT match queries where COUNT is in a subquery projection!
+      const isCountOnly = /^\s*SELECT\s+COUNT\s*\(/i.test(s);
+      if (isCountOnly) {
         let count = 0;
         if (upper.includes('FROM USERS')) {
           if (upper.includes("ROLE = 'GURU'") || (upper.includes("ROLE = ?") && params[0] === 'guru')) {
@@ -431,7 +395,7 @@ class D1Client {
       }
 
       // 1.2 FROM USERS (only when main table is users, not inside a subquery)
-      if (upper.includes('FROM USERS') && !upper.includes('FROM UJIAN')) {
+      if (upper.includes('FROM USERS') && !upper.includes('FROM UJIAN') && !upper.includes('FROM SOAL')) {
         // SELECT DISTINCT kelas FROM users WHERE role = 'siswa'...
         if (upper.includes('DISTINCT KELAS')) {
           let students = fallbackStore.users.filter(u => u.role === 'siswa' && u.kelas);
@@ -503,16 +467,17 @@ class D1Client {
       }
 
       // 1.3 FROM SOAL
-      if (upper.includes('FROM SOAL') && !upper.includes('JOIN')) {
-        if (upper.includes('WHERE ID =') && upper.includes('GURU_ID =')) {
+      if (upper.includes('FROM SOAL') && !upper.includes('JOIN UJIAN_SOAL') && !upper.includes('UJIAN_SOAL US')) {
+        if (upper.includes('WHERE ID =') && (upper.includes('GURU_ID =') || upper.includes('GURU_ID='))) {
           const found = fallbackStore.soal.find(q => q.id === params[0] && q.guru_id === params[1]);
           return { results: found ? [found] : [], meta: {} };
         }
-        if (upper.includes('WHERE ID =')) {
+        if (upper.includes('WHERE ID =') || upper.includes('WHERE S.ID =')) {
           const found = fallbackStore.soal.find(q => q.id === params[0]);
           return { results: found ? [found] : [], meta: {} };
         }
-        if (upper.includes('WHERE GURU_ID =') || upper.includes('WHERE GURU_ID=')) {
+        // Strict teacher isolation: a teacher ONLY sees questions where guru_id matches!
+        if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
           let results = fallbackStore.soal.filter(q => q.guru_id === params[0]);
           if (upper.includes('MATA_PELAJARAN = ?') && params[1]) {
             results = results.filter(q => q.mata_pelajaran === params[1]);
@@ -523,7 +488,16 @@ class D1Client {
           }
           return { results, meta: {} };
         }
-        return { results: fallbackStore.soal, meta: {} };
+        // Superadmin query (all questions across all teachers with teacher name)
+        const enriched = fallbackStore.soal.map(s => {
+          const g = fallbackStore.users.find(u => u.id === s.guru_id);
+          return {
+            ...s,
+            nama_guru: g ? g.nama : 'Guru Demo, S.Pd.',
+            username_guru: g ? g.username : 'guru',
+          };
+        });
+        return { results: enriched, meta: {} };
       }
 
       // 1.4 FROM UJIAN
@@ -537,6 +511,7 @@ class D1Client {
           const found = fallbackStore.ujian.find(u => u.kode_ujian?.toUpperCase() === code);
           return { results: found ? [found] : [], meta: {} };
         }
+        // Strict teacher isolation: a teacher ONLY sees exams where guru_id matches!
         if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
           let exams = fallbackStore.ujian.filter(u => u.guru_id === params[0]);
           if (upper.includes("STATUS = 'AKTIF'")) {
@@ -550,7 +525,7 @@ class D1Client {
           }));
           return { results, meta: {} };
         }
-        // Superadmin or active exam list
+        // Superadmin or active exam list for students
         let examList = fallbackStore.ujian;
         if (upper.includes("STATUS = 'AKTIF'")) {
           examList = examList.filter(u => u.status === 'aktif');

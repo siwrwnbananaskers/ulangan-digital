@@ -41,7 +41,7 @@ export default function BankSoal() {
 
   const loadSoal = async () => {
     try {
-      let url = '/api/soal?';
+      let url = `/api/soal?_t=${Date.now()}&`;
       if (filterMapel) url += `mapel=${encodeURIComponent(filterMapel)}&`;
       if (filterTipe) url += `tipe=${encodeURIComponent(filterTipe)}`;
       const res = await authFetch(url);

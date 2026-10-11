@@ -93,17 +93,35 @@ export function validateRequired(data, fields) {
 }
 
 /**
- * Create standardized API response
+ * Create standardized API response with strong cache-control headers
  */
-export function apiResponse(data, status = 200) {
-  return Response.json(data, { status });
+export function apiResponse(data, status = 200, customHeaders = {}) {
+  return Response.json(data, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      ...customHeaders,
+    },
+  });
 }
 
 /**
- * Create error API response
+ * Create error API response with strong cache-control headers
  */
 export function apiError(message, status = 400) {
-  return Response.json({ error: message }, { status });
+  return Response.json(
+    { error: message },
+    {
+      status,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    }
+  );
 }
 
 /**

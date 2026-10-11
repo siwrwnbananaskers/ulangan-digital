@@ -43,8 +43,8 @@ export default function UjianPage() {
   const loadData = async () => {
     try {
       const [ujianRes, soalRes] = await Promise.all([
-        authFetch('/api/ujian'),
-        authFetch('/api/soal'),
+        authFetch(`/api/ujian?_t=${Date.now()}`),
+        authFetch(`/api/soal?_t=${Date.now()}`),
       ]);
       const ujianData = await ujianRes.json();
       const soalData = await soalRes.json();
@@ -234,9 +234,11 @@ export default function UjianPage() {
     setSelectedSoal(prev => [...new Set([...prev, ...matching])]);
   };
 
+  const validUjianList = (ujianList || []).filter(u => u && u.id && (u.judul || u['u.judul']) && u.cnt === undefined);
+
   const getFilteredUjian = () => {
-    if (activeTab === 'semua') return ujianList;
-    return ujianList.filter(u => u.status === activeTab);
+    if (activeTab === 'semua') return validUjianList;
+    return validUjianList.filter(u => (u.status || u['u.status']) === activeTab);
   };
 
   const formatDate = (dateStr) => {
@@ -301,10 +303,10 @@ export default function UjianPage() {
         {/* Tab Pills */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: '#ffffff', padding: '6px 12px', borderRadius: 8, border: '1px solid #e0dfdc' }}>
           {[
-            { key: 'semua', label: `Semua (${ujianList.length})` },
-            { key: 'aktif', label: `Aktif (${ujianList.filter(u => u.status === 'aktif').length})` },
-            { key: 'draft', label: `Draft (${ujianList.filter(u => u.status === 'draft').length})` },
-            { key: 'selesai', label: `Selesai (${ujianList.filter(u => u.status === 'selesai').length})` },
+            { key: 'semua', label: `Semua (${validUjianList.length})` },
+            { key: 'aktif', label: `Aktif (${validUjianList.filter(u => (u.status || u['u.status']) === 'aktif').length})` },
+            { key: 'draft', label: `Draft (${validUjianList.filter(u => (u.status || u['u.status']) === 'draft').length})` },
+            { key: 'selesai', label: `Selesai (${validUjianList.filter(u => (u.status || u['u.status']) === 'selesai').length})` },
           ].map(tab => (
             <button
               key={tab.key}
@@ -344,45 +346,57 @@ export default function UjianPage() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
-            {getFilteredUjian().map(ujian => (
-              <div key={ujian.id} className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <div>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#191919', margin: '0 0 4px' }}>{ujian.judul}</h3>
-                      <p style={{ fontSize: 12, color: '#666666', margin: 0 }}>
-                        {ujian.mata_pelajaran} — Kelas: <strong>{ujian.kelas_target}</strong>
-                      </p>
-                    </div>
-                    <span className={`badge ${
-                      ujian.status === 'aktif' ? 'badge-success' :
-                      ujian.status === 'selesai' ? 'badge-gray' : 'badge-warning'
-                    }`} style={{ fontSize: 11, padding: '3px 10px' }}>
-                      {ujian.status === 'aktif' ? 'Aktif' : ujian.status === 'selesai' ? 'Selesai' : 'Draft'}
-                    </span>
-                  </div>
+            {getFilteredUjian().map(ujian => {
+              const judul = ujian.judul || ujian['u.judul'] || 'Ujian';
+              const mataPelajaran = ujian.mata_pelajaran || ujian['u.mata_pelajaran'] || '-';
+              const kelasTarget = ujian.kelas_target || ujian['u.kelas_target'] || '-';
+              const kodeUjian = ujian.kode_ujian || ujian['u.kode_ujian'] || '-';
+              const durasiMenit = ujian.durasi_menit || ujian['u.durasi_menit'] || 60;
+              const jumlahSoal = ujian.jumlah_soal || ujian['u.jumlah_soal'] || 0;
+              const kkm = ujian.kkm !== undefined ? ujian.kkm : (ujian['u.kkm'] !== undefined ? ujian['u.kkm'] : 75);
+              const status = ujian.status || ujian['u.status'] || 'draft';
+              const jadwalMulai = ujian.jadwal_mulai || ujian['u.jadwal_mulai'];
+              const jadwalSelesai = ujian.jadwal_selesai || ujian['u.jadwal_selesai'];
 
-                  {/* Metadata Specs */}
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #f1f5f9', marginBottom: 14, fontSize: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <span style={{ color: '#666666', minWidth: 65 }}>Kode Ruang:</span>
-                      <code style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>
-                        {ujian.kode_ujian}
-                      </code>
+              return (
+                <div key={ujian.id} className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                      <div>
+                        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#191919', margin: '0 0 4px' }}>{judul}</h3>
+                        <p style={{ fontSize: 12, color: '#666666', margin: 0 }}>
+                          {mataPelajaran} — Kelas: <strong>{kelasTarget}</strong>
+                        </p>
+                      </div>
+                      <span className={`badge ${
+                        status === 'aktif' ? 'badge-success' :
+                        status === 'selesai' ? 'badge-gray' : 'badge-warning'
+                      }`} style={{ fontSize: 11, padding: '3px 10px' }}>
+                        {status === 'aktif' ? 'Aktif' : status === 'selesai' ? 'Selesai' : 'Draft'}
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4 }}>
-                      <span>Durasi: <strong>{ujian.durasi_menit} Menit</strong></span>
-                      <span>Soal: <strong>{ujian.jumlah_soal} Butir</strong></span>
-                      <span>KKM: <strong>{ujian.kkm}</strong></span>
-                    </div>
-                    <div style={{ color: '#666666', fontSize: 11 }}>
-                      Jadwal: {formatDate(ujian.jadwal_mulai)} s/d {formatDate(ujian.jadwal_selesai)}
-                    </div>
-                    <div style={{ color: '#666666', fontSize: 11, marginTop: 4 }}>
-                      Peserta: <strong>{ujian.peserta_selesai || 0}</strong> selesai / <strong>{ujian.total_peserta || 0}</strong> terdaftar
+
+                    {/* Metadata Specs */}
+                    <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #f1f5f9', marginBottom: 14, fontSize: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <span style={{ color: '#666666', minWidth: 65 }}>Kode Ruang:</span>
+                        <code style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>
+                          {kodeUjian}
+                        </code>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4 }}>
+                        <span>Durasi: <strong>{durasiMenit} Menit</strong></span>
+                        <span>Soal: <strong>{jumlahSoal} Butir</strong></span>
+                        <span>KKM: <strong>{kkm}</strong></span>
+                      </div>
+                      <div style={{ color: '#666666', fontSize: 11 }}>
+                        Jadwal: {formatDate(jadwalMulai)} s/d {formatDate(jadwalSelesai)}
+                      </div>
+                      <div style={{ color: '#666666', fontSize: 11, marginTop: 4 }}>
+                        Peserta: <strong>{ujian.peserta_selesai || 0}</strong> selesai / <strong>{ujian.total_peserta || 0}</strong> terdaftar
+                      </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Actions Row */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>

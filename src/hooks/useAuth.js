@@ -70,7 +70,11 @@ export function useAuth(requiredRole = null) {
       headers['Authorization'] = `Bearer ${storedToken}`;
     }
 
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, {
+      cache: 'no-store',
+      ...options,
+      headers,
+    });
     
     if (res.status === 401) {
       localStorage.removeItem('token');
