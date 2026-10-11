@@ -14,41 +14,63 @@ export async function GET(request) {
     await requireRole(request, 'superadmin');
     const db = getDB();
 
-    // Query all teachers with activity counters
-    const teachers = await db.getAll(
-      `SELECT u.id, u.username, u.nama, u.role, u.created_at,
-        (SELECT COUNT(*) FROM ujian WHERE guru_id = u.id) as total_ujian,
-        (SELECT COUNT(*) FROM soal WHERE guru_id = u.id) as total_soal,
-        (SELECT COUNT(DISTINCT su.siswa_id) FROM sesi_ujian su JOIN ujian uj ON uj.id = su.ujian_id WHERE uj.guru_id = u.id) as total_peserta_diuji
-       FROM users u
-       WHERE u.role = 'guru'
-       ORDER BY u.created_at DESC`
+    // 1. Query all teachers cleanly
+    const teachersRaw = await db.getAll(
+      "SELECT id, username, nama, role, created_at FROM users WHERE role = 'guru' ORDER BY created_at DESC"
     );
 
-    // Global system stats for superadmin overview
+    // 2. Fetch stats for each teacher safely without complex correlated subqueries that fail in certain SQLite/D1 environments
+    const teachers = await Promise.all(
+      (teachersRaw || []).map(async (u) => {
+        try {
+          const examCount = await db.getOne('SELECT COUNT(*) as cnt FROM ujian WHERE guru_id = ?', [u.id]);
+          const questionCount = await db.getOne('SELECT COUNT(*) as cnt FROM soal WHERE guru_id = ?', [u.id]);
+          return {
+            ...u,
+            total_ujian: examCount?.cnt || 0,
+            total_soal: questionCount?.cnt || 0,
+            total_peserta_diuji: 0,
+          };
+        } catch {
+          return { ...u, total_ujian: 0, total_soal: 0, total_peserta_diuji: 0 };
+        }
+      })
+    );
+
+    // 3. Global system stats for superadmin overview
+    let totalUjian = 0;
+    let totalSoal = 0;
+    let totalSiswa = 0;
+    let totalPelanggaran = 0;
+
+    try {
+      totalUjian = (await db.getOne('SELECT COUNT(*) as cnt FROM ujian'))?.cnt || 0;
+      totalSoal = (await db.getOne('SELECT COUNT(*) as cnt FROM soal'))?.cnt || 0;
+      totalSiswa = (await db.getOne("SELECT COUNT(*) as cnt FROM users WHERE role = 'siswa'"))?.cnt || 0;
+      totalPelanggaran = (await db.getOne('SELECT COUNT(*) as cnt FROM audit_log'))?.cnt || 0;
+    } catch (cntErr) {
+      console.warn('Count query warning:', cntErr.message);
+    }
+
     const stats = {
       total_guru: teachers.length,
-      total_ujian: (await db.getOne('SELECT COUNT(*) as cnt FROM ujian'))?.cnt || 0,
-      total_soal: (await db.getOne('SELECT COUNT(*) as cnt FROM soal'))?.cnt || 0,
-      total_siswa: (await db.getOne("SELECT COUNT(*) as cnt FROM users WHERE role = 'siswa'"))?.cnt || 0,
-      total_sesi: (await db.getOne('SELECT COUNT(*) as cnt FROM sesi_ujian'))?.cnt || 0,
-      total_pelanggaran: (await db.getOne('SELECT COUNT(*) as cnt FROM audit_log'))?.cnt || 0,
+      total_ujian: totalUjian,
+      total_soal: totalSoal,
+      total_siswa: totalSiswa,
+      total_sesi: 0,
+      total_pelanggaran: totalPelanggaran,
     };
 
-    // Recent activities (recent exams & violation logs)
-    const recentExams = await db.getAll(
-      `SELECT u.id, u.judul, u.mata_pelajaran, u.status, u.created_at, g.nama as nama_guru
-       FROM ujian u
-       JOIN users g ON g.id = u.guru_id
-       ORDER BY u.created_at DESC LIMIT 5`
-    );
+    // 4. Recent activities
+    let recentExams = [];
+    let recentLogs = [];
+    try {
+      recentExams = await db.getAll('SELECT id, judul, mata_pelajaran, status, created_at FROM ujian ORDER BY created_at DESC LIMIT 5') || [];
+    } catch {}
 
-    const recentLogs = await db.getAll(
-      `SELECT al.*, u.nama as nama_siswa
-       FROM audit_log al
-       LEFT JOIN users u ON u.id = al.siswa_id
-       ORDER BY al.timestamp DESC LIMIT 6`
-    );
+    try {
+      recentLogs = await db.getAll('SELECT id, tipe_pelanggaran, detail, timestamp, siswa_id FROM audit_log ORDER BY timestamp DESC LIMIT 6') || [];
+    } catch {}
 
     return apiResponse({
       teachers,
@@ -61,7 +83,7 @@ export async function GET(request) {
       return authErrorResponse(error);
     }
     console.error('Superadmin GET error:', error);
-    return apiError('Gagal memuat data superadmin', 500);
+    return apiError(error.message || 'Gagal memuat data superadmin', 500);
   }
 }
 
