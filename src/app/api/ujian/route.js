@@ -161,15 +161,15 @@ export async function POST(request) {
         kodeUjian,
         body.deskripsi ? sanitizeInput(body.deskripsi) : null,
         body.durasi_menit,
-        body.jadwal_mulai,
-        body.jadwal_selesai,
+        body.jadwal_mulai || new Date().toISOString(),
+        body.jadwal_selesai || new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
         body.soal_ids.length,
         body.kkm || 75,
         body.acak_soal ? 1 : 0,
         body.acak_jawaban ? 1 : 0,
         body.tampilkan_nilai ? 1 : 0,
         body.batas_pelanggaran || 3,
-        body.status || 'draft',
+        body.status || 'aktif',
       ]
     );
 

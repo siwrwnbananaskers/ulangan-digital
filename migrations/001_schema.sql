@@ -136,7 +136,7 @@ INSERT OR IGNORE INTO users (id, username, password_hash, nama, role)
 VALUES 
   ('usr_superadmin_001', 'superadmin', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Super Admin Wozber (Owner)', 'superadmin'),
   ('usr_guru_001', 'guru', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Guru Demo, S.Pd.', 'guru'),
-  ('usr_guru_002', 'novisa', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'NOVISA MAHARANI, S.Pd', 'guru');
+  ('usr_guru_002', 'apim', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'NOVISA MAHARANI, S.Pd', 'guru');
 
 -- Insert demo students (assigned to Guru Demo usr_guru_001)
 INSERT OR IGNORE INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)

@@ -4,30 +4,75 @@ import os from 'os';
 
 const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
 
-const STORE_PATH = path.join(
-  process.env.VERCEL ? '/tmp' : (process.env.TEMP || os.tmpdir()),
-  'ulangan_digital_db_store_v3.json'
-);
+const STORE_PATHS = [
+  path.join(process.env.VERCEL ? '/tmp' : (process.env.TEMP || os.tmpdir()), 'ulangan_digital_db_store_v3.json'),
+  path.join(process.env.VERCEL ? '/tmp' : (process.env.TEMP || os.tmpdir()), 'ulangan_digital_db_store_v2.json'),
+  path.join(process.env.VERCEL ? '/tmp' : (process.env.TEMP || os.tmpdir()), 'ulangan_digital_db_store.json'),
+];
+const STORE_PATH = STORE_PATHS[0];
 
 function sanitizeStore(store) {
   if (!store || typeof store !== 'object') return store;
-  // 1. Purge any dummy seed questions created for novisa or other real teachers
+  if (!Array.isArray(store.deleted_usernames)) {
+    store.deleted_usernames = ['novisa'];
+  } else if (!store.deleted_usernames.includes('novisa')) {
+    store.deleted_usernames.push('novisa');
+  }
+
+  // 1. Purge deleted usernames (tombstones) and zombie accounts
+  if (Array.isArray(store.users)) {
+    store.users = store.users.filter(u => u && !store.deleted_usernames.includes(u.username));
+    // Ensure official teacher 'apim' is present
+    if (!store.users.some(u => u.username === 'apim')) {
+      store.users.push({
+        id: 'usr_guru_002',
+        username: 'apim',
+        password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // guru123
+        nama: 'NOVISA MAHARANI, S.Pd',
+        role: 'guru',
+        kelas: null,
+        no_absen: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  // 2. Purge dummy seed questions for real teachers
   if (Array.isArray(store.soal)) {
     store.soal = store.soal.filter(s => {
       if (!s || !s.id) return false;
-      // Strip any dummy seeded novisa questions
       if (s.id.startsWith('soal_novisa_')) return false;
       if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('Hasil dari 15 + (25')) return false;
       if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('Faktor Persekutuan Terbesar')) return false;
       if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('akar kuadrat 144')) return false;
-      // Demo questions must ONLY belong to demo guru (usr_guru_001)
       if (s.id.startsWith('soal_demo_')) {
         s.guru_id = 'usr_guru_001';
       }
       return true;
     });
+    // Ensure apim has at least 1 question
+    if (!store.soal.some(s => s.guru_id === 'usr_guru_002')) {
+      store.soal.unshift({
+        id: 'soal_apim_001',
+        guru_id: 'usr_guru_002',
+        mata_pelajaran: 'Matematika',
+        tipe: 'pg',
+        pertanyaan: 'Berapakah hasil dari 25 + 75?',
+        pilihan_a: '100',
+        pilihan_b: '90',
+        pilihan_c: '110',
+        pilihan_d: '85',
+        pilihan_e: '95',
+        kunci_jawaban: 'a',
+        bobot: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
   }
-  // 2. Purge any dummy seed exams created for novisa
+
+  // 3. Purge dummy seed exams and ensure apim's exam is active
   if (Array.isArray(store.ujian)) {
     store.ujian = store.ujian.filter(u => {
       if (!u || !u.id) return false;
@@ -38,8 +83,33 @@ function sanitizeStore(store) {
       }
       return true;
     });
+    // Ensure apim has at least 1 active exam
+    if (!store.ujian.some(u => u.guru_id === 'usr_guru_002')) {
+      store.ujian.unshift({
+        id: 'ujn_apim_001',
+        guru_id: 'usr_guru_002',
+        judul: 'Ulangan Harian Matematika',
+        mata_pelajaran: 'Matematika',
+        kelas_target: 'Semua Kelas',
+        kode_ujian: 'APM101',
+        deskripsi: 'Ujian asesmen resmi dewan guru',
+        durasi_menit: 60,
+        jadwal_mulai: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+        jadwal_selesai: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+        jumlah_soal: 1,
+        kkm: 75,
+        acak_soal: 0,
+        acak_jawaban: 0,
+        tampilkan_nilai: 1,
+        batas_pelanggaran: 3,
+        status: 'aktif',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
   }
-  // 3. Purge orphaned junction mappings
+
+  // 4. Ensure junction mappings
   if (Array.isArray(store.ujian_soal)) {
     store.ujian_soal = store.ujian_soal.filter(us => {
       if (!us || !us.id) return false;
@@ -47,21 +117,40 @@ function sanitizeStore(store) {
       if (us.ujian_id && us.ujian_id.startsWith('ujn_novisa_')) return false;
       return true;
     });
+    if (!store.ujian_soal.some(us => us.ujian_id === 'ujn_apim_001')) {
+      store.ujian_soal.push({
+        id: 'us_apim_1',
+        ujian_id: 'ujn_apim_001',
+        soal_id: 'soal_apim_001',
+        urutan: 1,
+      });
+    }
   }
+
   return store;
 }
 
 function loadPersistedStore() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const data = fs.readFileSync(STORE_PATH, 'utf8');
-      const parsed = JSON.parse(data);
-      if (parsed && Array.isArray(parsed.users)) {
-        return sanitizeStore(parsed);
+  for (const p of STORE_PATHS) {
+    try {
+      if (fs.existsSync(p)) {
+        const data = fs.readFileSync(p, 'utf8');
+        const parsed = JSON.parse(data);
+        if (parsed && Array.isArray(parsed.users)) {
+          // Merge with initialStore so initial accounts and new accounts coexist safely
+          const mergedUsers = [...initialStore.users];
+          for (const u of parsed.users) {
+            if (!mergedUsers.some(m => m.id === u.id || m.username === u.username)) {
+              mergedUsers.push(u);
+            }
+          }
+          parsed.users = mergedUsers;
+          return sanitizeStore(parsed);
+        }
       }
+    } catch (e) {
+      // ignore
     }
-  } catch (e) {
-    // ignore
   }
   return null;
 }
@@ -76,9 +165,8 @@ function savePersistedStore(store) {
 }
 
 // Initial in-memory fallback database state
-// NOTE: Demo questions and demo exams belong ONLY to Demo Guru (usr_guru_001).
-// Teacher Novisa (usr_guru_002) and newly created teachers start with a clean slate!
 const initialStore = {
+  deleted_usernames: ['novisa'],
   users: [
     {
       id: 'usr_superadmin_001',
@@ -104,8 +192,8 @@ const initialStore = {
     },
     {
       id: 'usr_guru_002',
-      username: 'novisa',
-      password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm',
+      username: 'apim',
+      password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // guru123
       nama: 'NOVISA MAHARANI, S.Pd',
       role: 'guru',
       kelas: null,
@@ -940,7 +1028,11 @@ class D1Client {
         const id = params[0];
         const idx = fallbackStore.users.findIndex(u => u.id === id);
         if (idx !== -1) {
-          fallbackStore.users.splice(idx, 1);
+          const removed = fallbackStore.users.splice(idx, 1)[0];
+          if (!Array.isArray(fallbackStore.deleted_usernames)) fallbackStore.deleted_usernames = [];
+          if (removed && removed.username && !fallbackStore.deleted_usernames.includes(removed.username)) {
+            fallbackStore.deleted_usernames.push(removed.username);
+          }
           savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }

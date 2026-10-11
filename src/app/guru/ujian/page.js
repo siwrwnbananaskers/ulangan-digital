@@ -18,22 +18,32 @@ export default function UjianPage() {
   const [alert, setAlert] = useState(null);
   const [activeTab, setActiveTab] = useState('semua');
   const [saving, setSaving] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
-  const [form, setForm] = useState({
-    judul: '',
-    mata_pelajaran: '',
-    kelas_target: '',
-    deskripsi: '',
-    durasi_menit: 60,
-    jadwal_mulai: '',
-    jadwal_selesai: '',
-    kkm: 75,
-    acak_soal: false,
-    acak_jawaban: false,
-    tampilkan_nilai: false,
-    batas_pelanggaran: 3,
-    status: 'draft',
-  });
+  const getInitialForm = () => {
+    const now = new Date();
+    const nextWeek = new Date(Date.now() + 7 * 24 * 3600 * 1000);
+    const pad = (n) => String(n).padStart(2, '0');
+    const formatDt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+    return {
+      judul: '',
+      mata_pelajaran: '',
+      kelas_target: 'Semua Kelas',
+      deskripsi: '',
+      durasi_menit: 60,
+      jadwal_mulai: formatDt(now),
+      jadwal_selesai: formatDt(nextWeek),
+      kkm: 75,
+      acak_soal: false,
+      acak_jawaban: false,
+      tampilkan_nilai: true,
+      batas_pelanggaran: 3,
+      status: 'aktif',
+    };
+  };
+
+  const [form, setForm] = useState(getInitialForm());
 
   useEffect(() => {
     if (!user) return;
@@ -58,23 +68,16 @@ export default function UjianPage() {
   };
 
   const resetForm = () => {
-    setForm({
-      judul: '',
-      mata_pelajaran: '',
-      kelas_target: '',
-      deskripsi: '',
-      durasi_menit: 60,
-      jadwal_mulai: '',
-      jadwal_selesai: '',
-      kkm: 75,
-      acak_soal: false,
-      acak_jawaban: false,
-      tampilkan_nilai: false,
-      batas_pelanggaran: 3,
-      status: 'draft',
-    });
+    setForm(getInitialForm());
     setSelectedSoal([]);
     setEditingUjian(null);
+  };
+
+  const handleCopyCode = (code, id) => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2500);
   };
 
   const handleOpenCreate = () => {
@@ -180,6 +183,7 @@ export default function UjianPage() {
 
       setShowModal(false);
       resetForm();
+      setActiveTab('semua');
       loadData();
     } catch {
       setAlert({ type: 'danger', message: 'Terjadi kesalahan sistem' });
@@ -234,7 +238,7 @@ export default function UjianPage() {
     setSelectedSoal(prev => [...new Set([...prev, ...matching])]);
   };
 
-  const validUjianList = (ujianList || []).filter(u => u && u.id && (u.judul || u['u.judul']) && u.cnt === undefined);
+  const validUjianList = (ujianList || []).filter(u => u && u.id && (u.judul || u['u.judul'] || u.mata_pelajaran));
 
   const getFilteredUjian = () => {
     if (activeTab === 'semua') return validUjianList;
@@ -378,11 +382,22 @@ export default function UjianPage() {
 
                     {/* Metadata Specs */}
                     <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #f1f5f9', marginBottom: 14, fontSize: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <span style={{ color: '#666666', minWidth: 65 }}>Kode Ruang:</span>
-                        <code style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>
-                          {kodeUjian}
-                        </code>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ color: '#666666', minWidth: 65 }}>Kode Ruang:</span>
+                          <code style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>
+                            {kodeUjian}
+                          </code>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => handleCopyCode(kodeUjian, ujian.id)}
+                          style={{ fontSize: 11, padding: '3px 8px', color: copiedId === ujian.id ? '#16a34a' : '#0a66c2', fontWeight: 600 }}
+                          title="Salin Kode Ruang Ujian"
+                        >
+                          {copiedId === ujian.id ? '✓ Tersalin' : '📋 Salin Kode'}
+                        </button>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4 }}>
                         <span>Durasi: <strong>{durasiMenit} Menit</strong></span>
@@ -401,16 +416,16 @@ export default function UjianPage() {
                 {/* Actions Row */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
                   {/* Status Toggle */}
-                  {ujian.status === 'draft' && (
+                  {status === 'draft' && (
                     <button
                       className="btn btn-success btn-sm"
                       onClick={() => handleStatusChange(ujian.id, 'aktif')}
-                      style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6 }}
+                      style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, fontWeight: 700 }}
                     >
-                      Aktifkan
+                      ⚡ Buka Ruang Ujian (Aktifkan)
                     </button>
                   )}
-                  {ujian.status === 'aktif' && (
+                  {status === 'aktif' && (
                     <button
                       className="btn btn-warning btn-sm"
                       onClick={() => handleStatusChange(ujian.id, 'selesai')}
