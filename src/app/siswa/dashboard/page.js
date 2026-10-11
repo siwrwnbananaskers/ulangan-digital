@@ -3,16 +3,31 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import EditProfileModal from '@/components/EditProfileModal';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function SiswaDashboard() {
   const router = useRouter();
   const { user, loading: authLoading, logout, authFetch } = useAuth('siswa');
+  const [currentUser, setCurrentUser] = useState(user);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [kodeUjian, setKodeUjian] = useState('');
   const [checkingCode, setCheckingCode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeExams, setActiveExams] = useState([]);
   const [loadingExams, setLoadingExams] = useState(true);
+
+  useEffect(() => {
+    if (user) setCurrentUser(user);
+  }, [user]);
+
+  useEffect(() => {
+    const handleUserUpdate = (e) => {
+      if (e.detail) setCurrentUser(e.detail);
+    };
+    window.addEventListener('user-profile-updated', handleUserUpdate);
+    return () => window.removeEventListener('user-profile-updated', handleUserUpdate);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -81,13 +96,51 @@ export default function SiswaDashboard() {
           <div className="linkedin-card">
             <div className="linkedin-cover-banner" style={{ background: 'linear-gradient(135deg, #057642 0%, #0a66c2 100%)' }} />
             <div className="linkedin-profile-header">
-              <div className="linkedin-profile-avatar-large" style={{ background: '#057642' }}>
-                {user?.nama?.charAt(0)?.toUpperCase() || 'S'}
+              <div
+                className="linkedin-profile-avatar-large"
+                style={{ background: '#057642', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}
+                onClick={() => setShowEditProfile(true)}
+                title="Klik untuk ganti foto & nama profil"
+              >
+                {currentUser?.foto_profil ? (
+                  <img
+                    src={currentUser.foto_profil}
+                    alt={currentUser.nama}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  currentUser?.nama?.charAt(0)?.toUpperCase() || 'S'
+                )}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 20,
+                    background: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: 10
+                  }}
+                >
+                  📷
+                </div>
               </div>
-              <h3 className="linkedin-profile-name">{user?.nama || 'Siswa'}</h3>
+              <h3 className="linkedin-profile-name">{currentUser?.nama || 'Siswa'}</h3>
               <p className="linkedin-profile-headline">
-                Kelas: <strong>{user?.kelas || '-'}</strong> • Absen: <strong>{user?.no_absen || '-'}</strong>
+                Kelas: <strong>{currentUser?.kelas || '-'}</strong> • Absen: <strong>{currentUser?.no_absen || '-'}</strong>
               </p>
+              <button
+                type="button"
+                onClick={() => setShowEditProfile(true)}
+                className="btn btn-secondary btn-sm"
+                style={{ marginTop: 8, fontSize: 11, padding: '3px 12px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}
+              >
+                <span>✏️ Edit Profil</span>
+              </button>
             </div>
 
             <div style={{ borderTop: '1px solid #f3f2ef', padding: '12px 16px' }}>
@@ -363,6 +416,17 @@ export default function SiswaDashboard() {
           </div>
         </aside>
       </main>
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <EditProfileModal
+          user={currentUser}
+          onClose={() => setShowEditProfile(false)}
+          onUpdate={(updated) => {
+            setCurrentUser(updated);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -884,6 +884,25 @@ class D1Client {
 
     // 3. UPDATE queries
     if (upper.startsWith('UPDATE')) {
+      if (upper.includes('UPDATE USERS')) {
+        const id = params[params.length - 1];
+        const user = fallbackStore.users.find(u => u.id === id || u.username === id);
+        if (user) {
+          const setMatch = sql.match(/SET\s+([\s\S]+?)\s+WHERE/i);
+          if (setMatch) {
+            const clauses = setMatch[1].split(',').map(c => c.trim().split('=')[0].trim().toLowerCase());
+            clauses.forEach((col, idx) => {
+              if (col && idx < params.length && params[idx] !== undefined && col !== 'id') {
+                user[col] = params[idx];
+              }
+            });
+          }
+          user.updated_at = new Date().toISOString();
+        }
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: 1 } };
+      }
+
       if (upper.includes('UPDATE SOAL')) {
         const id = params[10] || params[0];
         const item = fallbackStore.soal.find(s => s.id === id);

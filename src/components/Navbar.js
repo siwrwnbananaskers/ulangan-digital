@@ -2,11 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import EditProfileModal from './EditProfileModal';
 
 export default function Navbar({ user, onLogout, role }) {
   const pathname = usePathname();
+  const [currentUser, setCurrentUser] = useState(user);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  useEffect(() => {
+    if (user) setCurrentUser(user);
+  }, [user]);
+
+  // Sync profile when updated in any component or tab
+  useEffect(() => {
+    const handleProfileUpdate = (e) => {
+      if (e.detail) {
+        setCurrentUser(e.detail);
+      }
+    };
+    window.addEventListener('user-profile-updated', handleProfileUpdate);
+    return () => window.removeEventListener('user-profile-updated', handleProfileUpdate);
+  }, []);
+
+  // Background fetch from database on mount to guarantee cross-browser sync
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) return;
+
+    fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.user) {
+          setCurrentUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const guruLinks = [
     {
@@ -64,7 +100,7 @@ export default function Navbar({ user, onLogout, role }) {
         </svg>
       ),
     },
-    ...(user?.role === 'superadmin' ? [{
+    ...(currentUser?.role === 'superadmin' ? [{
       href: '/superadmin/dashboard',
       label: 'Superadmin',
       icon: (
@@ -128,7 +164,7 @@ export default function Navbar({ user, onLogout, role }) {
             </div>
           </div>
 
-          {/* Center Navigation Icons (LinkedIn style: icon on top, text on bottom) */}
+          {/* Center Navigation Icons with spacious, elegant buttons */}
           <nav className="linkedin-nav-links">
             {links.map((link) => {
               const isActive = pathname === link.href;
@@ -150,16 +186,28 @@ export default function Navbar({ user, onLogout, role }) {
 
           {/* User Profile & Logout section on the Right */}
           <div className="linkedin-right-section">
-            <div className="linkedin-user-profile">
+            <div
+              className="linkedin-user-profile"
+              onClick={() => setShowProfileModal(true)}
+              title="Klik untuk Edit Profil & Foto"
+            >
               <div className="linkedin-avatar">
-                {user?.nama?.charAt(0)?.toUpperCase() || 'U'}
+                {currentUser?.foto_profil ? (
+                  <img
+                    src={currentUser.foto_profil}
+                    alt={currentUser.nama}
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  currentUser?.nama?.charAt(0)?.toUpperCase() || 'U'
+                )}
               </div>
               <div className="linkedin-user-text">
                 <span className="linkedin-user-name">
-                  {user?.nama ? user.nama.split(',')[0].split(' ')[0] : 'Akun'}
+                  {currentUser?.nama ? currentUser.nama.split(',')[0].split(' ')[0] : 'Akun'}
                 </span>
                 <span className="linkedin-user-role-badge">
-                  {role === 'guru' ? 'Guru' : 'Siswa'}
+                  {currentUser?.role === 'superadmin' ? 'Super' : role === 'guru' ? 'Guru' : 'Siswa'} • Edit ✏️
                 </span>
               </div>
             </div>
@@ -183,6 +231,7 @@ export default function Navbar({ user, onLogout, role }) {
             <button
               className="linkedin-mobile-trigger"
               onClick={() => setMobileOpen(true)}
+              title="Menu Navigasi"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="3" y1="12" x2="21" y2="12" />
@@ -200,14 +249,25 @@ export default function Navbar({ user, onLogout, role }) {
           <div className="mobile-drawer-overlay" onClick={() => setMobileOpen(false)} />
           <div className="mobile-drawer-content">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                onClick={() => { setMobileOpen(false); setShowProfileModal(true); }}
+              >
                 <div className="linkedin-avatar">
-                  {user?.nama?.charAt(0)?.toUpperCase() || 'U'}
+                  {currentUser?.foto_profil ? (
+                    <img
+                      src={currentUser.foto_profil}
+                      alt={currentUser.nama}
+                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    currentUser?.nama?.charAt(0)?.toUpperCase() || 'U'
+                  )}
                 </div>
                 <div>
-                  <strong style={{ fontSize: 14 }}>{user?.nama}</strong>
-                  <span className="badge badge-primary" style={{ display: 'block', fontSize: 10, width: 'fit-content' }}>
-                    {role === 'guru' ? 'Guru Pengawas' : 'Siswa'}
+                  <strong style={{ fontSize: 14 }}>{currentUser?.nama}</strong>
+                  <span className="badge badge-primary" style={{ display: 'block', fontSize: 10, width: 'fit-content', marginTop: 2 }}>
+                    {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru Pengawas' : 'Siswa'} • Edit Profil ✏️
                   </span>
                 </div>
               </div>
@@ -229,6 +289,19 @@ export default function Navbar({ user, onLogout, role }) {
                   <span>{link.label}</span>
                 </a>
               ))}
+
+              <button
+                type="button"
+                className="nav-link"
+                onClick={() => { setMobileOpen(false); setShowProfileModal(true); }}
+                style={{ padding: '10px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', textAlign: 'left', width: '100%', color: '#0a66c2', fontWeight: 600 }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Edit Profil & Foto</span>
+              </button>
             </div>
 
             <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--gray-200)' }}>
@@ -238,6 +311,17 @@ export default function Navbar({ user, onLogout, role }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showProfileModal && (
+        <EditProfileModal
+          user={currentUser}
+          onClose={() => setShowProfileModal(false)}
+          onUpdate={(updated) => {
+            setCurrentUser(updated);
+          }}
+        />
       )}
     </>
   );

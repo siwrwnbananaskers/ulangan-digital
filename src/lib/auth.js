@@ -47,6 +47,7 @@ export function generateToken(user) {
       role: user.role,
       guru_id: user.guru_id || null,
       kelas: user.kelas,
+      foto_profil: user.foto_profil || null,
     },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRY }
