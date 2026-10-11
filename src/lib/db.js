@@ -1,10 +1,36 @@
-/**
- * Cloudflare D1 Database Client
- * Communicates with D1 via REST API from Vercel serverless functions.
- * Includes seamless in-memory fallback mode for local development and demonstration.
- */
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
+
+const STORE_PATH = path.join(
+  process.env.VERCEL ? '/tmp' : (process.env.TEMP || os.tmpdir()),
+  'ulangan_digital_db_store.json'
+);
+
+function loadPersistedStore() {
+  try {
+    if (fs.existsSync(STORE_PATH)) {
+      const data = fs.readFileSync(STORE_PATH, 'utf8');
+      const parsed = JSON.parse(data);
+      if (parsed && Array.isArray(parsed.users)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
+function savePersistedStore(store) {
+  try {
+    fs.writeFileSync(STORE_PATH, JSON.stringify(store), 'utf8');
+  } catch (e) {
+    // ignore
+  }
+}
 
 // In-memory fallback database state
 const fallbackStore = {
@@ -25,6 +51,17 @@ const fallbackStore = {
       username: 'guru',
       password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // guru123
       nama: 'Guru Demo, S.Pd.',
+      role: 'guru',
+      kelas: null,
+      no_absen: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'usr_guru_002',
+      username: 'novisa',
+      password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm',
+      nama: 'NOVISA MAHARANI, S.Pd',
       role: 'guru',
       kelas: null,
       no_absen: null,
@@ -233,73 +270,181 @@ class D1Client {
   }
 
   /**
-   * Fallback in-memory query handler
+   * Fallback in-memory and file-persisted query handler
    */
   executeFallback(sql, params = []) {
+    // Sync latest from persisted disk store if exists
+    const persisted = loadPersistedStore();
+    if (persisted) {
+      if (Array.isArray(persisted.users)) fallbackStore.users = persisted.users;
+      if (Array.isArray(persisted.soal)) fallbackStore.soal = persisted.soal;
+      if (Array.isArray(persisted.ujian)) fallbackStore.ujian = persisted.ujian;
+      if (Array.isArray(persisted.ujian_soal)) fallbackStore.ujian_soal = persisted.ujian_soal;
+      if (Array.isArray(persisted.sesi_ujian)) fallbackStore.sesi_ujian = persisted.sesi_ujian;
+      if (Array.isArray(persisted.jawaban)) fallbackStore.jawaban = persisted.jawaban;
+      if (Array.isArray(persisted.audit_log)) fallbackStore.audit_log = persisted.audit_log;
+    }
+
     const s = sql.trim();
     const upper = s.toUpperCase();
 
     // 1. SELECT queries
     if (upper.startsWith('SELECT')) {
-      // SELECT ... FROM users WHERE username = ?
-      if (upper.includes('FROM USERS') && upper.includes('WHERE USERNAME =')) {
-        const username = params[0]?.toLowerCase();
-        const found = fallbackStore.users.find(u => u.username.toLowerCase() === username);
-        return { results: found ? [found] : [], meta: {} };
-      }
-
-      // SELECT * FROM users WHERE id = ?
-      if (upper.includes('FROM USERS') && upper.includes('WHERE ID =')) {
-        const found = fallbackStore.users.find(u => u.id === params[0]);
-        return { results: found ? [found] : [], meta: {} };
-      }
-
-      // SELECT * FROM soal WHERE guru_id = ?
-      if (upper.includes('FROM SOAL') && upper.includes('WHERE GURU_ID =')) {
-        let results = fallbackStore.soal.filter(q => q.guru_id === params[0]);
-        if (upper.includes('MATA_PELAJARAN =')) {
-          results = results.filter(q => q.mata_pelajaran === params[1]);
+      // 1.1 COUNT queries
+      if (upper.includes('COUNT(')) {
+        let count = 0;
+        if (upper.includes('FROM USERS')) {
+          if (upper.includes("ROLE = 'GURU'") || (upper.includes("ROLE = ?") && params[0] === 'guru')) {
+            count = fallbackStore.users.filter(u => u.role === 'guru').length;
+          } else if (upper.includes("ROLE = 'SISWA'") || (upper.includes("ROLE = ?") && params[0] === 'siswa')) {
+            count = fallbackStore.users.filter(u => u.role === 'siswa').length;
+          } else {
+            count = fallbackStore.users.length;
+          }
+        } else if (upper.includes('FROM UJIAN')) {
+          if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
+            count = fallbackStore.ujian.filter(u => u.guru_id === params[0]).length;
+          } else {
+            count = fallbackStore.ujian.length;
+          }
+        } else if (upper.includes('FROM SOAL')) {
+          if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
+            count = fallbackStore.soal.filter(s => s.guru_id === params[0]).length;
+          } else {
+            count = fallbackStore.soal.length;
+          }
+        } else if (upper.includes('FROM AUDIT_LOG')) {
+          if (upper.includes('SESI_ID = ?')) {
+            count = fallbackStore.audit_log.filter(a => a.sesi_id === params[0]).length;
+          } else if (upper.includes('UJIAN_ID = ?')) {
+            count = fallbackStore.audit_log.filter(a => a.ujian_id === params[0]).length;
+          } else {
+            count = fallbackStore.audit_log.length;
+          }
+        } else if (upper.includes('FROM SESI_UJIAN')) {
+          if (upper.includes('UJIAN_ID = ?')) {
+            count = fallbackStore.sesi_ujian.filter(s => s.ujian_id === params[0]).length;
+          } else {
+            count = fallbackStore.sesi_ujian.length;
+          }
         }
-        return { results, meta: {} };
+        return { results: [{ cnt: count, count: count }], meta: {} };
       }
 
-      // SELECT id FROM soal WHERE id = ? AND guru_id = ?
-      if (upper.includes('FROM SOAL') && upper.includes('WHERE ID =') && upper.includes('AND GURU_ID =')) {
-        const found = fallbackStore.soal.find(q => q.id === params[0] && q.guru_id === params[1]);
-        return { results: found ? [found] : [], meta: {} };
+      // 1.2 FROM USERS
+      if (upper.includes('FROM USERS')) {
+        // SELECT DISTINCT kelas FROM users WHERE role = 'siswa'...
+        if (upper.includes('DISTINCT KELAS')) {
+          const classes = [...new Set(
+            fallbackStore.users
+              .filter(u => u.role === 'siswa' && u.kelas)
+              .map(u => u.kelas)
+          )].sort();
+          return { results: classes.map(c => ({ kelas: c })), meta: {} };
+        }
+
+        // SELECT ... FROM users WHERE username = ?
+        if (upper.includes('WHERE USERNAME =') || upper.includes('USERNAME = ?')) {
+          const username = params[0]?.toLowerCase();
+          const found = fallbackStore.users.find(u => u.username?.toLowerCase() === username);
+          return { results: found ? [found] : [], meta: {} };
+        }
+
+        // SELECT * FROM users WHERE id = ?
+        if (upper.includes('WHERE ID =') || upper.includes('ID = ?')) {
+          const id = params[0];
+          let found = fallbackStore.users.find(u => u.id === id);
+          if (found && upper.includes("ROLE = 'GURU'") && found.role !== 'guru') found = null;
+          if (found && upper.includes("ROLE = 'SISWA'") && found.role !== 'siswa') found = null;
+          return { results: found ? [found] : [], meta: {} };
+        }
+
+        // SELECT ... FROM users WHERE role = 'guru'
+        if (upper.includes("ROLE = 'GURU'") || (upper.includes("ROLE = ?") && params[0] === 'guru')) {
+          const teachers = fallbackStore.users.filter(u => u.role === 'guru');
+          return { results: teachers, meta: {} };
+        }
+
+        // SELECT ... FROM users WHERE role = 'siswa'
+        if (upper.includes("ROLE = 'SISWA'") || (upper.includes("ROLE = ?") && params[0] === 'siswa')) {
+          let students = fallbackStore.users.filter(u => u.role === 'siswa');
+          if (upper.includes('KELAS = ?') && params.length > 0) {
+            const k = params[params.length - 1];
+            students = students.filter(u => u.kelas === k);
+          }
+          students.sort((a, b) => {
+            const kComp = (a.kelas || '').localeCompare(b.kelas || '');
+            if (kComp !== 0) return kComp;
+            const nA = a.no_absen || 0;
+            const nB = b.no_absen || 0;
+            if (nA !== nB) return nA - nB;
+            return (a.nama || '').localeCompare(b.nama || '');
+          });
+          return { results: students, meta: {} };
+        }
+
+        return { results: fallbackStore.users, meta: {} };
       }
 
-      // SELECT * FROM ujian WHERE guru_id = ? OR overview
-      if (upper.includes('FROM UJIAN U WHERE U.GURU_ID =') || upper.includes('FROM UJIAN WHERE GURU_ID =')) {
-        const exams = fallbackStore.ujian.filter(u => u.guru_id === params[0]).map(u => ({
-          ...u,
-          total_peserta: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id).length,
-          peserta_selesai: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id && s.status === 'selesai').length,
-          rata_rata: 80,
-        }));
+      // 1.3 FROM SOAL
+      if (upper.includes('FROM SOAL') && !upper.includes('JOIN')) {
+        if (upper.includes('WHERE ID =') && upper.includes('GURU_ID =')) {
+          const found = fallbackStore.soal.find(q => q.id === params[0] && q.guru_id === params[1]);
+          return { results: found ? [found] : [], meta: {} };
+        }
+        if (upper.includes('WHERE ID =')) {
+          const found = fallbackStore.soal.find(q => q.id === params[0]);
+          return { results: found ? [found] : [], meta: {} };
+        }
+        if (upper.includes('WHERE GURU_ID =') || upper.includes('WHERE GURU_ID=')) {
+          let results = fallbackStore.soal.filter(q => q.guru_id === params[0]);
+          if (upper.includes('MATA_PELAJARAN = ?') && params[1]) {
+            results = results.filter(q => q.mata_pelajaran === params[1]);
+          }
+          if (upper.includes('TIPE = ?')) {
+            const tipeParam = params[2] || params[1];
+            if (tipeParam) results = results.filter(q => q.tipe === tipeParam);
+          }
+          return { results, meta: {} };
+        }
+        return { results: fallbackStore.soal, meta: {} };
+      }
+
+      // 1.4 FROM UJIAN
+      if (upper.includes('FROM UJIAN') && !upper.includes('UJIAN_SOAL')) {
+        if (upper.includes('WHERE ID =')) {
+          const found = fallbackStore.ujian.find(u => u.id === params[0]);
+          return { results: found ? [found] : [], meta: {} };
+        }
+        if (upper.includes('KODE_UJIAN =')) {
+          const code = params[0]?.toUpperCase();
+          const found = fallbackStore.ujian.find(u => u.kode_ujian?.toUpperCase() === code);
+          return { results: found ? [found] : [], meta: {} };
+        }
+        if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
+          const exams = fallbackStore.ujian.filter(u => u.guru_id === params[0]).map(u => ({
+            ...u,
+            total_peserta: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id).length,
+            peserta_selesai: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id && s.status === 'selesai').length,
+            rata_rata: 80,
+          }));
+          return { results: exams, meta: {} };
+        }
+        // Superadmin or student list
+        const exams = fallbackStore.ujian.map(u => {
+          const guru = fallbackStore.users.find(g => g.id === u.guru_id);
+          return {
+            ...u,
+            nama_guru: guru?.nama || 'Dewan Guru',
+            total_peserta: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id).length,
+            peserta_selesai: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id && s.status === 'selesai').length,
+          };
+        });
         return { results: exams, meta: {} };
       }
 
-      // SELECT * FROM ujian WHERE id = ?
-      if (upper.includes('FROM UJIAN') && upper.includes('WHERE ID =')) {
-        const found = fallbackStore.ujian.find(u => u.id === params[0]);
-        return { results: found ? [found] : [], meta: {} };
-      }
-
-      // SELECT ... FROM ujian WHERE kode_ujian = ?
-      if (upper.includes('FROM UJIAN') && upper.includes('KODE_UJIAN =')) {
-        const code = params[0]?.toUpperCase();
-        const found = fallbackStore.ujian.find(u => u.kode_ujian.toUpperCase() === code);
-        return { results: found ? [found] : [], meta: {} };
-      }
-
-      // SELECT * FROM ujian (all active exams for student)
-      if (upper.includes('FROM UJIAN') && !upper.includes('WHERE')) {
-        return { results: fallbackStore.ujian, meta: {} };
-      }
-
-      // Question junction SELECT s.*, us.urutan FROM soal s JOIN ujian_soal us
-      if (upper.includes('FROM SOAL S') || upper.includes('UJIAN_SOAL')) {
+      // 1.5 Junction SELECT s.*, us.urutan FROM soal s JOIN ujian_soal us
+      if (upper.includes('UJIAN_SOAL') || upper.includes('FROM SOAL S')) {
         const ujianId = params[0];
         const junctions = fallbackStore.ujian_soal.filter(j => j.ujian_id === ujianId);
         const results = junctions.map(j => {
@@ -309,55 +454,52 @@ class D1Client {
         return { results, meta: {} };
       }
 
-      // Sesi ujian: SELECT * FROM sesi_ujian WHERE ujian_id = ? AND siswa_id = ?
-      if (upper.includes('FROM SESI_UJIAN') && upper.includes('UJIAN_ID =') && upper.includes('SISWA_ID =')) {
-        const found = fallbackStore.sesi_ujian.find(s => s.ujian_id === params[0] && s.siswa_id === params[1]);
-        return { results: found ? [found] : [], meta: {} };
+      // 1.6 SESI UJIAN
+      if (upper.includes('FROM SESI_UJIAN')) {
+        if (upper.includes('UJIAN_ID =') && upper.includes('SISWA_ID =')) {
+          const found = fallbackStore.sesi_ujian.find(s => s.ujian_id === params[0] && s.siswa_id === params[1]);
+          return { results: found ? [found] : [], meta: {} };
+        }
+        if (upper.includes('WHERE ID =')) {
+          const found = fallbackStore.sesi_ujian.find(s => s.id === params[0]);
+          return { results: found ? [found] : [], meta: {} };
+        }
+        if (upper.includes('WHERE SU.SISWA_ID =')) {
+          const studentId = params[0];
+          const studentSessions = fallbackStore.sesi_ujian.filter(s => s.siswa_id === studentId);
+          const results = studentSessions.map(su => {
+            const uj = fallbackStore.ujian.find(u => u.id === su.ujian_id) || {};
+            return {
+              ...su,
+              judul: uj.judul,
+              mata_pelajaran: uj.mata_pelajaran,
+              kkm: uj.kkm,
+              tampilkan_nilai: uj.tampilkan_nilai,
+            };
+          });
+          return { results, meta: {} };
+        }
+        if (upper.includes('WHERE SU.UJIAN_ID =')) {
+          const examId = params[0];
+          const sessions = fallbackStore.sesi_ujian.filter(s => s.ujian_id === examId);
+          const results = sessions.map(su => {
+            const u = fallbackStore.users.find(usr => usr.id === su.siswa_id) || {};
+            const logCount = fallbackStore.audit_log.filter(l => l.sesi_id === su.id).length;
+            return {
+              ...su,
+              nama: u.nama || 'Siswa',
+              kelas: u.kelas || '-',
+              no_absen: u.no_absen || '-',
+              total_pelanggaran: logCount,
+            };
+          });
+          return { results, meta: {} };
+        }
+        return { results: fallbackStore.sesi_ujian, meta: {} };
       }
 
-      // Sesi ujian: SELECT * FROM sesi_ujian WHERE id = ?
-      if (upper.includes('FROM SESI_UJIAN') && upper.includes('WHERE ID =')) {
-        const found = fallbackStore.sesi_ujian.find(s => s.id === params[0]);
-        return { results: found ? [found] : [], meta: {} };
-      }
-
-      // Sesi ujian for student history: SELECT su.*, uj.judul...
-      if (upper.includes('FROM SESI_UJIAN SU') && upper.includes('WHERE SU.SISWA_ID =')) {
-        const studentId = params[0];
-        const studentSessions = fallbackStore.sesi_ujian.filter(s => s.siswa_id === studentId);
-        const results = studentSessions.map(su => {
-          const uj = fallbackStore.ujian.find(u => u.id === su.ujian_id) || {};
-          return {
-            ...su,
-            judul: uj.judul,
-            mata_pelajaran: uj.mata_pelajaran,
-            kkm: uj.kkm,
-            tampilkan_nilai: uj.tampilkan_nilai,
-          };
-        });
-        return { results, meta: {} };
-      }
-
-      // Detailed results for exam: SELECT su.*, u.nama... FROM sesi_ujian su JOIN users u...
-      if (upper.includes('FROM SESI_UJIAN SU') && upper.includes('WHERE SU.UJIAN_ID =')) {
-        const examId = params[0];
-        const sessions = fallbackStore.sesi_ujian.filter(s => s.ujian_id === examId);
-        const results = sessions.map(su => {
-          const u = fallbackStore.users.find(usr => usr.id === su.siswa_id) || {};
-          const logCount = fallbackStore.audit_log.filter(l => l.sesi_id === su.id).length;
-          return {
-            ...su,
-            nama: u.nama || 'Siswa',
-            kelas: u.kelas || '-',
-            no_absen: u.no_absen || '-',
-            total_pelanggaran: logCount,
-          };
-        });
-        return { results, meta: {} };
-      }
-
-      // Answers: SELECT soal_id, jawaban_siswa FROM jawaban WHERE sesi_id = ?
-      if (upper.includes('FROM JAWABAN') && upper.includes('SESI_ID =')) {
+      // 1.7 JAWABAN
+      if (upper.includes('FROM JAWABAN')) {
         const sesiId = params[0];
         if (upper.includes('SOAL_ID =')) {
           const found = fallbackStore.jawaban.find(j => j.sesi_id === sesiId && j.soal_id === params[1]);
@@ -367,16 +509,18 @@ class D1Client {
         return { results, meta: {} };
       }
 
-      // Audit logs: SELECT al.*, u.nama as siswa_nama...
-      if (upper.includes('FROM AUDIT_LOG') && upper.includes('UJIAN_ID =')) {
-        const ujianId = params[0];
-        const logs = fallbackStore.audit_log.filter(l => l.ujian_id === ujianId).map(l => {
+      // 1.8 AUDIT LOG
+      if (upper.includes('FROM AUDIT_LOG')) {
+        if (upper.includes('UJIAN_ID =')) {
+          const logs = fallbackStore.audit_log.filter(l => l.ujian_id === params[0]).map(l => {
+            const u = fallbackStore.users.find(usr => usr.id === l.siswa_id) || {};
+            return { ...l, siswa_nama: u.nama, siswa_kelas: u.kelas, nama_siswa: u.nama };
+          });
+          return { results: logs, meta: {} };
+        }
+        const logs = fallbackStore.audit_log.map(l => {
           const u = fallbackStore.users.find(usr => usr.id === l.siswa_id) || {};
-          return {
-            ...l,
-            siswa_nama: u.nama,
-            siswa_kelas: u.kelas,
-          };
+          return { ...l, siswa_nama: u.nama, siswa_kelas: u.kelas, nama_siswa: u.nama };
         });
         return { results: logs, meta: {} };
       }
@@ -390,12 +534,13 @@ class D1Client {
           username: params[1],
           password_hash: params[2],
           nama: params[3],
-          role: params[4],
+          role: params[4] || 'guru',
           kelas: params[5] || null,
           no_absen: params[6] || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
+        savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
       }
 
@@ -416,6 +561,18 @@ class D1Client {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: 1 } };
+      }
+
+      if (upper.includes('INTO UJIAN_SOAL')) {
+        fallbackStore.ujian_soal.push({
+          id: params[0],
+          ujian_id: params[1],
+          soal_id: params[2],
+          urutan: params[3],
+        });
+        savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
       }
 
@@ -437,20 +594,11 @@ class D1Client {
           acak_jawaban: params[13],
           tampilkan_nilai: params[14],
           batas_pelanggaran: params[15],
-          status: params[16],
+          status: params[16] || 'aktif',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-        return { results: [], meta: { changes: 1 } };
-      }
-
-      if (upper.includes('INTO UJIAN_SOAL')) {
-        fallbackStore.ujian_soal.push({
-          id: params[0],
-          ujian_id: params[1],
-          soal_id: params[2],
-          urutan: params[3],
-        });
+        savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
       }
 
@@ -465,6 +613,7 @@ class D1Client {
           created_at: new Date().toISOString(),
         };
         fallbackStore.sesi_ujian.push(item);
+        savePersistedStore(fallbackStore);
         return { results: [item], meta: { changes: 1 } };
       }
 
@@ -476,6 +625,7 @@ class D1Client {
           jawaban_siswa: params[3],
           updated_at: new Date().toISOString(),
         });
+        savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
       }
 
@@ -489,15 +639,64 @@ class D1Client {
           detail: params[5],
           timestamp: new Date().toISOString(),
         });
+        savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
       }
     }
 
     // 3. UPDATE queries
     if (upper.startsWith('UPDATE')) {
+      if (upper.includes('UPDATE SOAL')) {
+        const id = params[10] || params[0];
+        const item = fallbackStore.soal.find(s => s.id === id);
+        if (item) {
+          if (params[0]) item.mata_pelajaran = params[0];
+          if (params[1]) item.tipe = params[1];
+          if (params[2]) item.pertanyaan = params[2];
+          if (params[3] !== undefined) item.pilihan_a = params[3];
+          if (params[4] !== undefined) item.pilihan_b = params[4];
+          if (params[5] !== undefined) item.pilihan_c = params[5];
+          if (params[6] !== undefined) item.pilihan_d = params[6];
+          if (params[7] !== undefined) item.pilihan_e = params[7];
+          if (params[8] !== undefined) item.kunci_jawaban = params[8];
+          if (params[9] !== undefined) item.bobot = params[9];
+          item.updated_at = new Date().toISOString();
+        }
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: 1 } };
+      }
+
+      if (upper.includes('UPDATE UJIAN')) {
+        if (upper.includes('SET STATUS =')) {
+          const u = fallbackStore.ujian.find(x => x.id === params[1]);
+          if (u) u.status = params[0];
+        } else {
+          const examId = params[params.length - 1];
+          const u = fallbackStore.ujian.find(x => x.id === examId);
+          if (u) {
+            u.judul = params[0] || u.judul;
+            u.mata_pelajaran = params[1] || u.mata_pelajaran;
+            u.kelas_target = params[2] || u.kelas_target;
+            u.deskripsi = params[3] !== undefined ? params[3] : u.deskripsi;
+            u.durasi_menit = params[4] || u.durasi_menit;
+            u.jadwal_mulai = params[5] || u.jadwal_mulai;
+            u.jadwal_selesai = params[6] || u.jadwal_selesai;
+            u.jumlah_soal = params[7] || u.jumlah_soal;
+            u.kkm = params[8] || u.kkm;
+            u.acak_soal = params[9] !== undefined ? params[9] : u.acak_soal;
+            u.acak_jawaban = params[10] !== undefined ? params[10] : u.acak_jawaban;
+            u.tampilkan_nilai = params[11] !== undefined ? params[11] : u.tampilkan_nilai;
+            u.batas_pelanggaran = params[12] || u.batas_pelanggaran;
+            u.status = params[13] || u.status;
+            u.updated_at = new Date().toISOString();
+          }
+        }
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: 1 } };
+      }
+
       if (upper.includes('UPDATE SESI_UJIAN')) {
         if (upper.includes('STATUS =') && upper.includes('TOTAL_NILAI =')) {
-          // Submit update
           const [totalNilai, jBenar, jSalah, jKosong, sesiId] = params;
           const s = fallbackStore.sesi_ujian.find(x => x.id === sesiId);
           if (s) {
@@ -508,27 +707,31 @@ class D1Client {
             s.jumlah_kosong = jKosong;
             s.waktu_selesai = new Date().toISOString();
           }
+          savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }
 
-        if (upper.includes('STATUS = \'DITANGGUHKAN\'')) {
+        if (upper.includes("STATUS = 'DITANGGUHKAN'")) {
           const s = fallbackStore.sesi_ujian.find(x => x.id === params[0]);
           if (s) s.status = 'ditangguhkan';
+          savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }
 
-        if (upper.includes('STATUS = \'BERLANGSUNG\'') && upper.includes('JUMLAH_PELANGGARAN = 0')) {
+        if (upper.includes("STATUS = 'BERLANGSUNG'") && upper.includes('JUMLAH_PELANGGARAN = 0')) {
           const s = fallbackStore.sesi_ujian.find(x => x.id === params[0]);
           if (s) {
             s.status = 'berlangsung';
             s.jumlah_pelanggaran = 0;
           }
+          savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }
 
         if (upper.includes('JUMLAH_PELANGGARAN =')) {
           const s = fallbackStore.sesi_ujian.find(x => x.id === params[1]);
           if (s) s.jumlah_pelanggaran = params[0];
+          savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }
       }
@@ -540,6 +743,7 @@ class D1Client {
             existing.jawaban_siswa = params[0];
             existing.updated_at = new Date().toISOString();
           }
+          savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }
 
@@ -549,25 +753,65 @@ class D1Client {
             j.is_benar = params[0];
             j.nilai_soal = params[1];
           }
+          savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }
-      }
-
-      if (upper.includes('UPDATE UJIAN SET STATUS =')) {
-        const u = fallbackStore.ujian.find(x => x.id === params[1]);
-        if (u) u.status = params[0];
-        return { results: [], meta: { changes: 1 } };
       }
     }
 
     // 4. DELETE queries
-    if (upper.startsWith('DELETE FROM SOAL')) {
-      const idx = fallbackStore.soal.findIndex(s => s.id === params[0] && s.guru_id === params[1]);
-      if (idx !== -1) {
-        fallbackStore.soal.splice(idx, 1);
+    if (upper.startsWith('DELETE')) {
+      if (upper.includes('FROM USERS')) {
+        const id = params[0];
+        const idx = fallbackStore.users.findIndex(u => u.id === id);
+        if (idx !== -1) {
+          fallbackStore.users.splice(idx, 1);
+          savePersistedStore(fallbackStore);
+          return { results: [], meta: { changes: 1 } };
+        }
+        return { results: [], meta: { changes: 0 } };
+      }
+
+      if (upper.includes('FROM SOAL')) {
+        const idx = fallbackStore.soal.findIndex(s => s.id === params[0]);
+        if (idx !== -1) {
+          fallbackStore.soal.splice(idx, 1);
+          savePersistedStore(fallbackStore);
+          return { results: [], meta: { changes: 1 } };
+        }
+        return { results: [], meta: { changes: 0 } };
+      }
+
+      if (upper.includes('FROM UJIAN_SOAL')) {
+        const ujianId = params[0];
+        const before = fallbackStore.ujian_soal.length;
+        fallbackStore.ujian_soal = fallbackStore.ujian_soal.filter(j => j.ujian_id !== ujianId);
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: before - fallbackStore.ujian_soal.length } };
+      }
+
+      if (upper.includes('FROM UJIAN')) {
+        const ujianId = params[0];
+        const idx = fallbackStore.ujian.findIndex(u => u.id === ujianId);
+        if (idx !== -1) {
+          fallbackStore.ujian.splice(idx, 1);
+          savePersistedStore(fallbackStore);
+          return { results: [], meta: { changes: 1 } };
+        }
+        return { results: [], meta: { changes: 0 } };
+      }
+
+      if (upper.includes('FROM SESI_UJIAN')) {
+        const siswaId = params[0];
+        const before = fallbackStore.sesi_ujian.length;
+        fallbackStore.sesi_ujian = fallbackStore.sesi_ujian.filter(s => s.siswa_id !== siswaId);
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: before - fallbackStore.sesi_ujian.length } };
+      }
+
+      if (upper.includes('FROM JAWABAN') || upper.includes('FROM AUDIT_LOG')) {
         return { results: [], meta: { changes: 1 } };
       }
-      return { results: [], meta: { changes: 0 } };
     }
 
     return { results: [], meta: { changes: 0 } };

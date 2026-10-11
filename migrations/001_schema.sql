@@ -3,13 +3,13 @@
 -- Cloudflare D1 (SQLite)
 -- =============================================
 
--- Users table (guru & siswa)
+-- Users table (superadmin, guru & siswa)
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   nama TEXT NOT NULL,
-  role TEXT NOT NULL CHECK(role IN ('guru', 'siswa')),
+  role TEXT NOT NULL CHECK(role IN ('superadmin', 'guru', 'siswa')),
   kelas TEXT,
   no_absen INTEGER,
   created_at TEXT DEFAULT (datetime('now')),
@@ -128,10 +128,13 @@ CREATE INDEX IF NOT EXISTS idx_jawaban_sesi ON jawaban(sesi_id);
 CREATE INDEX IF NOT EXISTS idx_audit_sesi ON audit_log(sesi_id);
 CREATE INDEX IF NOT EXISTS idx_audit_ujian ON audit_log(ujian_id);
 
--- Insert default admin/guru account (password: guru123)
+-- Insert default superadmin and admin/guru account (password: guru123)
 -- bcrypt hash for 'guru123'
 INSERT OR IGNORE INTO users (id, username, password_hash, nama, role) 
-VALUES ('usr_guru_001', 'guru', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Guru Demo', 'guru');
+VALUES 
+  ('usr_superadmin_001', 'superadmin', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Super Admin Wozber (Owner)', 'superadmin'),
+  ('usr_guru_001', 'guru', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Guru Demo, S.Pd.', 'guru'),
+  ('usr_guru_002', 'novisa', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'NOVISA MAHARANI, S.Pd', 'guru');
 
 -- Insert demo students
 INSERT OR IGNORE INTO users (id, username, password_hash, nama, role, kelas, no_absen)

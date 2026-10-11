@@ -65,11 +65,31 @@ export async function GET(request) {
     let recentExams = [];
     let recentLogs = [];
     try {
-      recentExams = await db.getAll('SELECT id, judul, mata_pelajaran, status, created_at FROM ujian ORDER BY created_at DESC LIMIT 5') || [];
+      const examsRaw = await db.getAll('SELECT id, judul, mata_pelajaran, status, created_at, guru_id FROM ujian ORDER BY created_at DESC LIMIT 5') || [];
+      recentExams = await Promise.all(
+        examsRaw.map(async (ex) => {
+          try {
+            const g = await db.getOne('SELECT nama FROM users WHERE id = ?', [ex.guru_id]);
+            return { ...ex, nama_guru: g?.nama || 'Dewan Guru' };
+          } catch {
+            return { ...ex, nama_guru: 'Dewan Guru' };
+          }
+        })
+      );
     } catch {}
 
     try {
-      recentLogs = await db.getAll('SELECT id, tipe_pelanggaran, detail, timestamp, siswa_id FROM audit_log ORDER BY timestamp DESC LIMIT 6') || [];
+      const logsRaw = await db.getAll('SELECT id, tipe_pelanggaran, detail, timestamp, siswa_id FROM audit_log ORDER BY timestamp DESC LIMIT 6') || [];
+      recentLogs = await Promise.all(
+        logsRaw.map(async (l) => {
+          try {
+            const s = await db.getOne('SELECT nama FROM users WHERE id = ?', [l.siswa_id]);
+            return { ...l, nama_siswa: s?.nama || 'Siswa' };
+          } catch {
+            return { ...l, nama_siswa: 'Siswa' };
+          }
+        })
+      );
     } catch {}
 
     return apiResponse({
