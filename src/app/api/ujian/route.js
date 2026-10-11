@@ -6,7 +6,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireAuth, requireRole, authErrorResponse, sanitizeInput } from '@/lib/auth';
-import { apiResponse, apiError, generateId, generateKodeUjian, validateRequired } from '@/lib/utils';
+import { apiResponse, apiError, generateId, generateKodeUjian, validateRequired, parseWaktuWIB } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -91,8 +91,8 @@ export async function GET(request) {
     // Filter by student schedule with buffer and class
     const nowTime = Date.now();
     ujianList = ujianList.filter(u => {
-      const mulai = new Date(u.jadwal_mulai).getTime();
-      const selesai = new Date(u.jadwal_selesai).getTime();
+      const mulai = parseWaktuWIB(u.jadwal_mulai);
+      const selesai = parseWaktuWIB(u.jadwal_selesai);
       if (!isNaN(mulai) && nowTime < mulai - 10 * 60 * 1000) return false;
       if (!isNaN(selesai) && nowTime > selesai) return false;
       return true;

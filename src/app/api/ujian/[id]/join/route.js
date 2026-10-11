@@ -5,7 +5,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireRole, authErrorResponse } from '@/lib/auth';
-import { apiResponse, apiError, generateId } from '@/lib/utils';
+import { apiResponse, apiError, generateId, parseWaktuWIB } from '@/lib/utils';
 
 export async function POST(request, { params }) {
   try {
@@ -46,8 +46,8 @@ export async function POST(request, { params }) {
     }
 
     const nowTime = Date.now();
-    const mulaiTime = new Date(ujian.jadwal_mulai).getTime();
-    const selesaiTime = new Date(ujian.jadwal_selesai).getTime();
+    const mulaiTime = parseWaktuWIB(ujian.jadwal_mulai);
+    const selesaiTime = parseWaktuWIB(ujian.jadwal_selesai);
 
     if (!isNaN(mulaiTime) && nowTime < mulaiTime - 10 * 60 * 1000) {
       return apiError('Ujian belum dimulai', 403);

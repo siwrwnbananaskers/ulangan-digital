@@ -5,7 +5,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireAuth, authErrorResponse } from '@/lib/auth';
-import { apiResponse, apiError, shuffleArray } from '@/lib/utils';
+import { apiResponse, apiError, shuffleArray, parseWaktuWIB } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -62,8 +62,8 @@ export async function GET(request, { params }) {
 
       // Check if exam is active and within schedule
       const nowTime = Date.now();
-      const mulaiTime = new Date(ujian.jadwal_mulai).getTime();
-      const selesaiTime = new Date(ujian.jadwal_selesai).getTime();
+      const mulaiTime = parseWaktuWIB(ujian.jadwal_mulai);
+      const selesaiTime = parseWaktuWIB(ujian.jadwal_selesai);
 
       if (ujian.status !== 'aktif') {
         return apiError('Ujian belum aktif', 403);

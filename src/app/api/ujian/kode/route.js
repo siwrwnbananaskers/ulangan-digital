@@ -5,7 +5,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireRole, authErrorResponse } from '@/lib/auth';
-import { apiResponse, apiError } from '@/lib/utils';
+import { apiResponse, apiError, parseWaktuWIB } from '@/lib/utils';
 
 export async function POST(request) {
   try {
@@ -56,14 +56,14 @@ export async function POST(request) {
       return apiError('Ujian belum diaktifkan atau sudah ditutup oleh guru.', 403);
     }
 
-    // Parse schedule with timezone tolerance (give 5-minute buffer before scheduled time)
+    // Parse schedule with timezone tolerance (give 10-minute buffer before scheduled time)
     const nowTime = Date.now();
-    const mulaiTime = new Date(ujian.jadwal_mulai).getTime();
-    const selesaiTime = new Date(ujian.jadwal_selesai).getTime();
+    const mulaiTime = parseWaktuWIB(ujian.jadwal_mulai);
+    const selesaiTime = parseWaktuWIB(ujian.jadwal_selesai);
 
     // If started within 10 minutes from now or already passed
     if (!isNaN(mulaiTime) && nowTime < mulaiTime - 10 * 60 * 1000) {
-      return apiError(`Ujian belum dimulai. Jadwal mulai: ${new Date(ujian.jadwal_mulai).toLocaleString('id-ID')}`, 403);
+      return apiError(`Ujian belum dimulai. Jadwal mulai: ${new Date(mulaiTime).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}`, 403);
     }
     if (!isNaN(selesaiTime) && nowTime > selesaiTime) {
       return apiError('Waktu ujian sudah berakhir.', 403);

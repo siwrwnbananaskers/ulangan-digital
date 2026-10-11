@@ -59,13 +59,30 @@ export function hitungNilai(jumlahBenar, totalSoal) {
 }
 
 /**
+ * Parse date string reliably assuming WIB (UTC+7) if timezone is not specified
+ */
+export function parseWaktuWIB(dateStr) {
+  if (!dateStr) return NaN;
+  // If already contains timezone indicator Z or +/-, parse as is
+  if (dateStr.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+    return new Date(dateStr).getTime();
+  }
+  // If string is YYYY-MM-DDTHH:mm or YYYY-MM-DD HH:mm:ss without timezone, treat as WIB (UTC+7)
+  const clean = dateStr.replace(' ', 'T');
+  const withTz = `${clean}:00`.substring(0, 19) + '+07:00';
+  const t = new Date(withTz).getTime();
+  if (!isNaN(t)) return t;
+  return new Date(dateStr).getTime();
+}
+
+/**
  * Check if exam is within schedule
  */
 export function isJadwalAktif(jadwalMulai, jadwalSelesai) {
-  const now = new Date();
-  const mulai = new Date(jadwalMulai);
-  const selesai = new Date(jadwalSelesai);
-  return now >= mulai && now <= selesai;
+  const now = Date.now();
+  const mulai = parseWaktuWIB(jadwalMulai);
+  const selesai = parseWaktuWIB(jadwalSelesai);
+  return now >= (mulai - 10 * 60 * 1000) && now <= selesai;
 }
 
 /**

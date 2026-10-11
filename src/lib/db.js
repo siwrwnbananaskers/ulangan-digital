@@ -340,9 +340,9 @@ function extractD1Results(data) {
 
 class D1Client {
   constructor() {
-    this.accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-    this.databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-    this.apiToken = process.env.CLOUDFLARE_API_TOKEN;
+    this.accountId = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
+    this.databaseId = (process.env.CLOUDFLARE_D1_DATABASE_ID || '').trim();
+    this.apiToken = (process.env.CLOUDFLARE_API_TOKEN || '').trim();
     this.isCloudflare = !!(this.accountId && this.databaseId && this.apiToken);
   }
 

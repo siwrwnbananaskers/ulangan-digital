@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
+  const databaseId = (process.env.CLOUDFLARE_D1_DATABASE_ID || '').trim();
+  const apiToken = (process.env.CLOUDFLARE_API_TOKEN || '').trim();
 
   const db = getDB();
   let d1Status = 'disconnected';
