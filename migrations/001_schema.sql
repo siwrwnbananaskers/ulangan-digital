@@ -10,10 +10,12 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   nama TEXT NOT NULL,
   role TEXT NOT NULL CHECK(role IN ('superadmin', 'guru', 'siswa')),
+  guru_id TEXT,
   kelas TEXT,
   no_absen INTEGER,
   created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
+  updated_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (guru_id) REFERENCES users(id)
 );
 
 -- Question bank (bank soal)
@@ -136,9 +138,9 @@ VALUES
   ('usr_guru_001', 'guru', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Guru Demo, S.Pd.', 'guru'),
   ('usr_guru_002', 'novisa', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'NOVISA MAHARANI, S.Pd', 'guru');
 
--- Insert demo students
-INSERT OR IGNORE INTO users (id, username, password_hash, nama, role, kelas, no_absen)
+-- Insert demo students (assigned to Guru Demo usr_guru_001)
+INSERT OR IGNORE INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
 VALUES 
-  ('usr_siswa_001', 'siswa1', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Ahmad Rizki', 'siswa', 'XII-IPA-1', 1),
-  ('usr_siswa_002', 'siswa2', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Siti Nurhaliza', 'siswa', 'XII-IPA-1', 2),
-  ('usr_siswa_003', 'siswa3', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Budi Santoso', 'siswa', 'XII-IPA-1', 3);
+  ('usr_siswa_001', 'siswa1', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Ahmad Rizki', 'siswa', 'usr_guru_001', 'XII-IPA-1', 1),
+  ('usr_siswa_002', 'siswa2', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Siti Nurhaliza', 'siswa', 'usr_guru_001', 'XII-IPA-1', 2),
+  ('usr_siswa_003', 'siswa3', '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', 'Budi Santoso', 'siswa', 'usr_guru_001', 'XII-IPA-1', 3);

@@ -74,6 +74,7 @@ const fallbackStore = {
       password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // guru123
       nama: 'Ahmad Rizki Pratama',
       role: 'siswa',
+      guru_id: 'usr_guru_001',
       kelas: 'XII-IPA-1',
       no_absen: 1,
       created_at: new Date().toISOString(),
@@ -85,6 +86,7 @@ const fallbackStore = {
       password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm',
       nama: 'Siti Nurhaliza',
       role: 'siswa',
+      guru_id: 'usr_guru_001',
       kelas: 'XII-IPA-1',
       no_absen: 2,
       created_at: new Date().toISOString(),
@@ -96,6 +98,7 @@ const fallbackStore = {
       password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm',
       nama: 'Budi Santoso',
       role: 'siswa',
+      guru_id: 'usr_guru_001',
       kelas: 'XII-IPA-1',
       no_absen: 3,
       created_at: new Date().toISOString(),
@@ -296,8 +299,13 @@ class D1Client {
         if (upper.includes('FROM USERS')) {
           if (upper.includes("ROLE = 'GURU'") || (upper.includes("ROLE = ?") && params[0] === 'guru')) {
             count = fallbackStore.users.filter(u => u.role === 'guru').length;
-          } else if (upper.includes("ROLE = 'SISWA'") || (upper.includes("ROLE = ?") && params[0] === 'siswa')) {
-            count = fallbackStore.users.filter(u => u.role === 'siswa').length;
+          } else if (upper.includes("ROLE = 'SISWA'") || (upper.includes("ROLE = ?") && params.includes('siswa'))) {
+            let list = fallbackStore.users.filter(u => u.role === 'siswa');
+            if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
+              const gId = params[params.length - 1];
+              list = list.filter(u => u.guru_id === gId || (!u.guru_id && gId === 'usr_guru_001'));
+            }
+            count = list.length;
           } else {
             count = fallbackStore.users.length;
           }
@@ -335,11 +343,12 @@ class D1Client {
       if (upper.includes('FROM USERS')) {
         // SELECT DISTINCT kelas FROM users WHERE role = 'siswa'...
         if (upper.includes('DISTINCT KELAS')) {
-          const classes = [...new Set(
-            fallbackStore.users
-              .filter(u => u.role === 'siswa' && u.kelas)
-              .map(u => u.kelas)
-          )].sort();
+          let students = fallbackStore.users.filter(u => u.role === 'siswa' && u.kelas);
+          if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
+            const gId = params[0];
+            students = students.filter(u => u.guru_id === gId || (!u.guru_id && gId === 'usr_guru_001'));
+          }
+          const classes = [...new Set(students.map(u => u.kelas))].sort();
           return { results: classes.map(c => ({ kelas: c })), meta: {} };
         }
 
@@ -350,8 +359,8 @@ class D1Client {
           return { results: found ? [found] : [], meta: {} };
         }
 
-        // SELECT * FROM users WHERE id = ?
-        if (upper.includes('WHERE ID =') || upper.includes('ID = ?')) {
+        // SELECT * FROM users WHERE id = ? (primary ID, not guru_id)
+        if ((upper.includes('WHERE ID =') || upper.includes('WHERE U.ID =') || upper.includes('AND ID =')) && !upper.includes('GURU_ID')) {
           const id = params[0];
           let found = fallbackStore.users.find(u => u.id === id);
           if (found && upper.includes("ROLE = 'GURU'") && found.role !== 'guru') found = null;
@@ -366,13 +375,29 @@ class D1Client {
         }
 
         // SELECT ... FROM users WHERE role = 'siswa'
-        if (upper.includes("ROLE = 'SISWA'") || (upper.includes("ROLE = ?") && params[0] === 'siswa')) {
+        if (upper.includes("ROLE = 'SISWA'") || (upper.includes("ROLE = ?") && params.includes('siswa'))) {
           let students = fallbackStore.users.filter(u => u.role === 'siswa');
-          if (upper.includes('KELAS = ?') && params.length > 0) {
+          
+          // Check if filtered by guru_id
+          if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
+            const guruId = params[0];
+            students = students.filter(u => u.guru_id === guruId || (!u.guru_id && guruId === 'usr_guru_001'));
+          }
+
+          if (upper.includes('KELAS = ?')) {
             const k = params[params.length - 1];
             students = students.filter(u => u.kelas === k);
           }
-          students.sort((a, b) => {
+
+          const enriched = students.map(s => {
+            const guru = fallbackStore.users.find(g => g.id === s.guru_id);
+            return {
+              ...s,
+              nama_guru: guru ? guru.nama : (s.guru_id ? 'Guru' : 'Guru Demo, S.Pd.'),
+            };
+          });
+
+          enriched.sort((a, b) => {
             const kComp = (a.kelas || '').localeCompare(b.kelas || '');
             if (kComp !== 0) return kComp;
             const nA = a.no_absen || 0;
@@ -380,7 +405,7 @@ class D1Client {
             if (nA !== nB) return nA - nB;
             return (a.nama || '').localeCompare(b.nama || '');
           });
-          return { results: students, meta: {} };
+          return { results: enriched, meta: {} };
         }
 
         return { results: fallbackStore.users, meta: {} };
@@ -529,17 +554,46 @@ class D1Client {
     // 2. INSERT queries
     if (upper.startsWith('INSERT')) {
       if (upper.includes('INTO USERS')) {
-        fallbackStore.users.push({
-          id: params[0],
-          username: params[1],
-          password_hash: params[2],
-          nama: params[3],
-          role: params[4] || 'guru',
-          kelas: params[5] || null,
-          no_absen: params[6] || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        let userObj;
+        if (upper.includes('GURU_ID')) {
+          if (params.length >= 8) {
+            userObj = {
+              id: params[0],
+              username: params[1],
+              password_hash: params[2],
+              nama: params[3],
+              role: params[4],
+              guru_id: params[5],
+              kelas: params[6] || null,
+              no_absen: params[7] || null,
+            };
+          } else {
+            userObj = {
+              id: params[0],
+              username: params[1],
+              password_hash: params[2],
+              nama: params[3],
+              role: 'siswa',
+              guru_id: params[4],
+              kelas: params[5] || null,
+              no_absen: params[6] || null,
+            };
+          }
+        } else {
+          userObj = {
+            id: params[0],
+            username: params[1],
+            password_hash: params[2],
+            nama: params[3],
+            role: params[4] || (upper.includes("'GURU'") ? 'guru' : upper.includes("'SISWA'") ? 'siswa' : 'guru'),
+            guru_id: null,
+            kelas: params[5] || null,
+            no_absen: params[6] || null,
+          };
+        }
+        userObj.created_at = new Date().toISOString();
+        userObj.updated_at = new Date().toISOString();
+        fallbackStore.users.push(userObj);
         savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
       }

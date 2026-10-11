@@ -10,6 +10,9 @@ export default function SiswaManagementPage() {
   const [siswaList, setSiswaList] = useState([]);
   const [kelasList, setKelasList] = useState([]);
   const [filterKelas, setFilterKelas] = useState('');
+  const [filterGuru, setFilterGuru] = useState('');
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [teacherOptions, setTeacherOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -36,17 +39,21 @@ export default function SiswaManagementPage() {
   useEffect(() => {
     if (!user) return;
     loadSiswa();
-  }, [user, filterKelas]);
+  }, [user, filterKelas, filterGuru]);
 
   const loadSiswa = async () => {
     setLoading(true);
     try {
-      let url = '/api/siswa';
-      if (filterKelas) url += `?kelas=${encodeURIComponent(filterKelas)}`;
+      const qParams = [];
+      if (filterKelas) qParams.push(`kelas=${encodeURIComponent(filterKelas)}`);
+      if (filterGuru) qParams.push(`guru_id=${encodeURIComponent(filterGuru)}`);
+      const url = `/api/siswa${qParams.length > 0 ? '?' + qParams.join('&') : ''}`;
       const res = await authFetch(url);
       const data = await res.json();
       setSiswaList(data.siswa || []);
       if (data.kelas_options) setKelasList(data.kelas_options);
+      if (data.is_superadmin) setIsSuperadmin(true);
+      if (data.teacher_options) setTeacherOptions(data.teacher_options);
     } catch (err) {
       console.error(err);
     } finally {
@@ -172,9 +179,18 @@ export default function SiswaManagementPage() {
       <main className="main-content no-print" style={{ maxWidth: 1128, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Kelola Akun Siswa & Kartu Ujian</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Kelola Akun Siswa & Kartu Ujian</h1>
+              {isSuperadmin && (
+                <span className="badge badge-primary" style={{ background: '#0f172a', color: '#fff', fontSize: 11, padding: '2px 8px' }}>
+                  Superadmin View (Semua Guru)
+                </span>
+              )}
+            </div>
             <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>
-              Tambah siswa satuan, impor secara masal (Excel/CSV), dan cetak kartu ujian untuk login peserta
+              {isSuperadmin
+                ? 'Mode Superadmin: Anda dapat memantau dan memfilter seluruh akun siswa yang didaftarkan oleh masing-masing guru.'
+                : `Hanya menampilkan siswa yang Anda daftarkan (${user?.nama || 'Akun Guru'}). Siswa dari guru lain terisolasi secara aman.`}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -220,22 +236,40 @@ export default function SiswaManagementPage() {
               <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#191919' }}>
                 Daftar Peserta Ujian ({siswaList.length} Siswa)
               </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: '#666666' }}>Filter Kelas:</span>
-                <select
-                  className="form-select"
-                  style={{ padding: '4px 8px', fontSize: 12, width: 'auto' }}
-                  value={filterKelas}
-                  onChange={(e) => {
-                    setFilterKelas(e.target.value);
-                    setPrintKelas(e.target.value);
-                  }}
-                >
-                  <option value="">Semua Kelas</option>
-                  {kelasList.map(k => (
-                    <option key={k} value={k}>{k}</option>
-                  ))}
-                </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                {isSuperadmin && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 12, color: '#666666', fontWeight: 600 }}>Filter Guru:</span>
+                    <select
+                      className="form-select"
+                      style={{ padding: '4px 8px', fontSize: 12, width: 'auto', background: '#f8fafc', borderColor: '#cbd5e1', fontWeight: 600 }}
+                      value={filterGuru}
+                      onChange={(e) => setFilterGuru(e.target.value)}
+                    >
+                      <option value="">Semua Guru ({teacherOptions.length} Guru)</option>
+                      {teacherOptions.map(t => (
+                        <option key={t.id} value={t.id}>{t.nama} ({t.username})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 12, color: '#666666' }}>Filter Kelas:</span>
+                  <select
+                    className="form-select"
+                    style={{ padding: '4px 8px', fontSize: 12, width: 'auto' }}
+                    value={filterKelas}
+                    onChange={(e) => {
+                      setFilterKelas(e.target.value);
+                      setPrintKelas(e.target.value);
+                    }}
+                  >
+                    <option value="">Semua Kelas</option>
+                    {kelasList.map(k => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -246,7 +280,7 @@ export default function SiswaManagementPage() {
               </div>
             ) : siswaList.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 36, color: '#666666' }}>
-                <p style={{ margin: 0, fontSize: 13 }}>Belum ada data siswa untuk kelas ini.</p>
+                <p style={{ margin: 0, fontSize: 13 }}>Belum ada data siswa untuk kelas atau guru ini.</p>
               </div>
             ) : (
               <div className="table-container">
@@ -256,6 +290,7 @@ export default function SiswaManagementPage() {
                       <th style={{ width: 40 }}>No</th>
                       <th>Username (Login)</th>
                       <th>Nama Lengkap</th>
+                      {isSuperadmin && <th>Guru Pengampu</th>}
                       <th>Kelas</th>
                       <th>Absen</th>
                       <th style={{ width: 60, textAlign: 'center' }}>Aksi</th>
@@ -271,6 +306,13 @@ export default function SiswaManagementPage() {
                           </code>
                         </td>
                         <td><strong>{s.nama}</strong></td>
+                        {isSuperadmin && (
+                          <td>
+                            <span className="badge badge-primary" style={{ fontSize: 11, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                              {s.nama_guru || 'Guru'}
+                            </span>
+                          </td>
+                        )}
                         <td><span className="badge badge-gray">{s.kelas || '-'}</span></td>
                         <td>{s.no_absen || '-'}</td>
                         <td style={{ textAlign: 'center' }}>

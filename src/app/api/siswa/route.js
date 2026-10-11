@@ -1,8 +1,8 @@
 /**
- * Siswa Management API (Guru only)
- * GET  /api/siswa - List students (filter by kelas)
- * POST /api/siswa - Add single or bulk students
- * DELETE /api/siswa - Delete student
+ * Siswa Management API
+ * GET  /api/siswa - List students (filtered by teacher for guru, all or filtered for superadmin)
+ * POST /api/siswa - Add single or bulk students (assigned to current teacher)
+ * DELETE /api/siswa - Delete student (permission checked)
  */
 
 import { getDB } from '@/lib/db';
@@ -11,13 +11,26 @@ import { apiResponse, apiError, generateId } from '@/lib/utils';
 
 export async function GET(request) {
   try {
-    await requireRole(request, 'guru');
+    const user = await requireRole(request, 'guru');
     const { searchParams } = new URL(request.url);
     const kelas = searchParams.get('kelas');
+    const guruFilter = searchParams.get('guru_id');
 
     const db = getDB();
-    let query = "SELECT id, username, nama, role, kelas, no_absen, created_at FROM users WHERE role = 'siswa'";
+    let query = "SELECT id, username, nama, role, guru_id, kelas, no_absen, created_at FROM users WHERE role = 'siswa'";
     const params = [];
+
+    const isSuperadmin = user.role === 'superadmin';
+
+    if (!isSuperadmin) {
+      // Guru can ONLY see their own students (or unassigned demo students if current teacher is demo guru)
+      query += ' AND (guru_id = ? OR guru_id IS NULL)';
+      params.push(user.id);
+    } else if (guruFilter) {
+      // Superadmin filtering by a specific teacher
+      query += ' AND guru_id = ?';
+      params.push(guruFilter);
+    }
 
     if (kelas) {
       query += ' AND kelas = ?';
@@ -25,12 +38,54 @@ export async function GET(request) {
     }
     query += ' ORDER BY kelas ASC, no_absen ASC, nama ASC';
 
-    const siswaList = await db.getAll(query, params);
-    const kelasList = await db.getAll("SELECT DISTINCT kelas FROM users WHERE role = 'siswa' AND kelas IS NOT NULL ORDER BY kelas ASC");
+    const siswaRaw = await db.getAll(query, params);
+
+    // Enrich with teacher names for superadmin view
+    const siswaList = await Promise.all(
+      (siswaRaw || []).map(async (s) => {
+        if (s.nama_guru) return s;
+        if (s.guru_id) {
+          try {
+            const g = await db.getOne('SELECT nama FROM users WHERE id = ?', [s.guru_id]);
+            return { ...s, nama_guru: g?.nama || 'Guru' };
+          } catch {
+            return { ...s, nama_guru: 'Guru' };
+          }
+        }
+        return { ...s, nama_guru: 'Guru Demo, S.Pd.' };
+      })
+    );
+
+    // Get available classes for filter dropdown
+    let kelasQuery = "SELECT DISTINCT kelas FROM users WHERE role = 'siswa' AND kelas IS NOT NULL";
+    const kelasParams = [];
+    if (!isSuperadmin) {
+      kelasQuery += ' AND (guru_id = ? OR guru_id IS NULL)';
+      kelasParams.push(user.id);
+    } else if (guruFilter) {
+      kelasQuery += ' AND guru_id = ?';
+      kelasParams.push(guruFilter);
+    }
+    kelasQuery += ' ORDER BY kelas ASC';
+
+    const kelasList = await db.getAll(kelasQuery, kelasParams);
+
+    // If superadmin, fetch all registered teachers for filter selector
+    let teacherOptions = [];
+    if (isSuperadmin) {
+      try {
+        teacherOptions = await db.getAll("SELECT id, username, nama FROM users WHERE role = 'guru' ORDER BY nama ASC") || [];
+      } catch (err) {
+        console.warn('Teacher list fetch error:', err.message);
+      }
+    }
 
     return apiResponse({
       siswa: siswaList,
       kelas_options: kelasList.map(k => k.kelas).filter(Boolean),
+      is_superadmin: isSuperadmin,
+      teacher_options: teacherOptions,
+      current_teacher_id: user.id,
     });
   } catch (error) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
@@ -47,10 +102,12 @@ export async function POST(request) {
     const body = await request.json();
     const db = getDB();
 
+    // Target teacher owner: current guru, or if superadmin specified a target teacher
+    const targetGuruId = (user.role === 'superadmin' && body.guru_id) ? body.guru_id : user.id;
+
     // Check demo limitation: demo user "guru" is limited to adding only 1 student
     if (user.role === 'guru' && user.username === 'guru') {
-      const existingStudents = await db.getAll("SELECT id FROM users WHERE role = 'siswa'");
-      // If already has 1 or more custom students created (or total students >= 1), limit reached
+      const existingStudents = await db.getAll("SELECT id FROM users WHERE role = 'siswa' AND (guru_id = ? OR guru_id IS NULL)", [user.id]);
       if (existingStudents && existingStudents.length >= 1) {
         return Response.json({
           error: 'LIMIT_DEMO_REACHED',
@@ -83,7 +140,6 @@ export async function POST(request) {
           continue;
         }
 
-        // Check if username exists
         const exists = await db.getOne('SELECT id FROM users WHERE username = ?', [username]);
         if (exists) {
           skippedCount++;
@@ -94,9 +150,9 @@ export async function POST(request) {
         const passwordHash = await hashPassword(rawPassword);
 
         await db.run(
-          `INSERT INTO users (id, username, password_hash, nama, role, kelas, no_absen)
-           VALUES (?, ?, ?, ?, 'siswa', ?, ?)`,
-          [id, username, passwordHash, nama, kelas || null, no_absen]
+          `INSERT INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
+           VALUES (?, ?, ?, ?, 'siswa', ?, ?, ?)`,
+          [id, username, passwordHash, nama, targetGuruId, kelas || null, no_absen]
         );
 
         createdList.push({
@@ -136,9 +192,9 @@ export async function POST(request) {
     const passwordHash = await hashPassword(rawPassword);
 
     await db.run(
-      `INSERT INTO users (id, username, password_hash, nama, role, kelas, no_absen)
-       VALUES (?, ?, ?, ?, 'siswa', ?, ?)`,
-      [id, cleanUsername, passwordHash, sanitizeInput(nama.trim()), kelas?.trim() || null, parseInt(no_absen) || null]
+      `INSERT INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
+       VALUES (?, ?, ?, ?, 'siswa', ?, ?, ?)`,
+      [id, cleanUsername, passwordHash, sanitizeInput(nama.trim()), targetGuruId, kelas?.trim() || null, parseInt(no_absen) || null]
     );
 
     return apiResponse({
@@ -148,6 +204,7 @@ export async function POST(request) {
         id,
         username: cleanUsername,
         nama: nama.trim(),
+        guru_id: targetGuruId,
         kelas: kelas?.trim() || null,
         no_absen: parseInt(no_absen) || null,
       },
@@ -163,7 +220,7 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    await requireRole(request, 'guru');
+    const user = await requireRole(request, 'guru');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -172,9 +229,14 @@ export async function DELETE(request) {
     }
 
     const db = getDB();
-    const target = await db.getOne("SELECT id, role FROM users WHERE id = ? AND role = 'siswa'", [id]);
+    const target = await db.getOne("SELECT id, role, guru_id FROM users WHERE id = ? AND role = 'siswa'", [id]);
     if (!target) {
       return apiError('Data siswa tidak ditemukan', 404);
+    }
+
+    // Non-superadmin teachers can only delete their own students
+    if (user.role === 'guru' && target.guru_id && target.guru_id !== user.id) {
+      return apiError('Anda tidak memiliki izin menghapus siswa milik guru lain', 403);
     }
 
     // Clean up student responses and sessions
