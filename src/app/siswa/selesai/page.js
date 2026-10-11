@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import { formatTanggal } from '@/lib/utils';
 
-export default function SiswaSelesaiPage() {
+function SelesaiContent() {
   const searchParams = useSearchParams();
   const ujianId = searchParams.get('ujian_id');
   const sesiId = searchParams.get('sesi_id');
@@ -121,5 +121,13 @@ export default function SiswaSelesaiPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SiswaSelesaiPage() {
+  return (
+    <Suspense fallback={<div className="loading-page"><div className="spinner" /><p>Memuat...</p></div>}>
+      <SelesaiContent />
+    </Suspense>
   );
 }
