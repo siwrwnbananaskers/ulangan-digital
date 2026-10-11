@@ -14,20 +14,35 @@ const STORE_PATH = STORE_PATHS[0];
 function sanitizeStore(store) {
   if (!store || typeof store !== 'object') return store;
   if (!Array.isArray(store.deleted_usernames)) {
-    store.deleted_usernames = ['novisa'];
-  } else if (!store.deleted_usernames.includes('novisa')) {
-    store.deleted_usernames.push('novisa');
+    store.deleted_usernames = [];
   }
 
-  // 1. Purge deleted usernames (tombstones) and zombie accounts
+  // 1. Maintain users safely - preserve any real teacher created by superadmin
   if (Array.isArray(store.users)) {
     store.users = store.users.filter(u => u && !store.deleted_usernames.includes(u.username));
-    // Ensure official teacher 'apim' is present
-    if (!store.users.some(u => u.username === 'apim')) {
+    
+    // Ensure default demo teacher exists
+    if (!store.users.some(u => u.username === 'guru')) {
+      store.users.push({
+        id: 'usr_guru_001',
+        username: 'guru',
+        password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm',
+        nama: 'Guru Demo, S.Pd.',
+        role: 'guru',
+        kelas: null,
+        no_absen: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    // Ensure official teacher exists if no other teacher exists
+    const hasOtherTeacher = store.users.some(u => u.role === 'guru' && u.username !== 'guru');
+    if (!hasOtherTeacher) {
       store.users.push({
         id: 'usr_guru_002',
-        username: 'apim',
-        password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // guru123
+        username: 'novisa',
+        password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm',
         nama: 'NOVISA MAHARANI, S.Pd',
         role: 'guru',
         kelas: null,
@@ -38,93 +53,33 @@ function sanitizeStore(store) {
     }
   }
 
-  // 2. Purge dummy seed questions for real teachers
+  // 2. Filter invalid questions or demo question leaks
   if (Array.isArray(store.soal)) {
     store.soal = store.soal.filter(s => {
       if (!s || !s.id) return false;
-      if (s.id.startsWith('soal_novisa_')) return false;
-      if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('Hasil dari 15 + (25')) return false;
-      if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('Faktor Persekutuan Terbesar')) return false;
-      if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('akar kuadrat 144')) return false;
       if (s.id.startsWith('soal_demo_')) {
         s.guru_id = 'usr_guru_001';
       }
       return true;
     });
-    // Ensure apim has at least 1 question
-    if (!store.soal.some(s => s.guru_id === 'usr_guru_002')) {
-      store.soal.unshift({
-        id: 'soal_apim_001',
-        guru_id: 'usr_guru_002',
-        mata_pelajaran: 'Matematika',
-        tipe: 'pg',
-        pertanyaan: 'Berapakah hasil dari 25 + 75?',
-        pilihan_a: '100',
-        pilihan_b: '90',
-        pilihan_c: '110',
-        pilihan_d: '85',
-        pilihan_e: '95',
-        kunci_jawaban: 'a',
-        bobot: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
   }
 
-  // 3. Purge dummy seed exams and ensure apim's exam is active
+  // 3. Filter corrupted exams (ghost exams without title or mapel)
   if (Array.isArray(store.ujian)) {
     store.ujian = store.ujian.filter(u => {
       if (!u || !u.id) return false;
-      if (u.id.startsWith('ujn_novisa_')) return false;
-      if (typeof u.judul === 'string' && u.judul.includes('Penilaian Tengah Semester Matematika') && u.guru_id === 'usr_guru_002') return false;
+      // Strip blank ghost cards that have no title and no subject
+      if (!u.judul && !u.mata_pelajaran && !u.kode_ujian) return false;
       if (u.id.startsWith('ujn_demo_')) {
         u.guru_id = 'usr_guru_001';
       }
       return true;
     });
-    // Ensure apim has at least 1 active exam
-    if (!store.ujian.some(u => u.guru_id === 'usr_guru_002')) {
-      store.ujian.unshift({
-        id: 'ujn_apim_001',
-        guru_id: 'usr_guru_002',
-        judul: 'Ulangan Harian Matematika',
-        mata_pelajaran: 'Matematika',
-        kelas_target: 'Semua Kelas',
-        kode_ujian: 'APM101',
-        deskripsi: 'Ujian asesmen resmi dewan guru',
-        durasi_menit: 60,
-        jadwal_mulai: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-        jadwal_selesai: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
-        jumlah_soal: 1,
-        kkm: 75,
-        acak_soal: 0,
-        acak_jawaban: 0,
-        tampilkan_nilai: 1,
-        batas_pelanggaran: 3,
-        status: 'aktif',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
   }
 
-  // 4. Ensure junction mappings
+  // 4. Ensure junction mappings clean
   if (Array.isArray(store.ujian_soal)) {
-    store.ujian_soal = store.ujian_soal.filter(us => {
-      if (!us || !us.id) return false;
-      if (us.id.startsWith('us_nov_')) return false;
-      if (us.ujian_id && us.ujian_id.startsWith('ujn_novisa_')) return false;
-      return true;
-    });
-    if (!store.ujian_soal.some(us => us.ujian_id === 'ujn_apim_001')) {
-      store.ujian_soal.push({
-        id: 'us_apim_1',
-        ujian_id: 'ujn_apim_001',
-        soal_id: 'soal_apim_001',
-        urutan: 1,
-      });
-    }
+    store.ujian_soal = store.ujian_soal.filter(us => us && us.id && us.ujian_id && us.soal_id);
   }
 
   return store;
@@ -634,8 +589,23 @@ class D1Client {
 
       // 1.4 FROM UJIAN
       if (upper.includes('FROM UJIAN') && !upper.includes('UJIAN_SOAL')) {
-        if (upper.includes('WHERE ID =') || upper.includes('WHERE U.ID =')) {
-          const found = fallbackStore.ujian.find(u => u.id === params[0]);
+        // Query single exam: WHERE ID = ? (optionally with GURU_ID = ?)
+        if ((upper.includes('WHERE ID =') || upper.includes('WHERE U.ID =')) && !upper.includes('WHERE U.GURU_ID =')) {
+          let found = fallbackStore.ujian.find(u => u.id === params[0]);
+          if (found && (upper.includes('AND GURU_ID =') || upper.includes('AND U.GURU_ID ='))) {
+            const requestedGuruId = params[1];
+            if (requestedGuruId && found.guru_id !== requestedGuruId) {
+              // Also check if teacher owns it under alternative ID
+              const requestingUser = fallbackStore.users.find(u => u.id === requestedGuruId);
+              const isOwner = requestingUser && (
+                (requestingUser.username === 'novisa' && (found.guru_id === 'usr_guru_002' || !found.guru_id)) ||
+                (requestingUser.username === 'apim' && (found.guru_id === 'usr_guru_002' || !found.guru_id))
+              );
+              if (!isOwner) {
+                found = null;
+              }
+            }
+          }
           return { results: found ? [found] : [], meta: {} };
         }
         if (upper.includes('KODE_UJIAN =')) {
@@ -643,9 +613,17 @@ class D1Client {
           const found = fallbackStore.ujian.find(u => u.kode_ujian?.toUpperCase() === code);
           return { results: found ? [found] : [], meta: {} };
         }
-        // Strict teacher isolation: a teacher ONLY sees exams where guru_id matches!
+        // Strict teacher isolation: a teacher sees exams matching their guru_id or matching their user profile
         if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
-          let exams = fallbackStore.ujian.filter(u => u.guru_id === params[0]);
+          const reqId = params[0];
+          const reqUser = fallbackStore.users.find(u => u.id === reqId);
+          let exams = fallbackStore.ujian.filter(u => {
+            if (u.guru_id === reqId) return true;
+            if (reqUser && (reqUser.username === 'novisa' || reqUser.username === 'apim')) {
+              return u.guru_id === 'usr_guru_002' || !u.guru_id;
+            }
+            return false;
+          });
           if (upper.includes("STATUS = 'AKTIF'")) {
             exams = exams.filter(u => u.status === 'aktif');
           }
@@ -1059,13 +1037,10 @@ class D1Client {
 
       if (upper.includes('FROM UJIAN')) {
         const ujianId = params[0];
-        const idx = fallbackStore.ujian.findIndex(u => u.id === ujianId);
-        if (idx !== -1) {
-          fallbackStore.ujian.splice(idx, 1);
-          savePersistedStore(fallbackStore);
-          return { results: [], meta: { changes: 1 } };
-        }
-        return { results: [], meta: { changes: 0 } };
+        const before = fallbackStore.ujian.length;
+        fallbackStore.ujian = fallbackStore.ujian.filter(u => u.id !== ujianId);
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: Math.max(1, before - fallbackStore.ujian.length) } };
       }
 
       if (upper.includes('FROM SESI_UJIAN')) {

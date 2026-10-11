@@ -238,7 +238,7 @@ export default function UjianPage() {
     setSelectedSoal(prev => [...new Set([...prev, ...matching])]);
   };
 
-  const validUjianList = (ujianList || []).filter(u => u && u.id && (u.judul || u['u.judul'] || u.mata_pelajaran));
+  const validUjianList = (ujianList || []).filter(u => u && u.id && ((u.judul && u.judul.trim()) || (u['u.judul'] && u['u.judul'].trim())));
 
   const getFilteredUjian = () => {
     if (activeTab === 'semua') return validUjianList;
