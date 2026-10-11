@@ -1976,3 +1976,87 @@ img {
   border-color: #01754f;
 }
 
+/* === Print Exam Cards Styling === */
+.print-only {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-cards-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12mm !important;
+    padding: 8mm !important;
+  }
+  .exam-card-badge {
+    border: 2px dashed #333333;
+    border-radius: 8px;
+    padding: 14px 16px;
+    page-break-inside: avoid;
+    background: #ffffff;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .exam-card-header {
+    border-bottom: 2px solid #000000;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .exam-card-logo {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+  .exam-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    background: #000000;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .exam-card-body {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .exam-card-row {
+    display: flex;
+    margin-bottom: 3px;
+  }
+  .exam-card-label {
+    width: 90px;
+    color: #555555;
+    font-size: 11px;
+  }
+  .exam-card-val {
+    flex: 1;
+    font-size: 12px;
+  }
+  .exam-card-divider {
+    height: 1px;
+    background: #e5e5e5;
+    margin: 6px 0;
+  }
+  .exam-card-footer {
+    border-top: 1px solid #000000;
+    margin-top: 8px;
+    padding-top: 4px;
+    font-size: 9px;
+    color: #666666;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+

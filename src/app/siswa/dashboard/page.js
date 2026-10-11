@@ -142,10 +142,10 @@ export default function SiswaDashboard() {
                 </div>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 800, color: '#191919', margin: 0 }}>
-                    Masuk ke Lembar Ujian
+                    Masuk ke Ruang Ujian / Mapel
                   </h2>
                   <p style={{ fontSize: 13, color: '#666666', margin: 0 }}>
-                    Masukkan 6 digit Kode Ujian / Token yang diumumkan oleh guru pengawas
+                    Masukkan 6 digit Kode Ruang Ujian yang dibagikan guru pengawas untuk mapel yang sedang diujikan
                   </p>
                 </div>
               </div>
