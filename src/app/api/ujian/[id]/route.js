@@ -28,6 +28,29 @@ export async function GET(request, { params }) {
     );
 
     if (user.role === 'siswa') {
+      // Verify that this exam belongs to student's teacher
+      let studentGuruId = user.guru_id;
+      let studentKelas = user.kelas;
+      if (!studentGuruId || !studentKelas) {
+        try {
+          const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
+          if (studentProfile) {
+            studentGuruId = studentGuruId || studentProfile.guru_id || 'usr_guru_001';
+            studentKelas = studentKelas || studentProfile.kelas;
+          }
+        } catch {}
+      }
+
+      if (studentGuruId && ujian.guru_id && ujian.guru_id !== studentGuruId && !(studentGuruId === 'usr_guru_001' && !ujian.guru_id)) {
+        return apiError('Anda tidak memiliki akses ke lembar ujian dari guru lain.', 403);
+      }
+
+      if (studentKelas && ujian.kelas_target && ujian.kelas_target !== 'Semua Kelas' && ujian.kelas_target !== '*') {
+        if (ujian.kelas_target.trim().toUpperCase() !== studentKelas.trim().toUpperCase()) {
+          return apiError(`Ujian ini diperuntukkan bagi kelas ${ujian.kelas_target}.`, 403);
+        }
+      }
+
       // Check if exam is active and within schedule
       const now = new Date().toISOString();
       if (ujian.status !== 'aktif') {

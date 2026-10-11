@@ -35,15 +35,55 @@ export async function GET(request) {
       return apiResponse({ ujian: ujianList });
     }
 
-    // For siswa, only show active exams
-    const ujianList = await db.getAll(
-      `SELECT id, judul, mata_pelajaran, kelas_target, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, status
-       FROM ujian 
-       WHERE status = 'aktif' 
-       AND datetime(jadwal_mulai) <= datetime('now') 
-       AND datetime(jadwal_selesai) >= datetime('now')
-       ORDER BY jadwal_mulai ASC`
-    );
+    // For siswa, only show active exams created by their own teacher (guru_id) and for their class
+    let studentGuruId = user.guru_id;
+    let studentKelas = user.kelas;
+
+    // Fetch up-to-date user info if missing from token
+    if (!studentGuruId || !studentKelas) {
+      try {
+        const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
+        if (studentProfile) {
+          studentGuruId = studentGuruId || studentProfile.guru_id || 'usr_guru_001';
+          studentKelas = studentKelas || studentProfile.kelas;
+        }
+      } catch {}
+    }
+
+    let ujianList = [];
+    if (studentGuruId) {
+      ujianList = await db.getAll(
+        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm,
+                (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+         FROM ujian u
+         WHERE u.status = 'aktif' 
+         AND u.guru_id = ?
+         AND datetime(u.jadwal_mulai) <= datetime('now') 
+         AND datetime(u.jadwal_selesai) >= datetime('now')
+         ORDER BY u.jadwal_mulai ASC`,
+        [studentGuruId]
+      );
+    } else {
+      ujianList = await db.getAll(
+        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm,
+                (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+         FROM ujian u
+         WHERE u.status = 'aktif' 
+         AND datetime(u.jadwal_mulai) <= datetime('now') 
+         AND datetime(u.jadwal_selesai) >= datetime('now')
+         ORDER BY u.jadwal_mulai ASC`
+      );
+    }
+
+    // Filter by student class if kelas_target is set and student has a class
+    if (studentKelas) {
+      const normalizedKelas = studentKelas.trim().toUpperCase();
+      ujianList = ujianList.filter(u => {
+        if (!u.kelas_target || u.kelas_target === 'Semua Kelas' || u.kelas_target === '*') return true;
+        return u.kelas_target.trim().toUpperCase() === normalizedKelas;
+      });
+    }
+
     return apiResponse({ ujian: ujianList });
   } catch (error) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {

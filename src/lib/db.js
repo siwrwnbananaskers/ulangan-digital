@@ -339,8 +339,8 @@ class D1Client {
         return { results: [{ cnt: count, count: count }], meta: {} };
       }
 
-      // 1.2 FROM USERS
-      if (upper.includes('FROM USERS')) {
+      // 1.2 FROM USERS (only when main table is users, not inside a subquery)
+      if (upper.includes('FROM USERS') && !upper.includes('FROM UJIAN')) {
         // SELECT DISTINCT kelas FROM users WHERE role = 'siswa'...
         if (upper.includes('DISTINCT KELAS')) {
           let students = fallbackStore.users.filter(u => u.role === 'siswa' && u.kelas);
@@ -437,7 +437,7 @@ class D1Client {
 
       // 1.4 FROM UJIAN
       if (upper.includes('FROM UJIAN') && !upper.includes('UJIAN_SOAL')) {
-        if (upper.includes('WHERE ID =')) {
+        if (upper.includes('WHERE ID =') || upper.includes('WHERE U.ID =')) {
           const found = fallbackStore.ujian.find(u => u.id === params[0]);
           return { results: found ? [found] : [], meta: {} };
         }
@@ -447,16 +447,24 @@ class D1Client {
           return { results: found ? [found] : [], meta: {} };
         }
         if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
-          const exams = fallbackStore.ujian.filter(u => u.guru_id === params[0]).map(u => ({
+          let exams = fallbackStore.ujian.filter(u => u.guru_id === params[0]);
+          if (upper.includes("STATUS = 'AKTIF'")) {
+            exams = exams.filter(u => u.status === 'aktif');
+          }
+          const results = exams.map(u => ({
             ...u,
             total_peserta: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id).length,
             peserta_selesai: fallbackStore.sesi_ujian.filter(s => s.ujian_id === u.id && s.status === 'selesai').length,
             rata_rata: 80,
           }));
-          return { results: exams, meta: {} };
+          return { results, meta: {} };
         }
-        // Superadmin or student list
-        const exams = fallbackStore.ujian.map(u => {
+        // Superadmin or active exam list
+        let examList = fallbackStore.ujian;
+        if (upper.includes("STATUS = 'AKTIF'")) {
+          examList = examList.filter(u => u.status === 'aktif');
+        }
+        const exams = examList.map(u => {
           const guru = fallbackStore.users.find(g => g.id === u.guru_id);
           return {
             ...u,

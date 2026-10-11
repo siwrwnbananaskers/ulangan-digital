@@ -254,13 +254,18 @@ export default function SiswaDashboard() {
                       }}
                     >
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                           <span className="badge badge-primary" style={{ fontSize: 11 }}>
                             {exam.mata_pelajaran}
                           </span>
                           <span className="badge badge-gray" style={{ fontSize: 11 }}>
-                            {exam.kelas_target}
+                            Kelas: {exam.kelas_target}
                           </span>
+                          {exam.nama_guru && (
+                            <span className="badge" style={{ fontSize: 10, background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
+                              Guru: {exam.nama_guru}
+                            </span>
+                          )}
                         </div>
                         <h4 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: '4px 0' }}>
                           {exam.judul}

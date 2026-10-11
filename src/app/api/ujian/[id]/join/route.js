@@ -18,6 +18,29 @@ export async function POST(request, { params }) {
       return apiError('Ujian tidak ditemukan', 404);
     }
 
+    // Verify teacher ownership
+    let studentGuruId = user.guru_id;
+    let studentKelas = user.kelas;
+    if (!studentGuruId || !studentKelas) {
+      try {
+        const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
+        if (studentProfile) {
+          studentGuruId = studentGuruId || studentProfile.guru_id || 'usr_guru_001';
+          studentKelas = studentKelas || studentProfile.kelas;
+        }
+      } catch {}
+    }
+
+    if (studentGuruId && ujian.guru_id && ujian.guru_id !== studentGuruId && !(studentGuruId === 'usr_guru_001' && !ujian.guru_id)) {
+      return apiError('Anda tidak memiliki izin mengikuti ujian dari guru lain.', 403);
+    }
+
+    if (studentKelas && ujian.kelas_target && ujian.kelas_target !== 'Semua Kelas' && ujian.kelas_target !== '*') {
+      if (ujian.kelas_target.trim().toUpperCase() !== studentKelas.trim().toUpperCase()) {
+        return apiError(`Ujian ini dikhususkan untuk kelas ${ujian.kelas_target}.`, 403);
+      }
+    }
+
     if (ujian.status !== 'aktif') {
       return apiError('Ujian tidak aktif', 403);
     }

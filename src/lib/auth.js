@@ -45,6 +45,7 @@ export function generateToken(user) {
       username: user.username,
       nama: user.nama,
       role: user.role,
+      guru_id: user.guru_id || null,
       kelas: user.kelas,
     },
     JWT_SECRET,

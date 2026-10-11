@@ -19,25 +19,49 @@ export async function POST(request) {
 
     const db = getDB();
     const ujian = await db.getOne(
-      `SELECT id, judul, mata_pelajaran, kelas_target, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, status, batas_pelanggaran, deskripsi
+      `SELECT id, judul, mata_pelajaran, kelas_target, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, status, batas_pelanggaran, deskripsi, guru_id
        FROM ujian WHERE kode_ujian = ?`,
       [kode_ujian.trim().toUpperCase()]
     );
 
     if (!ujian) {
-      return apiError('Kode ujian tidak ditemukan', 404);
+      return apiError('Kode ujian tidak ditemukan. Periksa kembali 6 digit kode yang dibagikan guru Anda.', 404);
+    }
+
+    // Verify teacher ownership: the exam must belong to the student's teacher
+    let studentGuruId = user.guru_id;
+    let studentKelas = user.kelas;
+    if (!studentGuruId || !studentKelas) {
+      try {
+        const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
+        if (studentProfile) {
+          studentGuruId = studentGuruId || studentProfile.guru_id || 'usr_guru_001';
+          studentKelas = studentKelas || studentProfile.kelas;
+        }
+      } catch {}
+    }
+
+    if (studentGuruId && ujian.guru_id && ujian.guru_id !== studentGuruId && !(studentGuruId === 'usr_guru_001' && !ujian.guru_id)) {
+      return apiError('Kode ruang ujian ini bukan milik guru pengampu Anda.', 403);
+    }
+
+    // Verify target class if specified
+    if (studentKelas && ujian.kelas_target && ujian.kelas_target !== 'Semua Kelas' && ujian.kelas_target !== '*') {
+      if (ujian.kelas_target.trim().toUpperCase() !== studentKelas.trim().toUpperCase()) {
+        return apiError(`Ujian ini dikhususkan untuk kelas ${ujian.kelas_target}, sedangkan kelas Anda adalah ${studentKelas}.`, 403);
+      }
     }
 
     if (ujian.status !== 'aktif') {
-      return apiError('Ujian belum aktif atau sudah selesai', 403);
+      return apiError('Ujian belum diaktifkan atau sudah ditutup oleh guru.', 403);
     }
 
     const now = new Date().toISOString();
     if (now < ujian.jadwal_mulai) {
-      return apiError(`Ujian belum dimulai. Jadwal: ${ujian.jadwal_mulai}`, 403);
+      return apiError(`Ujian belum dimulai. Jadwal mulai: ${new Date(ujian.jadwal_mulai).toLocaleString('id-ID')}`, 403);
     }
     if (now > ujian.jadwal_selesai) {
-      return apiError('Ujian sudah berakhir', 403);
+      return apiError('Waktu ujian sudah berakhir.', 403);
     }
 
     // Check if student already has a session
