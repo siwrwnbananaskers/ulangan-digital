@@ -102,11 +102,11 @@ export default function SuperAdminDashboard() {
     <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={logout} role="guru" />
 
-      <main className="main-content" style={{ maxWidth: 1128, margin: '0 auto', padding: '24px 16px' }}>
+      <main className="main-content">
         {/* Header Ribbon */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+        <div className="page-header-ribbon">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
               <span className="badge badge-primary" style={{ background: '#0f172a', color: '#ffffff', fontSize: 11, padding: '3px 10px' }}>
                 HAK AKSES PENUH (OWNER)
               </span>
@@ -120,7 +120,7 @@ export default function SuperAdminDashboard() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="page-header-actions">
             <a
               href="/superadmin/guru"
               className="btn btn-secondary"
@@ -142,12 +142,12 @@ export default function SuperAdminDashboard() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              + Tambah Guru
+              Tambah Guru
             </button>
             <a
               href="/guru/ujian"
               className="btn btn-secondary"
-              style={{ borderRadius: 8, padding: '8px 16px', fontWeight: 600, fontSize: 13 }}
+              style={{ borderRadius: 8, padding: '8px 16px', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
               Kelola Semua Ujian →
             </a>
@@ -161,8 +161,8 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* Global Metric Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 20 }}>
+        {/* Global Metric Cards (5 Cards Auto-Fit Perfectly on Mobile & Desktop) */}
+        <div className="metric-grid-5">
           <div className="card" style={{ padding: '16px', background: '#ffffff' }}>
             <div style={{ fontSize: 12, color: '#666666', marginBottom: 4 }}>Total Guru Terdaftar</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: '#0a66c2' }}>{data.stats.total_guru || 0}</div>
@@ -186,7 +186,7 @@ export default function SuperAdminDashboard() {
         </div>
 
         {/* 2 Column Main Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20 }}>
+        <div className="admin-two-col">
           {/* Left: Teachers Directory & Activity */}
           <div className="card" style={{ padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>

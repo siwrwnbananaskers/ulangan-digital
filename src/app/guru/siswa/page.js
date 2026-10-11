@@ -176,10 +176,10 @@ export default function SiswaManagementPage() {
       </div>
 
       {/* Main Screen (Hidden on print) */}
-      <main className="main-content no-print" style={{ maxWidth: 1128, margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+      <main className="main-content no-print">
+        <div className="page-header-ribbon">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Kelola Akun Siswa & Kartu Ujian</h1>
               {isSuperadmin && (
                 <span className="badge badge-primary" style={{ background: '#0f172a', color: '#fff', fontSize: 11, padding: '2px 8px' }}>
@@ -193,7 +193,7 @@ export default function SiswaManagementPage() {
                 : `Hanya menampilkan siswa yang Anda daftarkan (${user?.nama || 'Akun Guru'}). Siswa dari guru lain terisolasi secara aman.`}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="page-header-actions">
             <button
               className="btn btn-secondary"
               onClick={() => setShowBulkModal(true)}
@@ -229,7 +229,7 @@ export default function SiswaManagementPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
+        <div className="admin-two-col">
           {/* Left Column: Student Table */}
           <div className="card" style={{ padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>

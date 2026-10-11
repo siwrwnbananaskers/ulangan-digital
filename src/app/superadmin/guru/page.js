@@ -95,8 +95,8 @@ export default function SuperadminGuruManagementPage() {
     <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={logout} role="guru" />
 
-      <main className="main-content" style={{ maxWidth: 1128, margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+      <main className="main-content">
+        <div className="page-header-ribbon">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <a href="/superadmin/dashboard" style={{ fontSize: 12, color: '#0a66c2', fontWeight: 600, textDecoration: 'none' }}>
@@ -111,7 +111,7 @@ export default function SuperadminGuruManagementPage() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="page-header-actions">
             <button
               className="btn btn-primary"
               onClick={() => setShowAddModal(true)}
@@ -120,7 +120,7 @@ export default function SuperadminGuruManagementPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              + Tambah Akun Guru Baru
+              Tambah Akun Guru Baru
             </button>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function SuperadminGuruManagementPage() {
               type="text"
               placeholder="Cari nama atau username..."
               className="form-input"
-              style={{ maxWidth: 280, padding: '6px 12px', fontSize: 13 }}
+              style={{ maxWidth: 280, width: '100%', flex: '1 1 200px', padding: '6px 12px', fontSize: 13 }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

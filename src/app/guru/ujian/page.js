@@ -261,16 +261,16 @@ export default function UjianPage() {
     <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={logout} role="guru" />
 
-      <main className="main-content" style={{ maxWidth: 1128, margin: '0 auto', padding: '24px 16px' }}>
+      <main className="main-content">
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+        <div className="page-header-ribbon">
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Manajemen Ujian</h1>
             <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>
               Buat, jadwalkan, atur butir soal, dan pantau status pelaksanaan asesmen siswa
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="page-header-actions">
             <a
               href="/guru/siswa"
               className="btn btn-secondary"
@@ -304,8 +304,8 @@ export default function UjianPage() {
           </div>
         )}
 
-        {/* Tab Pills */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: '#ffffff', padding: '6px 12px', borderRadius: 8, border: '1px solid #e0dfdc' }}>
+        {/* Tab Pills with horizontal touch scrolling on mobile */}
+        <div className="tab-scroll-row">
           {[
             { key: 'semua', label: `Semua (${validUjianList.length})` },
             { key: 'aktif', label: `Aktif (${validUjianList.filter(u => (u.status || u['u.status']) === 'aktif').length})` },
@@ -349,7 +349,7 @@ export default function UjianPage() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
+          <div className="ujian-cards-grid">
             {getFilteredUjian().map(ujian => {
               const judul = ujian.judul || ujian['u.judul'] || 'Ujian';
               const mataPelajaran = ujian.mata_pelajaran || ujian['u.mata_pelajaran'] || '-';

@@ -178,30 +178,32 @@ export default function GuruHasilPage() {
       <Navbar user={user} onLogout={logout} role="guru" />
 
       <main className="main-content">
-        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div className="page-header-ribbon">
           <div>
-            <h1>Hasil & Evaluasi Ujian</h1>
-            <p>Pantau nilai siswa, statistik kelulusan KKM, dan status pengerjaan</p>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Hasil & Evaluasi Ujian</h1>
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Pantau nilai siswa, statistik kelulusan KKM, dan status pengerjaan</p>
           </div>
           {selectedUjianId && (
-            <a href={`/guru/audit?ujian_id=${selectedUjianId}`} className="btn btn-secondary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Lihat Audit Pelanggaran Ujian Ini
-            </a>
+            <div className="page-header-actions">
+              <a href={`/guru/audit?ujian_id=${selectedUjianId}`} className="btn btn-secondary" style={{ borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Lihat Audit Pelanggaran Ujian Ini
+              </a>
+            </div>
           )}
         </div>
 
         {/* Filter Ujian */}
-        <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
+        <div className="card" style={{ marginBottom: 'var(--space-xl)', padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-            <label style={{ fontWeight: 600, color: 'var(--gray-700)', minWidth: 100 }}>
+            <label style={{ fontWeight: 600, color: 'var(--gray-700)', minWidth: 90 }}>
               Pilih Ujian:
             </label>
             <select
               className="form-select"
-              style={{ maxWidth: 450, flex: 1 }}
+              style={{ maxWidth: 450, flex: '1 1 220px', width: '100%' }}
               value={selectedUjianId}
               onChange={(e) => setSelectedUjianId(e.target.value)}
             >

@@ -113,25 +113,27 @@ export default function GuruAuditPage() {
       <Navbar user={user} onLogout={logout} role="guru" />
 
       <main className="main-content">
-        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div className="page-header-ribbon">
           <div>
-            <h1>Audit Log Integritas Ujian</h1>
-            <p>Rekam jejak real-time aktivitas siswa (Page Visibility, Blur Focus, Exit Fullscreen)</p>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Audit Log Integritas Ujian</h1>
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Rekam jejak real-time aktivitas siswa (Page Visibility, Blur Focus, Exit Fullscreen)</p>
           </div>
           {selectedUjianId && (
-            <a href={`/guru/hasil?ujian_id=${selectedUjianId}`} className="btn btn-secondary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10" />
-              </svg>
-              Lihat Rekap Nilai
-            </a>
+            <div className="page-header-actions">
+              <a href={`/guru/hasil?ujian_id=${selectedUjianId}`} className="btn btn-secondary" style={{ borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10" />
+                </svg>
+                Lihat Rekap Nilai
+              </a>
+            </div>
           )}
         </div>
 
         {/* Filter Toolbar */}
-        <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-lg)', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ flex: 1, minWidth: 260 }}>
+        <div className="card" style={{ marginBottom: 'var(--space-xl)', padding: 16 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ flex: '1 1 220px', minWidth: 0, width: '100%' }}>
               <label className="form-label" style={{ marginBottom: 'var(--space-xs)' }}>Pilih Ujian:</label>
               <select
                 className="form-select"
@@ -150,7 +152,7 @@ export default function GuruAuditPage() {
               </select>
             </div>
 
-            <div style={{ minWidth: 200 }}>
+            <div style={{ flex: '1 1 180px', minWidth: 0, width: '100%' }}>
               <label className="form-label" style={{ marginBottom: 'var(--space-xs)' }}>Tipe Pelanggaran:</label>
               <select
                 className="form-select"

@@ -135,15 +135,17 @@ export default function BankSoal() {
       <Navbar user={user} onLogout={logout} role="guru" />
 
       <main className="main-content">
-        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div className="page-header-ribbon">
           <div>
-            <h1>Bank Soal</h1>
-            <p>Kelola koleksi soal untuk ujian Anda</p>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Bank Soal</h1>
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Kelola koleksi soal untuk asesmen dan ujian siswa</p>
           </div>
-          <button className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Tambah Soal
-          </button>
+          <div className="page-header-actions">
+            <button className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }} style={{ borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, background: '#0a66c2', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Tambah Soal Baru
+            </button>
+          </div>
         </div>
 
         {alert && (
