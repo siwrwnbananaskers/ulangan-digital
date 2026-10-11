@@ -6,8 +6,50 @@ const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
 
 const STORE_PATH = path.join(
   process.env.VERCEL ? '/tmp' : (process.env.TEMP || os.tmpdir()),
-  'ulangan_digital_db_store.json'
+  'ulangan_digital_db_store_v3.json'
 );
+
+function sanitizeStore(store) {
+  if (!store || typeof store !== 'object') return store;
+  // 1. Purge any dummy seed questions created for novisa or other real teachers
+  if (Array.isArray(store.soal)) {
+    store.soal = store.soal.filter(s => {
+      if (!s || !s.id) return false;
+      // Strip any dummy seeded novisa questions
+      if (s.id.startsWith('soal_novisa_')) return false;
+      if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('Hasil dari 15 + (25')) return false;
+      if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('Faktor Persekutuan Terbesar')) return false;
+      if (typeof s.pertanyaan === 'string' && s.pertanyaan.includes('akar kuadrat 144')) return false;
+      // Demo questions must ONLY belong to demo guru (usr_guru_001)
+      if (s.id.startsWith('soal_demo_')) {
+        s.guru_id = 'usr_guru_001';
+      }
+      return true;
+    });
+  }
+  // 2. Purge any dummy seed exams created for novisa
+  if (Array.isArray(store.ujian)) {
+    store.ujian = store.ujian.filter(u => {
+      if (!u || !u.id) return false;
+      if (u.id.startsWith('ujn_novisa_')) return false;
+      if (typeof u.judul === 'string' && u.judul.includes('Penilaian Tengah Semester Matematika') && u.guru_id === 'usr_guru_002') return false;
+      if (u.id.startsWith('ujn_demo_')) {
+        u.guru_id = 'usr_guru_001';
+      }
+      return true;
+    });
+  }
+  // 3. Purge orphaned junction mappings
+  if (Array.isArray(store.ujian_soal)) {
+    store.ujian_soal = store.ujian_soal.filter(us => {
+      if (!us || !us.id) return false;
+      if (us.id.startsWith('us_nov_')) return false;
+      if (us.ujian_id && us.ujian_id.startsWith('ujn_novisa_')) return false;
+      return true;
+    });
+  }
+  return store;
+}
 
 function loadPersistedStore() {
   try {
@@ -15,7 +57,7 @@ function loadPersistedStore() {
       const data = fs.readFileSync(STORE_PATH, 'utf8');
       const parsed = JSON.parse(data);
       if (parsed && Array.isArray(parsed.users)) {
-        return parsed;
+        return sanitizeStore(parsed);
       }
     }
   } catch (e) {
@@ -26,7 +68,8 @@ function loadPersistedStore() {
 
 function savePersistedStore(store) {
   try {
-    fs.writeFileSync(STORE_PATH, JSON.stringify(store), 'utf8');
+    const clean = sanitizeStore(store);
+    fs.writeFileSync(STORE_PATH, JSON.stringify(clean), 'utf8');
   } catch (e) {
     // ignore
   }
@@ -340,6 +383,7 @@ class D1Client {
       if (Array.isArray(persisted.jawaban)) fallbackStore.jawaban = persisted.jawaban;
       if (Array.isArray(persisted.audit_log)) fallbackStore.audit_log = persisted.audit_log;
     }
+    sanitizeStore(fallbackStore);
 
     const s = sql.trim();
     const upper = s.toUpperCase();

@@ -9,6 +9,9 @@ import { getDB } from '@/lib/db';
 import { requireRole, authErrorResponse, sanitizeInput, hashPassword } from '@/lib/auth';
 import { apiResponse, apiError, generateId } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
   try {
     await requireRole(request, 'superadmin');

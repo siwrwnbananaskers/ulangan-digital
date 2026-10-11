@@ -26,7 +26,7 @@ export default function SuperadminGuruManagementPage() {
   const loadTeachers = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/api/superadmin/guru');
+      const res = await authFetch(`/api/superadmin/guru?_t=${Date.now()}`);
       const data = await res.json();
       if (res.ok) {
         setTeachers(data.teachers || []);

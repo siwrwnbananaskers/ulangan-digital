@@ -32,7 +32,7 @@ export default function SuperAdminDashboard() {
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/api/superadmin/guru');
+      const res = await authFetch(`/api/superadmin/guru?_t=${Date.now()}`);
       const resData = await res.json();
       if (res.ok) {
         setData({
