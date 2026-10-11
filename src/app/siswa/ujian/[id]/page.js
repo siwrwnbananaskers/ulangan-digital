@@ -62,7 +62,7 @@ export default function LembarUjianPage() {
     setViolations,
     setIsSuspended,
   } = useExamMode({
-    enabled: !!sesi && !isSuspended && !loading,
+    enabled: !!sesi && !loading,
     batasPelanggaran: ujian?.batas_pelanggaran || 3,
     onViolation: handleViolationCallback,
     sesiId: sesi?.id,
