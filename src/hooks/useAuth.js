@@ -24,9 +24,19 @@ export function useAuth(requiredRole = null) {
     try {
       const parsedUser = JSON.parse(storedUser);
       
-      if (requiredRole && parsedUser.role !== requiredRole) {
-        router.push('/');
-        return;
+      if (requiredRole) {
+        if (requiredRole === 'superadmin' && parsedUser.role !== 'superadmin') {
+          router.push('/');
+          return;
+        }
+        if (requiredRole === 'guru' && parsedUser.role !== 'guru' && parsedUser.role !== 'superadmin') {
+          router.push('/');
+          return;
+        }
+        if (requiredRole === 'siswa' && parsedUser.role !== 'siswa') {
+          router.push('/');
+          return;
+        }
       }
 
       setUser(parsedUser);

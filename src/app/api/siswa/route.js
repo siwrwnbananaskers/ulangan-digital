@@ -43,9 +43,23 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    await requireRole(request, 'guru');
+    const user = await requireRole(request, 'guru');
     const body = await request.json();
     const db = getDB();
+
+    // Check demo limitation: demo user "guru" is limited to adding only 1 student
+    if (user.role === 'guru' && user.username === 'guru') {
+      const existingStudents = await db.getAll("SELECT id FROM users WHERE role = 'siswa'");
+      // If already has 1 or more custom students created (or total students >= 1), limit reached
+      if (existingStudents && existingStudents.length >= 1) {
+        return Response.json({
+          error: 'LIMIT_DEMO_REACHED',
+          message: 'Batas Akun Demo Tercapai! Anda hanya dapat menambah 1 siswa untuk uji coba.',
+          upgrade_required: true,
+          wa_contact: '082175693537',
+        }, { status: 403 });
+      }
+    }
 
     // Check if bulk insert
     if (Array.isArray(body.siswa)) {

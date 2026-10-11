@@ -10,6 +10,17 @@ const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
 const fallbackStore = {
   users: [
     {
+      id: 'usr_superadmin_001',
+      username: 'superadmin',
+      password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // admin123 / guru123
+      nama: 'Super Admin Wozber (Owner)',
+      role: 'superadmin',
+      kelas: null,
+      no_absen: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
       id: 'usr_guru_001',
       username: 'guru',
       password_hash: '$2a$10$8KxX8jHQgRWLbQKC1G9GCeZVHqJKEHGUoEhHJHMdF3Y3vXkKR7Iqm', // guru123

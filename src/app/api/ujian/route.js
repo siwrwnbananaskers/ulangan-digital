@@ -13,6 +13,17 @@ export async function GET(request) {
     const user = await requireAuth(request);
     const db = getDB();
 
+    if (user.role === 'superadmin') {
+      const ujianList = await db.getAll(
+        `SELECT u.*, 
+          (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
+          (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
+          (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+         FROM ujian u ORDER BY u.created_at DESC`
+      );
+      return apiResponse({ ujian: ujianList });
+    }
+
     if (user.role === 'guru') {
       const ujianList = await db.getAll(
         `SELECT u.*, 
@@ -60,6 +71,20 @@ export async function POST(request) {
     }
 
     const db = getDB();
+
+    // Check demo limitation: demo user "guru" is limited to 1 exam
+    if (user.role === 'guru' && user.username === 'guru') {
+      const existingExams = await db.getAll('SELECT id FROM ujian WHERE guru_id = ?', [user.id]);
+      if (existingExams && existingExams.length >= 1) {
+        return Response.json({
+          error: 'LIMIT_DEMO_REACHED',
+          message: 'Batas Akun Demo Tercapai! Anda hanya dapat membuat 1 ujian untuk uji coba.',
+          upgrade_required: true,
+          wa_contact: '082175693537',
+        }, { status: 403 });
+      }
+    }
+
     const id = generateId('ujn');
     let kodeUjian = generateKodeUjian();
 

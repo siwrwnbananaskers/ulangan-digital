@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
+import UpgradeModal from '@/components/UpgradeModal';
 
 export default function UjianPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -10,6 +11,8 @@ export default function UjianPage() {
   const [soalList, setSoalList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState('');
   const [editingUjian, setEditingUjian] = useState(null);
   const [selectedSoal, setSelectedSoal] = useState([]);
   const [alert, setAlert] = useState(null);
@@ -161,6 +164,13 @@ export default function UjianPage() {
         });
         const data = await res.json();
         if (!res.ok) {
+          if (data.upgrade_required || data.error === 'LIMIT_DEMO_REACHED') {
+            setShowUpgradeModal(true);
+            setUpgradeMsg(data.message || 'Batas Akun Demo Tercapai! Anda hanya dapat membuat 1 ujian untuk uji coba.');
+            setShowModal(false);
+            setSaving(false);
+            return;
+          }
           setAlert({ type: 'danger', message: data.error || 'Gagal membuat ujian' });
           setSaving(false);
           return;
@@ -677,6 +687,14 @@ export default function UjianPage() {
           </div>
         </div>
       )}
+
+      {/* Upgrade WhatsApp Modal when Demo Limit Reached */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Batas Kuota Ujian Demo"
+        message={upgradeMsg}
+      />
     </div>
   );
 }

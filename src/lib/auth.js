@@ -100,6 +100,9 @@ export async function requireAuth(request) {
  */
 export async function requireRole(request, role) {
   const user = await requireAuth(request);
+  if (user.role === 'superadmin') {
+    return user; // Superadmin has god-mode access to all guru/siswa APIs
+  }
   if (user.role !== role) {
     throw new Error('FORBIDDEN');
   }

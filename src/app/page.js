@@ -35,7 +35,9 @@ export default function LoginPage() {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redirect based on role
-      if (data.user.role === 'guru') {
+      if (data.user.role === 'superadmin') {
+        router.push('/superadmin/dashboard');
+      } else if (data.user.role === 'guru') {
         router.push('/guru/dashboard');
       } else {
         router.push('/siswa/dashboard');

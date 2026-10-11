@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
+import UpgradeModal from '@/components/UpgradeModal';
 
 export default function SiswaManagementPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -11,6 +12,8 @@ export default function SiswaManagementPage() {
   const [filterKelas, setFilterKelas] = useState('');
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState('');
 
   // Single Add Form
   const [singleForm, setSingleForm] = useState({
@@ -60,6 +63,11 @@ export default function SiswaManagementPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.upgrade_required || data.error === 'LIMIT_DEMO_REACHED') {
+          setShowUpgradeModal(true);
+          setUpgradeMsg(data.message || 'Batas Akun Demo Tercapai! Anda hanya dapat menambah 1 siswa untuk uji coba.');
+          return;
+        }
         setAlert({ type: 'danger', message: data.error || 'Gagal menambahkan siswa' });
         return;
       }
@@ -107,6 +115,13 @@ export default function SiswaManagementPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.upgrade_required || data.error === 'LIMIT_DEMO_REACHED') {
+          setShowBulkModal(false);
+          setShowUpgradeModal(true);
+          setUpgradeMsg(data.message || 'Batas Akun Demo Tercapai! Anda hanya dapat menambah 1 siswa untuk uji coba.');
+          setBulkProcessing(false);
+          return;
+        }
         setAlert({ type: 'danger', message: data.error || 'Gagal impor data' });
       } else {
         setAlert({ type: 'success', message: data.message });
@@ -466,6 +481,14 @@ export default function SiswaManagementPage() {
           ))}
         </div>
       </div>
+
+      {/* Upgrade WhatsApp Modal when Demo Limit Reached */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Batas Kuota Siswa Demo"
+        message={upgradeMsg}
+      />
     </div>
   );
 }
