@@ -25,31 +25,40 @@ async function main() {
 
   console.log('🚀 Menjalankan migrasi skema ke Cloudflare D1...');
 
-  // Split SQL by statements or send as batch
   const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`;
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ sql: schemaSql }),
-    });
+  // Parse SQL statements
+  const statements = schemaSql
+    .split(/;\s*[\r\n]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !s.startsWith('--'));
 
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      console.error('❌ Gagal menjalankan migrasi:', JSON.stringify(data.errors, null, 2));
-      process.exit(1);
+  console.log(`Ditemukan ${statements.length} perintah SQL untuk dieksekusi.`);
+
+  for (let i = 0; i < statements.length; i++) {
+    const stmt = statements[i];
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sql: stmt }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.warn(`⚠️ Pernyataan #${i + 1} dilewati atau gagal:`, data.errors?.[0]?.message || 'Unknown error');
+      } else {
+        console.log(`✅ Pernyataan #${i + 1}/${statements.length} selesai.`);
+      }
+    } catch (err) {
+      console.warn(`⚠️ Gagal mengeksekusi pernyataan #${i + 1}:`, err.message);
     }
-
-    console.log('✅ Berhasil menginisialisasi skema Cloudflare D1!');
-    console.log('Tabel users, soal, ujian, ujian_soal, sesi_ujian, jawaban, dan audit_log siap digunakan.');
-  } catch (err) {
-    console.error('❌ Terjadi kesalahan jaringan:', err.message);
-    process.exit(1);
   }
+
+  console.log('🎉 Migrasi skema Cloudflare D1 selesai!');
 }
 
 main();

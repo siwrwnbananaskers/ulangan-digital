@@ -20,7 +20,13 @@ export async function GET(request, { params }) {
 
     // Get questions
     let soalList = await db.getAll(
-      `SELECT s.*, us.urutan FROM soal s
+      `SELECT 
+        s.id as id, s.guru_id as guru_id, s.mata_pelajaran as mata_pelajaran, s.tipe as tipe,
+        s.pertanyaan as pertanyaan, s.pilihan_a as pilihan_a, s.pilihan_b as pilihan_b,
+        s.pilihan_c as pilihan_c, s.pilihan_d as pilihan_d, s.pilihan_e as pilihan_e,
+        s.kunci_jawaban as kunci_jawaban, s.bobot as bobot, s.created_at as created_at,
+        us.urutan as urutan
+       FROM soal s
        JOIN ujian_soal us ON us.soal_id = s.id
        WHERE us.ujian_id = ?
        ORDER BY us.urutan ASC`,

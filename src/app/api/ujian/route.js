@@ -15,7 +15,13 @@ export async function GET(request) {
 
     if (user.role === 'superadmin') {
       const ujianList = await db.getAll(
-        `SELECT u.*, 
+        `SELECT 
+          u.id as id, u.guru_id as guru_id, u.judul as judul, u.mata_pelajaran as mata_pelajaran,
+          u.kelas_target as kelas_target, u.kode_ujian as kode_ujian, u.deskripsi as deskripsi,
+          u.durasi_menit as durasi_menit, u.jadwal_mulai as jadwal_mulai, u.jadwal_selesai as jadwal_selesai,
+          u.jumlah_soal as jumlah_soal, u.kkm as kkm, u.acak_soal as acak_soal, u.acak_jawaban as acak_jawaban,
+          u.tampilkan_nilai as tampilkan_nilai, u.batas_pelanggaran as batas_pelanggaran, u.status as status,
+          u.created_at as created_at, u.updated_at as updated_at,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
           (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
@@ -26,7 +32,13 @@ export async function GET(request) {
 
     if (user.role === 'guru') {
       const ujianList = await db.getAll(
-        `SELECT u.*, 
+        `SELECT 
+          u.id as id, u.guru_id as guru_id, u.judul as judul, u.mata_pelajaran as mata_pelajaran,
+          u.kelas_target as kelas_target, u.kode_ujian as kode_ujian, u.deskripsi as deskripsi,
+          u.durasi_menit as durasi_menit, u.jadwal_mulai as jadwal_mulai, u.jadwal_selesai as jadwal_selesai,
+          u.jumlah_soal as jumlah_soal, u.kkm as kkm, u.acak_soal as acak_soal, u.acak_jawaban as acak_jawaban,
+          u.tampilkan_nilai as tampilkan_nilai, u.batas_pelanggaran as batas_pelanggaran, u.status as status,
+          u.created_at as created_at, u.updated_at as updated_at,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai
          FROM ujian u WHERE u.guru_id = ? ORDER BY u.created_at DESC`,

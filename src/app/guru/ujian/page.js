@@ -226,9 +226,11 @@ export default function UjianPage() {
   };
 
   const selectAllFilteredSoal = () => {
+    const currentMapel = (form.mata_pelajaran || '').trim().toLowerCase();
     const matching = soalList
-      .filter(s => !form.mata_pelajaran || s.mata_pelajaran.toLowerCase() === form.mata_pelajaran.toLowerCase())
-      .map(s => s.id);
+      .filter(s => !currentMapel || (s.mata_pelajaran || '').trim().toLowerCase() === currentMapel)
+      .map(s => s.id)
+      .filter(Boolean);
     setSelectedSoal(prev => [...new Set([...prev, ...matching])]);
   };
 

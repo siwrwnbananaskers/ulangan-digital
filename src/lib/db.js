@@ -186,6 +186,54 @@ const fallbackStore = {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
+    {
+      id: 'soal_novisa_001',
+      guru_id: 'usr_guru_002',
+      mata_pelajaran: 'Matematika',
+      tipe: 'pg',
+      pertanyaan: 'Hasil dari 15 + (25 x 4) - 50 adalah...',
+      pilihan_a: '65',
+      pilihan_b: '75',
+      pilihan_c: '85',
+      pilihan_d: '90',
+      pilihan_e: '100',
+      kunci_jawaban: 'a',
+      bobot: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'soal_novisa_002',
+      guru_id: 'usr_guru_002',
+      mata_pelajaran: 'Matematika',
+      tipe: 'pg',
+      pertanyaan: 'Faktor Persekutuan Terbesar (FPB) dari 24 dan 36 adalah...',
+      pilihan_a: '6',
+      pilihan_b: '12',
+      pilihan_c: '18',
+      pilihan_d: '24',
+      pilihan_e: '72',
+      kunci_jawaban: 'b',
+      bobot: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'soal_novisa_003',
+      guru_id: 'usr_guru_002',
+      mata_pelajaran: 'Matematika',
+      tipe: 'isian',
+      pertanyaan: 'Berapakah nilai dari akar kuadrat 144?',
+      pilihan_a: null,
+      pilihan_b: null,
+      pilihan_c: null,
+      pilihan_d: null,
+      pilihan_e: null,
+      kunci_jawaban: '12',
+      bobot: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
   ],
   ujian: [
     {
@@ -209,6 +257,27 @@ const fallbackStore = {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
+    {
+      id: 'ujn_novisa_001',
+      guru_id: 'usr_guru_002',
+      judul: 'Penilaian Tengah Semester Matematika',
+      mata_pelajaran: 'Matematika',
+      kelas_target: 'XII-IPA-1',
+      kode_ujian: 'NOV789',
+      deskripsi: 'Kerjakan secara mandiri dan jujur.',
+      durasi_menit: 60,
+      jadwal_mulai: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      jadwal_selesai: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+      jumlah_soal: 3,
+      kkm: 75,
+      acak_soal: 0,
+      acak_jawaban: 0,
+      tampilkan_nilai: 1,
+      batas_pelanggaran: 3,
+      status: 'draft',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
   ],
   ujian_soal: [
     { id: 'us_1', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_001', urutan: 1 },
@@ -216,6 +285,9 @@ const fallbackStore = {
     { id: 'us_3', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_003', urutan: 3 },
     { id: 'us_4', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_004', urutan: 4 },
     { id: 'us_5', ujian_id: 'ujn_demo_001', soal_id: 'soal_demo_005', urutan: 5 },
+    { id: 'us_nov_1', ujian_id: 'ujn_novisa_001', soal_id: 'soal_novisa_001', urutan: 1 },
+    { id: 'us_nov_2', ujian_id: 'ujn_novisa_001', soal_id: 'soal_novisa_002', urutan: 2 },
+    { id: 'us_nov_3', ujian_id: 'ujn_novisa_001', soal_id: 'soal_novisa_003', urutan: 3 },
   ],
   sesi_ujian: [],
   jawaban: [],
@@ -232,6 +304,21 @@ class D1Client {
     if (!this.isCloudflare) {
       // In-memory fallback
     }
+  }
+
+  normalizeRow(row) {
+    if (!row || typeof row !== 'object') return row;
+    const clean = {};
+    for (const [key, value] of Object.entries(row)) {
+      clean[key] = value;
+      if (key.includes('.')) {
+        const shortKey = key.split('.').pop();
+        if (clean[shortKey] === undefined) {
+          clean[shortKey] = value;
+        }
+      }
+    }
+    return clean;
   }
 
   /**
@@ -261,7 +348,11 @@ class D1Client {
           throw new Error(`D1 query failed: ${JSON.stringify(data.errors)}`);
         }
 
-        return data.result?.[0] || { results: [], meta: {} };
+        const res = data.result?.[0] || { results: [], meta: {} };
+        if (Array.isArray(res.results)) {
+          res.results = res.results.map(r => this.normalizeRow(r));
+        }
+        return res;
       } catch (error) {
         console.warn('⚠️ Cloudflare D1 query failed, using resilient fallback store:', error.message);
         return this.executeFallback(sql, params);
@@ -729,32 +820,35 @@ class D1Client {
       }
 
       if (upper.includes('UPDATE UJIAN')) {
-        if (upper.includes('SET STATUS =')) {
-          const u = fallbackStore.ujian.find(x => x.id === params[1]);
-          if (u) u.status = params[0];
-        } else {
-          const examId = params[params.length - 1];
-          const u = fallbackStore.ujian.find(x => x.id === examId);
-          if (u) {
-            u.judul = params[0] || u.judul;
-            u.mata_pelajaran = params[1] || u.mata_pelajaran;
-            u.kelas_target = params[2] || u.kelas_target;
-            u.deskripsi = params[3] !== undefined ? params[3] : u.deskripsi;
-            u.durasi_menit = params[4] || u.durasi_menit;
-            u.jadwal_mulai = params[5] || u.jadwal_mulai;
-            u.jadwal_selesai = params[6] || u.jadwal_selesai;
-            u.jumlah_soal = params[7] || u.jumlah_soal;
-            u.kkm = params[8] || u.kkm;
-            u.acak_soal = params[9] !== undefined ? params[9] : u.acak_soal;
-            u.acak_jawaban = params[10] !== undefined ? params[10] : u.acak_jawaban;
-            u.tampilkan_nilai = params[11] !== undefined ? params[11] : u.tampilkan_nilai;
-            u.batas_pelanggaran = params[12] || u.batas_pelanggaran;
-            u.status = params[13] || u.status;
-            u.updated_at = new Date().toISOString();
+        let u = null;
+        for (const p of params) {
+          if (typeof p === 'string' && fallbackStore.ujian.some(x => x.id === p)) {
+            u = fallbackStore.ujian.find(x => x.id === p);
+            break;
           }
         }
+        if (!u && params.length >= 2) {
+          u = fallbackStore.ujian.find(x => x.id === params[params.length - 2] || x.id === params[params.length - 1]);
+        }
+
+        if (u) {
+          const setMatch = sql.match(/SET\s+([\s\S]+?)\s+WHERE/i);
+          if (setMatch) {
+            const clauses = setMatch[1].split(',').map(c => c.trim().split('=')[0].trim().toLowerCase());
+            clauses.forEach((col, idx) => {
+              if (col && idx < params.length && params[idx] !== undefined && col !== 'id' && col !== 'guru_id') {
+                u[col] = params[idx];
+              }
+            });
+          }
+          if (upper.includes('STATUS =') && !setMatch) {
+            const newStatus = params.find(p => ['draft', 'aktif', 'selesai'].includes(p));
+            if (newStatus) u.status = newStatus;
+          }
+          u.updated_at = new Date().toISOString();
+        }
         savePersistedStore(fallbackStore);
-        return { results: [], meta: { changes: 1 } };
+        return { results: [], meta: { changes: u ? 1 : 0 } };
       }
 
       if (upper.includes('UPDATE SESI_UJIAN')) {
@@ -890,12 +984,14 @@ class D1Client {
 
   async getOne(sql, params = []) {
     const result = await this.query(sql, params);
-    return result.results?.[0] || null;
+    const row = result.results?.[0] || null;
+    return row ? this.normalizeRow(row) : null;
   }
 
   async getAll(sql, params = []) {
     const result = await this.query(sql, params);
-    return result.results || [];
+    const rows = result.results || [];
+    return rows.map(r => this.normalizeRow(r));
   }
 
   async run(sql, params = []) {

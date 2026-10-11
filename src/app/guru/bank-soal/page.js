@@ -42,8 +42,8 @@ export default function BankSoal() {
   const loadSoal = async () => {
     try {
       let url = '/api/soal?';
-      if (filterMapel) url += `mapel=${filterMapel}&`;
-      if (filterTipe) url += `tipe=${filterTipe}`;
+      if (filterMapel) url += `mapel=${encodeURIComponent(filterMapel)}&`;
+      if (filterTipe) url += `tipe=${encodeURIComponent(filterTipe)}`;
       const res = await authFetch(url);
       const data = await res.json();
       setSoalList(data.soal || []);
@@ -124,7 +124,7 @@ export default function BankSoal() {
     }
   };
 
-  const getMapelList = () => [...new Set(soalList.map(s => s.mata_pelajaran))];
+  const getMapelList = () => [...new Set(soalList.map(s => s.mata_pelajaran).filter(Boolean))];
 
   if (authLoading) {
     return <div className="loading-page"><div className="spinner" /><p>Memuat...</p></div>;
