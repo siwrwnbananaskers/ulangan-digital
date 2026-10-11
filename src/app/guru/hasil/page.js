@@ -17,6 +17,7 @@ export default function GuruHasilPage() {
   const [modalJawaban, setModalJawaban] = useState(null);
   const [loadingJawaban, setLoadingJawaban] = useState(false);
   const [gradingLoadingId, setGradingLoadingId] = useState(null);
+  const [scoreInputs, setScoreInputs] = useState({});
 
   useEffect(() => {
     if (!user) return;
@@ -107,8 +108,16 @@ export default function GuruHasilPage() {
     }
   };
 
-  const handleKoreksi = async (item, isBenar) => {
-    if (!modalJawaban?.sesi?.id || !item.jawaban_id) return;
+  const handleScoreInputChange = (soalId, val) => {
+    setScoreInputs((prev) => ({ ...prev, [soalId]: val }));
+  };
+
+  const handleKoreksi = async (item, scoreVal, isBenarParam = undefined) => {
+    if (!modalJawaban?.sesi?.id) return;
+    const maxScore = Number(item.bobot) || 10;
+    const numScore = Math.max(0, Math.min(maxScore, Number(scoreVal) || 0));
+    const isBenar = isBenarParam !== undefined ? (isBenarParam ? 1 : 0) : (numScore > 0 ? 1 : 0);
+
     setGradingLoadingId(item.soal_id);
     try {
       const res = await authFetch('/api/hasil', {
@@ -116,18 +125,25 @@ export default function GuruHasilPage() {
         body: JSON.stringify({
           sesi_id: modalJawaban.sesi.id,
           action: 'koreksi_soal',
-          jawaban_id: item.jawaban_id,
+          jawaban_id: item.jawaban_id || null,
+          soal_id: item.soal_id,
           is_benar: isBenar,
-          nilai_soal: isBenar ? item.bobot : 0,
+          nilai_soal: numScore,
         }),
       });
       const data = await res.json();
       if (res.ok) {
+        setScoreInputs((prev) => ({ ...prev, [item.soal_id]: numScore }));
         setModalJawaban((prev) => {
           if (!prev) return prev;
           const updatedJawaban = prev.jawaban.map((j) =>
             j.soal_id === item.soal_id
-              ? { ...j, is_benar: isBenar ? 1 : 0, nilai_soal: isBenar ? item.bobot : 0 }
+              ? {
+                  ...j,
+                  jawaban_id: data.jawaban_id || j.jawaban_id,
+                  is_benar: isBenar,
+                  nilai_soal: numScore,
+                }
               : j
           );
           return {
@@ -137,6 +153,7 @@ export default function GuruHasilPage() {
               total_nilai: data.total_nilai,
               jumlah_benar: data.jumlah_benar,
               jumlah_salah: data.jumlah_salah,
+              jumlah_kosong: data.jumlah_kosong,
             },
             jawaban: updatedJawaban,
           };
@@ -486,9 +503,20 @@ export default function GuruHasilPage() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                            {isBenar && <span className="badge badge-success">✓ Benar ({item.nilai_soal ?? item.bobot} Poin)</span>}
-                            {isSalah && !isKosong && <span className="badge badge-danger">✗ Salah (0 Poin)</span>}
-                            {isKosong && <span className="badge badge-gray">⚪ Tidak Dijawab</span>}
+                            {Number(item.nilai_soal) >= Number(item.bobot) && (
+                              <span className="badge badge-success">✓ Nilai Maksimal: {item.nilai_soal} Poin</span>
+                            )}
+                            {Number(item.nilai_soal) > 0 && Number(item.nilai_soal) < Number(item.bobot) && (
+                              <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                                ⚡ Nilai Parsial: {item.nilai_soal} / {item.bobot} Poin
+                              </span>
+                            )}
+                            {(Number(item.nilai_soal) === 0 || item.nilai_soal === null) && !isKosong && (
+                              <span className="badge badge-danger">✗ 0 / {item.bobot} Poin</span>
+                            )}
+                            {isKosong && (Number(item.nilai_soal) === 0 || item.nilai_soal === null) && (
+                              <span className="badge badge-gray">⚪ Tidak Dijawab</span>
+                            )}
                             {isUraian && item.is_benar === null && (
                               <span className="badge badge-warning">⏳ Perlu Dinilai Guru</span>
                             )}
@@ -556,10 +584,10 @@ export default function GuruHasilPage() {
                         {item.tipe !== 'pg' && (
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
                             <div style={{
-                              background: isBenar ? '#dcfce7' : isSalah ? '#fee2e2' : 'var(--gray-50)',
+                              background: Number(item.nilai_soal) > 0 ? '#dcfce7' : '#fee2e2',
                               padding: '8px 12px',
                               borderRadius: 'var(--radius-md)',
-                              border: isBenar ? '1px solid var(--success)' : isSalah ? '1px solid var(--danger)' : '1px solid var(--gray-200)'
+                              border: Number(item.nilai_soal) > 0 ? '1px solid var(--success)' : '1px solid var(--danger)'
                             }}>
                               <div className="text-xs" style={{ fontWeight: 700, color: 'var(--gray-600)', marginBottom: 2 }}>
                                 Jawaban Siswa:
@@ -585,38 +613,123 @@ export default function GuruHasilPage() {
                           </div>
                         )}
 
-                        {/* Teacher Manual Grading / Override Tool */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          gap: 'var(--space-xs)',
-                          marginTop: 6,
-                          paddingTop: 6,
-                          borderTop: '1px dashed rgba(0,0,0,0.1)'
-                        }}>
-                          <span className="text-xs text-muted" style={{ marginRight: 6 }}>
-                            Koreksi Manual:
-                          </span>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${isBenar ? 'btn-success' : 'btn-secondary'}`}
-                            onClick={() => handleKoreksi(item, true)}
-                            disabled={gradingLoadingId === item.soal_id || isBenar}
-                            title="Tandai jawaban ini sebagai Benar (Penuh)"
-                          >
-                            ✓ Benar (+{item.bobot || 10})
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-xs ${isSalah ? 'btn-danger' : 'btn-secondary'}`}
-                            onClick={() => handleKoreksi(item, false)}
-                            disabled={gradingLoadingId === item.soal_id || (isSalah && !isKosong)}
-                            title="Tandai jawaban ini sebagai Salah (0 poin)"
-                          >
-                            ✗ Salah (0)
-                          </button>
-                        </div>
+                        {/* Teacher Manual Grading / Custom Score Toolbar */}
+                        {(item.tipe === 'isian' || item.tipe === 'uraian') ? (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 10,
+                            marginTop: 8,
+                            paddingTop: 8,
+                            borderTop: '1px dashed rgba(0,0,0,0.1)'
+                          }}>
+                            {/* Input manual skor 0-10 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--gray-700)' }}>
+                                Beri Skor (0 - {item.bobot || 10}):
+                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={item.bobot || 10}
+                                  step="0.5"
+                                  className="form-input"
+                                  style={{
+                                    width: 68,
+                                    height: 32,
+                                    padding: '2px 6px',
+                                    fontSize: 13,
+                                    textAlign: 'center',
+                                    fontWeight: 700,
+                                    borderRadius: 'var(--radius-md)'
+                                  }}
+                                  value={scoreInputs[item.soal_id] !== undefined ? scoreInputs[item.soal_id] : (item.nilai_soal ?? 0)}
+                                  onChange={(e) => handleScoreInputChange(item.soal_id, e.target.value)}
+                                />
+                                <span className="text-xs text-muted">/ {item.bobot || 10} poin</span>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary btn-xs"
+                                  onClick={() => handleKoreksi(item, scoreInputs[item.soal_id] !== undefined ? scoreInputs[item.soal_id] : (item.nilai_soal ?? 0))}
+                                  disabled={gradingLoadingId === item.soal_id}
+                                  style={{ height: 32, padding: '0 10px', fontWeight: 600 }}
+                                >
+                                  {gradingLoadingId === item.soal_id ? 'Menyimpan...' : 'Simpan Skor'}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Tombol cepat: 0 (Salah), Setengah, Penuh (Benar) */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                              <span className="text-xs text-muted" style={{ marginRight: 2 }}>Pilihan Cepat:</span>
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-secondary"
+                                onClick={() => handleKoreksi(item, 0, false)}
+                                disabled={gradingLoadingId === item.soal_id || Number(item.nilai_soal) === 0}
+                                title="Beri skor 0 (Salah)"
+                              >
+                                ✗ 0 Poin
+                              </button>
+                              {(item.bobot || 10) >= 2 && (
+                                <button
+                                  type="button"
+                                  className="btn btn-xs"
+                                  onClick={() => handleKoreksi(item, Math.round((item.bobot || 10) / 2), true)}
+                                  disabled={gradingLoadingId === item.soal_id || Number(item.nilai_soal) === Math.round((item.bobot || 10) / 2)}
+                                  title={`Beri nilai setengah (${Math.round((item.bobot || 10) / 2)} poin)`}
+                                  style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}
+                                >
+                                  ½ ({Math.round((item.bobot || 10) / 2)} Poin)
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-success"
+                                onClick={() => handleKoreksi(item, item.bobot || 10, true)}
+                                disabled={gradingLoadingId === item.soal_id || Number(item.nilai_soal) === (item.bobot || 10)}
+                                title={`Beri skor penuh (${item.bobot || 10} poin)`}
+                              >
+                                ✓ Penuh ({item.bobot || 10})
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            gap: 'var(--space-xs)',
+                            marginTop: 6,
+                            paddingTop: 6,
+                            borderTop: '1px dashed rgba(0,0,0,0.1)'
+                          }}>
+                            <span className="text-xs text-muted" style={{ marginRight: 6 }}>
+                              Koreksi Guru:
+                            </span>
+                            <button
+                              type="button"
+                              className={`btn btn-xs ${isBenar ? 'btn-success' : 'btn-secondary'}`}
+                              onClick={() => handleKoreksi(item, item.bobot || 10, true)}
+                              disabled={gradingLoadingId === item.soal_id || isBenar}
+                              title="Tandai jawaban ini sebagai Benar (Penuh)"
+                            >
+                              ✓ Benar (+{item.bobot || 10})
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn btn-xs ${isSalah ? 'btn-danger' : 'btn-secondary'}`}
+                              onClick={() => handleKoreksi(item, 0, false)}
+                              disabled={gradingLoadingId === item.soal_id || (isSalah && !isKosong)}
+                              title="Tandai jawaban ini sebagai Salah (0 poin)"
+                            >
+                              ✗ Salah (0)
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

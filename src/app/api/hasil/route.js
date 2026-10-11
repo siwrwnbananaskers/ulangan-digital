@@ -5,7 +5,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireAuth, authErrorResponse } from '@/lib/auth';
-import { apiResponse, apiError } from '@/lib/utils';
+import { apiResponse, apiError, generateId } from '@/lib/utils';
 
 export async function GET(request) {
   try {
@@ -171,14 +171,26 @@ export async function PATCH(request) {
     }
 
     if (action === 'koreksi_soal') {
-      const { jawaban_id, is_benar, nilai_soal } = body;
-      if (!jawaban_id) {
-        return apiError('jawaban_id wajib diisi', 400);
+      const { jawaban_id, soal_id, is_benar, nilai_soal } = body;
+      const score = Math.max(0, Number(nilai_soal) || 0);
+      const isCorrect = is_benar !== undefined ? (is_benar ? 1 : 0) : (score > 0 ? 1 : 0);
+      let jId = jawaban_id;
+
+      if (!jId) {
+        if (!soal_id) {
+          return apiError('soal_id atau jawaban_id wajib disertakan', 400);
+        }
+        jId = generateId('jwb');
+        await db.run(
+          `INSERT INTO jawaban (id, sesi_id, soal_id, jawaban_siswa, is_benar, nilai_soal) VALUES (?, ?, ?, '', ?, ?)`,
+          [jId, sesi_id, soal_id, isCorrect, score]
+        );
+      } else {
+        await db.run(
+          `UPDATE jawaban SET is_benar = ?, nilai_soal = ?, updated_at = datetime('now') WHERE id = ?`,
+          [isCorrect, score, jId]
+        );
       }
-      await db.run(
-        `UPDATE jawaban SET is_benar = ?, nilai_soal = ?, updated_at = datetime('now') WHERE id = ?`,
-        [is_benar ? 1 : 0, Number(nilai_soal) || 0, jawaban_id]
-      );
 
       // Recalculate session totals
       const allAnswers = await db.getAll(
@@ -200,9 +212,14 @@ export async function PATCH(request) {
       let salah = 0;
       let kosong = 0;
       for (const a of allAnswers) {
-        if (!a.jawaban_siswa || a.jawaban_siswa.trim() === '') kosong++;
-        else if (a.is_benar === 1) benar++;
-        else salah++;
+        if (!a.jawaban_siswa || a.jawaban_siswa.trim() === '') {
+          if ((a.nilai_soal || 0) > 0) benar++;
+          else kosong++;
+        } else if (a.is_benar === 1 || (a.nilai_soal || 0) > 0) {
+          benar++;
+        } else {
+          salah++;
+        }
         sumNilai += Number(a.nilai_soal) || 0;
       }
       const finalScore = totalBobot > 0 ? Math.round((sumNilai / totalBobot) * 100 * 100) / 100 : 0;
@@ -210,7 +227,16 @@ export async function PATCH(request) {
         `UPDATE sesi_ujian SET total_nilai = ?, jumlah_benar = ?, jumlah_salah = ?, jumlah_kosong = ? WHERE id = ?`,
         [finalScore, benar, salah, kosong, sesi_id]
       );
-      return apiResponse({ success: true, total_nilai: finalScore, jumlah_benar: benar, jumlah_salah: salah });
+      return apiResponse({ 
+        success: true, 
+        jawaban_id: jId,
+        nilai_soal: score,
+        is_benar: isCorrect,
+        total_nilai: finalScore, 
+        jumlah_benar: benar, 
+        jumlah_salah: salah, 
+        jumlah_kosong: kosong 
+      });
     }
 
     return apiError('Aksi tidak valid', 400);
