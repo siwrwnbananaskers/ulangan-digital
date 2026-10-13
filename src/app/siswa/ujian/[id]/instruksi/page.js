@@ -59,16 +59,18 @@ export default function InstruksiUjianPage() {
         return;
       }
 
-      // Try entering fullscreen before navigation
-      try {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen();
+      // Try entering fullscreen before navigation if exambro is active
+      if (ujian?.mode_exambro !== 0) {
+        try {
+          const elem = document.documentElement;
+          if (elem.requestFullscreen) {
+            await elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) {
+            await elem.webkitRequestFullscreen();
+          }
+        } catch (fsErr) {
+          console.warn('Fullscreen request prompt dismissed or not yet allowed', fsErr);
         }
-      } catch (fsErr) {
-        console.warn('Fullscreen request prompt dismissed or not yet allowed', fsErr);
       }
 
       // Navigate to active exam page
@@ -113,9 +115,17 @@ export default function InstruksiUjianPage() {
       <main className="main-content">
         <div className="instruction-page">
           <div className="instruction-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)', flexWrap: 'wrap' }}>
               <span className="badge badge-primary">{ujian?.mata_pelajaran}</span>
-              <span className="badge badge-success">Mode Asesmen Terproteksi</span>
+              {ujian?.mode_exambro === 0 ? (
+                <span className="badge badge-success" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
+                  📋 Mode Fleksibel (Tugas / Ulangan Harian)
+                </span>
+              ) : (
+                <span className="badge badge-success">
+                  🔒 Mode Asesmen Terproteksi (Exambro)
+                </span>
+              )}
             </div>
 
             <h1>{ujian?.judul}</h1>
@@ -147,7 +157,11 @@ export default function InstruksiUjianPage() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                <span>Batas Pelanggaran: <strong>{ujian?.batas_pelanggaran || 3}x Kejadian</strong></span>
+                {ujian?.mode_exambro === 0 ? (
+                  <span>Keamanan: <strong>Mode Fleksibel / Bebas</strong></span>
+                ) : (
+                  <span>Batas Pelanggaran: <strong>{ujian?.batas_pelanggaran || 3}x Kejadian</strong></span>
+                )}
               </div>
 
               <div className="instruction-meta-item">
@@ -167,26 +181,49 @@ export default function InstruksiUjianPage() {
             )}
 
             {/* Rules */}
-            <div className="instruction-rules">
-              <h3>Peraturan & Ketentuan Integritas Ujian</h3>
-              <ul>
-                <li>
-                  <strong>Layar Penuh (Fullscreen):</strong> Halaman ujian akan otomatis mengunci dalam mode fullscreen. Menutup atau keluar fullscreen akan terhitung sebagai pelanggaran.
-                </li>
-                <li>
-                  <strong>Deteksi Perpindahan Halaman:</strong> Sistem menggunakan Page Visibility & Focus Detection. Berpindah tab browser, membuka browser/aplikasi lain, split-screen, atau alt-tab akan dicatat ke server beserta timestamp real-time.
-                </li>
-                <li>
-                  <strong>Tindakan Otomatis & Penangguhan:</strong> Setiap pelanggaran akan menampilkan peringatan. Jika melampaui batas ({ujian?.batas_pelanggaran || 3}x), ujian akan <strong>DITANGGUHKAN</strong> dan hanya dapat dibuka kembali setelah verifikasi guru pengawas.
-                </li>
-                <li>
-                  <strong>Penyimpanan Jawaban (Autosave):</strong> Jawaban Anda tersimpan otomatis ke server secara berkala. Jawaban Anda aman dan tidak akan hilang jika perangkat mati mendadak.
-                </li>
-                <li>
-                  <strong>Sinkronisasi Waktu Server:</strong> Waktu ujian dihitung dari jam server, bukan jam HP/Laptop Anda. Jika waktu habis, lembar jawaban otomatis terkunci dan terkirim ke guru.
-                </li>
-              </ul>
-            </div>
+            {ujian?.mode_exambro === 0 ? (
+              <div className="instruction-rules" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                <h3 style={{ color: '#166534' }}>Petunjuk Pengerjaan (Mode Fleksibel / Tugas)</h3>
+                <ul>
+                  <li>
+                    <strong>Mode Bebas (Tanpa Fullscreen):</strong> Ujian ini tidak mewajibkan mode layar penuh (fullscreen). Anda dapat mengerjakan dengan nyaman di browser.
+                  </li>
+                  <li>
+                    <strong>Bebas Referensi & Tab Browser:</strong> Mode ini dirancang untuk latihan mandiri, ulangan harian, atau tugas. Anda bebas membuka materi atau catatan pendukung tanpa sanksi pelanggaran.
+                  </li>
+                  <li>
+                    <strong>Tanpa Penangguhan Otomatis:</strong> Tidak ada sistem penangguhan (lockout) untuk mode ini.
+                  </li>
+                  <li>
+                    <strong>Penyimpanan Jawaban (Autosave):</strong> Jawaban Anda tetap tersimpan otomatis ke server secara berkala sehingga aman bila browser ter-refresh.
+                  </li>
+                  <li>
+                    <strong>Sinkronisasi Batas Waktu:</strong> Pastikan Anda mengumpulkan jawaban sebelum batas waktu pengerjaan berakhir.
+                  </li>
+                </ul>
+              </div>
+            ) : (
+              <div className="instruction-rules">
+                <h3>Peraturan & Ketentuan Integritas Ujian (Exambro)</h3>
+                <ul>
+                  <li>
+                    <strong>Layar Penuh (Fullscreen):</strong> Halaman ujian akan otomatis mengunci dalam mode fullscreen. Menutup atau keluar fullscreen akan terhitung sebagai pelanggaran.
+                  </li>
+                  <li>
+                    <strong>Deteksi Perpindahan Halaman:</strong> Sistem menggunakan Page Visibility & Focus Detection. Berpindah tab browser, membuka browser/aplikasi lain, split-screen, atau alt-tab akan dicatat ke server beserta timestamp real-time.
+                  </li>
+                  <li>
+                    <strong>Tindakan Otomatis & Penangguhan:</strong> Setiap pelanggaran akan menampilkan peringatan. Jika melampaui batas ({ujian?.batas_pelanggaran || 3}x), ujian akan <strong>DITANGGUHKAN</strong> dan hanya dapat dibuka kembali setelah verifikasi guru pengawas.
+                  </li>
+                  <li>
+                    <strong>Penyimpanan Jawaban (Autosave):</strong> Jawaban Anda tersimpan otomatis ke server secara berkala. Jawaban Anda aman dan tidak akan hilang jika perangkat mati mendadak.
+                  </li>
+                  <li>
+                    <strong>Sinkronisasi Waktu Server:</strong> Waktu ujian dihitung dari jam server, bukan jam HP/Laptop Anda. Jika waktu habis, lembar jawaban otomatis terkunci dan terkirim ke guru.
+                  </li>
+                </ul>
+              </div>
+            )}
 
             {/* Educational Disclaimer */}
             <div className="instruction-disclaimer">
@@ -228,6 +265,13 @@ export default function InstruksiUjianPage() {
                   <>
                     <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
                     Menyiapkan Lembar Soal...
+                  </>
+                ) : ujian?.mode_exambro === 0 ? (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Mulai Kerjakan Soal
                   </>
                 ) : (
                   <>

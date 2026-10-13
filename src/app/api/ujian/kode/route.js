@@ -19,7 +19,7 @@ export async function POST(request) {
 
     const db = getDB();
     const ujian = await db.getOne(
-      `SELECT id, judul, mata_pelajaran, kelas_target, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, status, batas_pelanggaran, deskripsi, guru_id
+      `SELECT id, judul, mata_pelajaran, kelas_target, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, status, batas_pelanggaran, deskripsi, guru_id, mode_exambro
        FROM ujian WHERE kode_ujian = ?`,
       [kode_ujian.trim().toUpperCase()]
     );

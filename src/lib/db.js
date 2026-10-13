@@ -73,6 +73,9 @@ function sanitizeStore(store) {
       if (u.id.startsWith('ujn_demo_')) {
         u.guru_id = 'usr_guru_001';
       }
+      if (u.mode_exambro === undefined) {
+        u.mode_exambro = 1;
+      }
       return true;
     });
   }
@@ -293,6 +296,7 @@ const initialStore = {
       acak_jawaban: 0,
       tampilkan_nilai: 1,
       batas_pelanggaran: 3,
+      mode_exambro: 1,
       status: 'aktif',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -815,6 +819,10 @@ class D1Client {
       }
 
       if (upper.includes('INTO UJIAN')) {
+        let modeExambro = 1;
+        if (params.length > 17 && params[17] !== undefined) {
+          modeExambro = params[17] ? 1 : 0;
+        }
         fallbackStore.ujian.unshift({
           id: params[0],
           guru_id: params[1],
@@ -833,6 +841,7 @@ class D1Client {
           tampilkan_nilai: params[14],
           batas_pelanggaran: params[15],
           status: params[16] || 'aktif',
+          mode_exambro: modeExambro,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });

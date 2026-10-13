@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS ujian (
   acak_jawaban INTEGER DEFAULT 0,
   tampilkan_nilai INTEGER DEFAULT 0,
   batas_pelanggaran INTEGER DEFAULT 3,
+  mode_exambro INTEGER DEFAULT 1,
   status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'aktif', 'selesai')),
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),

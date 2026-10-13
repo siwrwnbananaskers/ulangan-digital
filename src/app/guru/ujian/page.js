@@ -35,6 +35,7 @@ export default function UjianPage() {
       jadwal_mulai: formatDt(now),
       jadwal_selesai: formatDt(nextWeek),
       kkm: 75,
+      mode_exambro: 1,
       acak_soal: false,
       acak_jawaban: false,
       tampilkan_nilai: true,
@@ -107,6 +108,7 @@ export default function UjianPage() {
       jadwal_mulai: formatForInput(ujian.jadwal_mulai),
       jadwal_selesai: formatForInput(ujian.jadwal_selesai),
       kkm: ujian.kkm || 75,
+      mode_exambro: ujian.mode_exambro !== undefined ? (ujian.mode_exambro ? 1 : 0) : 1,
       acak_soal: !!ujian.acak_soal,
       acak_jawaban: !!ujian.acak_jawaban,
       tampilkan_nilai: !!ujian.tampilkan_nilai,
@@ -372,12 +374,23 @@ export default function UjianPage() {
                           {mataPelajaran} — Kelas: <strong>{kelasTarget}</strong>
                         </p>
                       </div>
-                      <span className={`badge ${
-                        status === 'aktif' ? 'badge-success' :
-                        status === 'selesai' ? 'badge-gray' : 'badge-warning'
-                      }`} style={{ fontSize: 11, padding: '3px 10px' }}>
-                        {status === 'aktif' ? 'Aktif' : status === 'selesai' ? 'Selesai' : 'Draft'}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                        <span className={`badge ${
+                          status === 'aktif' ? 'badge-success' :
+                          status === 'selesai' ? 'badge-gray' : 'badge-warning'
+                        }`} style={{ fontSize: 11, padding: '3px 10px' }}>
+                          {status === 'aktif' ? 'Aktif' : status === 'selesai' ? 'Selesai' : 'Draft'}
+                        </span>
+                        {ujian.mode_exambro === 0 ? (
+                          <span className="badge" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontSize: 10, padding: '2px 8px', fontWeight: 600 }}>
+                            📋 Mode Fleksibel (Tugas/Harian)
+                          </span>
+                        ) : (
+                          <span className="badge" style={{ background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', fontSize: 10, padding: '2px 8px', fontWeight: 600 }}>
+                            🔒 Exambro Kiosk Ketat
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Metadata Specs */}
@@ -399,10 +412,11 @@ export default function UjianPage() {
                           {copiedId === ujian.id ? '✓ Tersalin' : '📋 Salin Kode'}
                         </button>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4, flexWrap: 'wrap', gap: 6 }}>
                         <span>Durasi: <strong>{durasiMenit} Menit</strong></span>
                         <span>Soal: <strong>{jumlahSoal} Butir</strong></span>
                         <span>KKM: <strong>{kkm}</strong></span>
+                        <span>Mode: <strong style={{ color: ujian.mode_exambro === 0 ? '#057642' : '#0369a1' }}>{ujian.mode_exambro === 0 ? 'Fleksibel' : 'Exambro'}</strong></span>
                       </div>
                       <div style={{ color: '#666666', fontSize: 11 }}>
                         Jadwal: {formatDate(jadwalMulai)} s/d {formatDate(jadwalSelesai)}
@@ -581,6 +595,77 @@ export default function UjianPage() {
                 />
               </div>
 
+              {/* Pilihan Mode Exambro / Kiosk */}
+              <div className="form-group" style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, color: '#1e293b' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Mode Keamanan Pengerjaan (Exambro / Kiosk Security) *
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      border: form.mode_exambro === 1 ? '2px solid #0a66c2' : '1px solid #cbd5e1',
+                      background: form.mode_exambro === 1 ? '#eff6ff' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="mode_exambro"
+                      checked={form.mode_exambro === 1}
+                      onChange={() => setForm({ ...form, mode_exambro: 1 })}
+                      style={{ marginTop: 3 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>🔒 Exambro Aktif (Ketat)</span>
+                        <span className="badge badge-primary" style={{ fontSize: 9 }}>Direkomendasikan</span>
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
+                        Wajib layar penuh (fullscreen), kunci pindah tab browser, deteksi kecurangan otomatis & penangguhan. Cocok untuk <strong>UTS, UAS, Asesmen Resmi</strong>.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      border: form.mode_exambro === 0 ? '2px solid #057642' : '1px solid #cbd5e1',
+                      background: form.mode_exambro === 0 ? '#f0fdf4' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="mode_exambro"
+                      checked={form.mode_exambro === 0}
+                      onChange={() => setForm({ ...form, mode_exambro: 0 })}
+                      style={{ marginTop: 3 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>📋 Mode Fleksibel (Tugas / Latihan)</span>
+                        <span className="badge badge-success" style={{ fontSize: 9 }}>Fleksibel</span>
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
+                        Tidak wajib fullscreen, siswa bebas membuka tab atau referensi belajar, tanpa penangguhan akun. Cocok untuk <strong>Ulangan Harian, Tugas, Latihan, PR</strong>.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Nilai KKM (Standar Kelulusan)</label>
@@ -593,8 +678,10 @@ export default function UjianPage() {
                     max="100"
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Batas Toleransi Pelanggaran (Kiosk Mode)</label>
+                <div className="form-group" style={{ opacity: form.mode_exambro === 0 ? 0.6 : 1 }}>
+                  <label className="form-label">
+                    Batas Toleransi Pelanggaran {form.mode_exambro === 0 ? <span style={{ color: '#057642', fontSize: 11 }}>(Nonaktif - Fleksibel)</span> : '(Kiosk Mode)'}
+                  </label>
                   <input
                     type="number"
                     className="form-input"
@@ -602,6 +689,7 @@ export default function UjianPage() {
                     onChange={(e) => setForm({ ...form, batas_pelanggaran: parseInt(e.target.value) || 1 })}
                     min="1"
                     max="10"
+                    disabled={form.mode_exambro === 0}
                   />
                 </div>
                 <div className="form-group">

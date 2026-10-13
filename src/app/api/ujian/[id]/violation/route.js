@@ -30,6 +30,17 @@ export async function POST(request, { params }) {
       return apiError('Sesi ujian tidak ditemukan', 404);
     }
 
+    // Check if exambro mode is disabled for this exam
+    const ujian = await db.getOne('SELECT batas_pelanggaran, mode_exambro FROM ujian WHERE id = ?', [id]);
+    if (ujian && ujian.mode_exambro === 0) {
+      return apiResponse({
+        success: true,
+        count: 0,
+        ditangguhkan: false,
+        mode_exambro: 0,
+      });
+    }
+
     // Log violation
     await db.run(
       `INSERT INTO audit_log (id, sesi_id, siswa_id, ujian_id, tipe_pelanggaran, detail)

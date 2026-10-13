@@ -23,7 +23,7 @@ export async function GET(request) {
           u.kelas_target as kelas_target, u.kode_ujian as kode_ujian, u.deskripsi as deskripsi,
           u.durasi_menit as durasi_menit, u.jadwal_mulai as jadwal_mulai, u.jadwal_selesai as jadwal_selesai,
           u.jumlah_soal as jumlah_soal, u.kkm as kkm, u.acak_soal as acak_soal, u.acak_jawaban as acak_jawaban,
-          u.tampilkan_nilai as tampilkan_nilai, u.batas_pelanggaran as batas_pelanggaran, u.status as status,
+          u.tampilkan_nilai as tampilkan_nilai, u.batas_pelanggaran as batas_pelanggaran, u.mode_exambro as mode_exambro, u.status as status,
           u.created_at as created_at, u.updated_at as updated_at,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
@@ -40,7 +40,7 @@ export async function GET(request) {
           u.kelas_target as kelas_target, u.kode_ujian as kode_ujian, u.deskripsi as deskripsi,
           u.durasi_menit as durasi_menit, u.jadwal_mulai as jadwal_mulai, u.jadwal_selesai as jadwal_selesai,
           u.jumlah_soal as jumlah_soal, u.kkm as kkm, u.acak_soal as acak_soal, u.acak_jawaban as acak_jawaban,
-          u.tampilkan_nilai as tampilkan_nilai, u.batas_pelanggaran as batas_pelanggaran, u.status as status,
+          u.tampilkan_nilai as tampilkan_nilai, u.batas_pelanggaran as batas_pelanggaran, u.mode_exambro as mode_exambro, u.status as status,
           u.created_at as created_at, u.updated_at as updated_at,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai
@@ -70,7 +70,7 @@ export async function GET(request) {
     let ujianList = [];
     if (studentGuruId) {
       ujianList = await db.getAll(
-        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm,
+        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro,
                 (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
          FROM ujian u
          WHERE u.status = 'aktif' 
@@ -80,7 +80,7 @@ export async function GET(request) {
       );
     } else {
       ujianList = await db.getAll(
-        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm,
+        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro,
                 (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
          FROM ujian u
          WHERE u.status = 'aktif' 
@@ -135,6 +135,11 @@ export async function POST(request) {
 
     const db = getDB();
 
+    // Ensure mode_exambro column exists in Cloudflare D1
+    try {
+      await db.run('ALTER TABLE ujian ADD COLUMN mode_exambro INTEGER DEFAULT 1');
+    } catch (_) {}
+
     // Check demo limitation: demo user "guru" is limited to 1 exam
     if (user.role === 'guru' && user.username === 'guru') {
       const existingExams = await db.getAll('SELECT id FROM ujian WHERE guru_id = ?', [user.id]);
@@ -158,9 +163,11 @@ export async function POST(request) {
       codeExists = await db.getOne('SELECT id FROM ujian WHERE kode_ujian = ?', [kodeUjian]);
     }
 
+    const modeExambroVal = body.mode_exambro !== undefined ? (body.mode_exambro ? 1 : 0) : 1;
+
     await db.run(
-      `INSERT INTO ujian (id, guru_id, judul, mata_pelajaran, kelas_target, kode_ujian, deskripsi, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, kkm, acak_soal, acak_jawaban, tampilkan_nilai, batas_pelanggaran, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ujian (id, guru_id, judul, mata_pelajaran, kelas_target, kode_ujian, deskripsi, durasi_menit, jadwal_mulai, jadwal_selesai, jumlah_soal, kkm, acak_soal, acak_jawaban, tampilkan_nilai, batas_pelanggaran, status, mode_exambro)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, user.id,
         sanitizeInput(body.judul),
@@ -178,6 +185,7 @@ export async function POST(request) {
         body.tampilkan_nilai ? 1 : 0,
         body.batas_pelanggaran || 3,
         body.status || 'aktif',
+        modeExambroVal,
       ]
     );
 
@@ -240,6 +248,7 @@ export async function PUT(request) {
     if (body.batas_pelanggaran !== undefined) { updates.push('batas_pelanggaran = ?'); params.push(body.batas_pelanggaran); }
     if (body.tampilkan_nilai !== undefined) { updates.push('tampilkan_nilai = ?'); params.push(body.tampilkan_nilai ? 1 : 0); }
     if (body.acak_soal !== undefined) { updates.push('acak_soal = ?'); params.push(body.acak_soal ? 1 : 0); }
+    if (body.mode_exambro !== undefined) { updates.push('mode_exambro = ?'); params.push(body.mode_exambro ? 1 : 0); }
     if (body.jadwal_mulai) { updates.push('jadwal_mulai = ?'); params.push(body.jadwal_mulai); }
     if (body.jadwal_selesai) { updates.push('jadwal_selesai = ?'); params.push(body.jadwal_selesai); }
 

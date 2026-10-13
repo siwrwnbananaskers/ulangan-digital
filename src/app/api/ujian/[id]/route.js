@@ -110,6 +110,7 @@ export async function GET(request, { params }) {
           jumlah_soal: ujian.jumlah_soal,
           batas_pelanggaran: ujian.batas_pelanggaran,
           jadwal_selesai: ujian.jadwal_selesai,
+          mode_exambro: ujian.mode_exambro !== undefined ? ujian.mode_exambro : 1,
         },
         soal: soalList,
         sesi,

@@ -302,6 +302,15 @@ export default function SiswaDashboard() {
                               Guru: {exam.nama_guru}
                             </span>
                           )}
+                          {exam.mode_exambro === 0 ? (
+                            <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
+                              📋 Mode Fleksibel (Tugas/Harian)
+                            </span>
+                          ) : (
+                            <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd' }}>
+                              🔒 Exambro Kiosk Ketat
+                            </span>
+                          )}
                         </div>
                         <h4 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: '4px 0' }}>
                           {exam.judul}

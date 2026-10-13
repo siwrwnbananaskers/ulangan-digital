@@ -51,6 +51,8 @@ export default function LembarUjianPage() {
     }
   }, [authFetch, examId]);
 
+  const isExambroActive = ujian?.mode_exambro !== undefined ? !!ujian.mode_exambro : true;
+
   const {
     isFullscreen,
     violations,
@@ -62,7 +64,7 @@ export default function LembarUjianPage() {
     setViolations,
     setIsSuspended,
   } = useExamMode({
-    enabled: !!sesi && !loading,
+    enabled: !!sesi && !loading && isExambroActive,
     batasPelanggaran: ujian?.batas_pelanggaran || 3,
     onViolation: handleViolationCallback,
     sesiId: sesi?.id,
@@ -386,10 +388,21 @@ export default function LembarUjianPage() {
       <header className="exam-topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
           <div>
-            <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--gray-900)' }}>
-              {ujian?.judul}
-            </h3>
-            <p className="text-xs text-muted">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--gray-900)', margin: 0 }}>
+                {ujian?.judul}
+              </h3>
+              {ujian?.mode_exambro === 0 ? (
+                <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '1px 6px' }}>
+                  📋 Mode Fleksibel (Tugas/Harian)
+                </span>
+              ) : (
+                <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', padding: '1px 6px' }}>
+                  🔒 Exambro Kiosk Ketat
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted" style={{ margin: '2px 0 0' }}>
               {ujian?.mata_pelajaran} • {user?.nama} ({user?.kelas || '-'})
             </p>
           </div>
