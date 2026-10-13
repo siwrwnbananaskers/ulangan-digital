@@ -63,7 +63,6 @@ export async function POST(request, { params }) {
     );
 
     // Check violation limit
-    const ujian = await db.getOne('SELECT batas_pelanggaran FROM ujian WHERE id = ?', [id]);
     const limitReached = newCount >= (ujian?.batas_pelanggaran || 3);
 
     if (limitReached) {
