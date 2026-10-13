@@ -1,13 +1,30 @@
 /**
  * Siswa Management API
- * GET  /api/siswa - List students (filtered by teacher for guru, all or filtered for superadmin)
- * POST /api/siswa - Add single or bulk students (assigned to current teacher)
- * DELETE /api/siswa - Delete student (permission checked)
+ * GET    /api/siswa - List students (filtered by teacher for guru, all or filtered for superadmin)
+ * POST   /api/siswa - Add single or bulk students (assigned to current teacher)
+ * PUT    /api/siswa - Update student details & password (CRUD edit)
+ * DELETE /api/siswa - Delete single, selected, or all students
  */
 
 import { getDB } from '@/lib/db';
 import { requireRole, authErrorResponse, sanitizeInput, hashPassword } from '@/lib/auth';
 import { apiResponse, apiError, generateId } from '@/lib/utils';
+
+let _migrationChecked = false;
+async function ensureSchema(db) {
+  if (_migrationChecked) return;
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN password_plain TEXT');
+  } catch (e) {
+    // Column already exists or alter table skipped
+  }
+  try {
+    await db.run("UPDATE users SET password_plain = '123456' WHERE role = 'siswa' AND (password_plain IS NULL OR password_plain = '')");
+  } catch (e) {
+    // ignore
+  }
+  _migrationChecked = true;
+}
 
 export async function GET(request) {
   try {
@@ -17,7 +34,9 @@ export async function GET(request) {
     const guruFilter = searchParams.get('guru_id');
 
     const db = getDB();
-    let query = "SELECT id, username, nama, role, guru_id, kelas, no_absen, created_at FROM users WHERE role = 'siswa'";
+    await ensureSchema(db);
+
+    let query = "SELECT id, username, nama, role, guru_id, kelas, no_absen, password_plain, created_at FROM users WHERE role = 'siswa'";
     const params = [];
 
     const isSuperadmin = user.role === 'superadmin';
@@ -38,21 +57,37 @@ export async function GET(request) {
     }
     query += ' ORDER BY kelas ASC, no_absen ASC, nama ASC';
 
-    const siswaRaw = await db.getAll(query, params);
+    let siswaRaw = [];
+    try {
+      siswaRaw = await db.getAll(query, params);
+    } catch {
+      // Fallback query without password_plain if column not yet queried
+      const fallbackQuery = query.replace(', password_plain', '');
+      siswaRaw = await db.getAll(fallbackQuery, params);
+    }
 
-    // Enrich with teacher names for superadmin view
+    // Enrich with teacher names for superadmin view & default password fallback
     const siswaList = await Promise.all(
       (siswaRaw || []).map(async (s) => {
-        if (s.nama_guru) return s;
-        if (s.guru_id) {
-          try {
-            const g = await db.getOne('SELECT nama FROM users WHERE id = ?', [s.guru_id]);
-            return { ...s, nama_guru: g?.nama || 'Guru' };
-          } catch {
-            return { ...s, nama_guru: 'Guru' };
+        const plainPwd = s.password_plain || '123456';
+        let namaGuru = s.nama_guru;
+        if (!namaGuru) {
+          if (s.guru_id) {
+            try {
+              const g = await db.getOne('SELECT nama FROM users WHERE id = ?', [s.guru_id]);
+              namaGuru = g?.nama || 'Guru';
+            } catch {
+              namaGuru = 'Guru';
+            }
+          } else {
+            namaGuru = 'Guru Demo, S.Pd.';
           }
         }
-        return { ...s, nama_guru: 'Guru Demo, S.Pd.' };
+        return {
+          ...s,
+          password_plain: plainPwd,
+          nama_guru: namaGuru,
+        };
       })
     );
 
@@ -101,6 +136,7 @@ export async function POST(request) {
     const user = await requireRole(request, 'guru');
     const body = await request.json();
     const db = getDB();
+    await ensureSchema(db);
 
     // Target teacher owner: current guru, or if superadmin specified a target teacher
     const targetGuruId = (user.role === 'superadmin' && body.guru_id) ? body.guru_id : user.id;
@@ -133,7 +169,7 @@ export async function POST(request) {
         const nama = item.nama?.trim();
         const kelas = item.kelas?.trim();
         const no_absen = parseInt(item.no_absen) || null;
-        const rawPassword = item.password?.trim() || 'guru123';
+        const rawPassword = item.password?.trim() || '123456';
 
         if (!username || !nama) {
           skippedCount++;
@@ -147,9 +183,9 @@ export async function POST(request) {
             const passwordHash = await hashPassword(rawPassword);
             await db.run(
               `UPDATE users 
-               SET nama = ?, kelas = ?, no_absen = ?, password_hash = ?, guru_id = ?, updated_at = datetime('now')
+               SET nama = ?, kelas = ?, no_absen = ?, password_hash = ?, password_plain = ?, guru_id = ?, updated_at = datetime('now')
                WHERE id = ?`,
-              [sanitizeInput(nama), kelas || null, no_absen, passwordHash, targetGuruId, exists.id]
+              [sanitizeInput(nama), kelas || null, no_absen, passwordHash, rawPassword, targetGuruId, exists.id]
             );
             createdList.push({
               id: exists.id,
@@ -157,7 +193,7 @@ export async function POST(request) {
               nama,
               kelas,
               no_absen,
-              raw_password: rawPassword,
+              password_plain: rawPassword,
               updated: true,
             });
             createdCount++;
@@ -172,9 +208,9 @@ export async function POST(request) {
         const passwordHash = await hashPassword(rawPassword);
 
         await db.run(
-          `INSERT INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
-           VALUES (?, ?, ?, ?, 'siswa', ?, ?, ?)`,
-          [id, username, passwordHash, sanitizeInput(nama), targetGuruId, kelas || null, no_absen]
+          `INSERT INTO users (id, username, password_hash, password_plain, nama, role, guru_id, kelas, no_absen)
+           VALUES (?, ?, ?, ?, ?, 'siswa', ?, ?, ?)`,
+          [id, username, passwordHash, rawPassword, sanitizeInput(nama), targetGuruId, kelas || null, no_absen]
         );
 
         createdList.push({
@@ -183,7 +219,7 @@ export async function POST(request) {
           nama,
           kelas,
           no_absen,
-          raw_password: rawPassword,
+          password_plain: rawPassword,
         });
         createdCount++;
       }
@@ -207,7 +243,7 @@ export async function POST(request) {
 
     const cleanUsername = username.trim().toLowerCase();
     const exists = await db.getOne('SELECT id, role, guru_id FROM users WHERE username = ?', [cleanUsername]);
-    const rawPassword = password?.trim() || 'guru123';
+    const rawPassword = password?.trim() || '123456';
     const passwordHash = await hashPassword(rawPassword);
 
     if (exists) {
@@ -215,9 +251,9 @@ export async function POST(request) {
         // Update existing student and link to target teacher
         await db.run(
           `UPDATE users 
-           SET nama = ?, kelas = ?, no_absen = ?, password_hash = ?, guru_id = ?, updated_at = datetime('now')
+           SET nama = ?, kelas = ?, no_absen = ?, password_hash = ?, password_plain = ?, guru_id = ?, updated_at = datetime('now')
            WHERE id = ?`,
-          [sanitizeInput(nama.trim()), kelas?.trim() || null, parseInt(no_absen) || null, passwordHash, targetGuruId, exists.id]
+          [sanitizeInput(nama.trim()), kelas?.trim() || null, parseInt(no_absen) || null, passwordHash, rawPassword, targetGuruId, exists.id]
         );
         return apiResponse({
           success: true,
@@ -229,6 +265,7 @@ export async function POST(request) {
             guru_id: targetGuruId,
             kelas: kelas?.trim() || null,
             no_absen: parseInt(no_absen) || null,
+            password_plain: rawPassword,
           },
         });
       }
@@ -238,9 +275,9 @@ export async function POST(request) {
     const id = generateId('usr');
 
     await db.run(
-      `INSERT INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
-       VALUES (?, ?, ?, ?, 'siswa', ?, ?, ?)`,
-      [id, cleanUsername, passwordHash, sanitizeInput(nama.trim()), targetGuruId, kelas?.trim() || null, parseInt(no_absen) || null]
+      `INSERT INTO users (id, username, password_hash, password_plain, nama, role, guru_id, kelas, no_absen)
+       VALUES (?, ?, ?, ?, ?, 'siswa', ?, ?, ?)`,
+      [id, cleanUsername, passwordHash, rawPassword, sanitizeInput(nama.trim()), targetGuruId, kelas?.trim() || null, parseInt(no_absen) || null]
     );
 
     return apiResponse({
@@ -253,6 +290,7 @@ export async function POST(request) {
         guru_id: targetGuruId,
         kelas: kelas?.trim() || null,
         no_absen: parseInt(no_absen) || null,
+        password_plain: rawPassword,
       },
     }, 201);
   } catch (error) {
@@ -264,10 +302,81 @@ export async function POST(request) {
   }
 }
 
+export async function PUT(request) {
+  try {
+    const user = await requireRole(request, 'guru');
+    const body = await request.json();
+    const db = getDB();
+    await ensureSchema(db);
+
+    const { id, username, nama, kelas, no_absen, password } = body;
+    if (!id || !username || !nama) {
+      return apiError('ID, username, dan nama siswa wajib diisi', 400);
+    }
+
+    const cleanUsername = username.trim().toLowerCase();
+
+    // Check target student exists
+    const target = await db.getOne("SELECT id, role, guru_id, password_hash, password_plain FROM users WHERE id = ? AND role = 'siswa'", [id]);
+    if (!target) {
+      return apiError('Data siswa tidak ditemukan', 404);
+    }
+
+    // Teacher isolation check
+    if (user.role === 'guru' && target.guru_id && target.guru_id !== user.id) {
+      return apiError('Anda tidak memiliki akses untuk mengubah siswa ini', 403);
+    }
+
+    // Check unique username constraint if username was changed
+    if (cleanUsername !== target.username) {
+      const existingUser = await db.getOne('SELECT id FROM users WHERE username = ? AND id != ?', [cleanUsername, id]);
+      if (existingUser) {
+        return apiError(`Username "${cleanUsername}" sudah digunakan oleh akun lain`, 409);
+      }
+    }
+
+    let passwordHash = target.password_hash;
+    let passwordPlain = target.password_plain || '123456';
+
+    if (password && password.trim()) {
+      passwordPlain = password.trim();
+      passwordHash = await hashPassword(passwordPlain);
+    }
+
+    await db.run(
+      `UPDATE users 
+       SET username = ?, nama = ?, kelas = ?, no_absen = ?, password_hash = ?, password_plain = ?, updated_at = datetime('now')
+       WHERE id = ?`,
+      [cleanUsername, sanitizeInput(nama.trim()), kelas?.trim() || null, parseInt(no_absen) || null, passwordHash, passwordPlain, id]
+    );
+
+    return apiResponse({
+      success: true,
+      message: `Data siswa "${nama.trim()}" berhasil diperbarui`,
+      siswa: {
+        id,
+        username: cleanUsername,
+        nama: nama.trim(),
+        kelas: kelas?.trim() || null,
+        no_absen: parseInt(no_absen) || null,
+        password_plain: passwordPlain,
+      },
+    });
+  } catch (error) {
+    if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
+      return authErrorResponse(error);
+    }
+    console.error('Update siswa error:', error);
+    return apiError('Gagal memperbarui data siswa', 500);
+  }
+}
+
 export async function DELETE(request) {
   try {
     const user = await requireRole(request, 'guru');
     const db = getDB();
+    await ensureSchema(db);
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const isAll = searchParams.get('all') === 'true';

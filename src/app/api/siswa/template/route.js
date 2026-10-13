@@ -9,23 +9,23 @@ export async function GET() {
       {
         'Username': 'siswa1',
         'Nama Siswa': 'Ahmad Rizki Pratama',
-        'Kelas': 'XII-IPA-1',
+        'Kelas': '5',
         'No Absen': 1,
-        'Password': 'guru123',
+        'Password': '123456',
       },
       {
         'Username': 'siswa2',
         'Nama Siswa': 'Siti Nurhaliza',
-        'Kelas': 'XII-IPA-1',
+        'Kelas': '5',
         'No Absen': 2,
-        'Password': 'guru123',
+        'Password': '123456',
       },
       {
         'Username': 'siswa3',
         'Nama Siswa': 'Budi Santoso',
-        'Kelas': 'XII-IPA-1',
+        'Kelas': '5',
         'No Absen': 3,
-        'Password': 'guru123',
+        'Password': '123456',
       },
     ];
 

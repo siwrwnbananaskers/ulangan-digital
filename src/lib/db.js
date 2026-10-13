@@ -742,44 +742,29 @@ class D1Client {
     // 2. INSERT queries
     if (upper.startsWith('INSERT')) {
       if (upper.includes('INTO USERS')) {
-        let userObj;
-        if (upper.includes('GURU_ID')) {
-          if (params.length >= 8) {
-            userObj = {
-              id: params[0],
-              username: params[1],
-              password_hash: params[2],
-              nama: params[3],
-              role: params[4],
-              guru_id: params[5],
-              kelas: params[6] || null,
-              no_absen: params[7] || null,
-            };
-          } else {
-            userObj = {
-              id: params[0],
-              username: params[1],
-              password_hash: params[2],
-              nama: params[3],
-              role: 'siswa',
-              guru_id: params[4],
-              kelas: params[5] || null,
-              no_absen: params[6] || null,
-            };
-          }
+        let userObj = {};
+        const colMatch = sql.match(/INSERT\s+INTO\s+users\s*\(([^)]+)\)/i);
+        if (colMatch) {
+          const cols = colMatch[1].split(',').map(c => c.trim().toLowerCase());
+          cols.forEach((col, idx) => {
+            if (idx < params.length) {
+              userObj[col] = params[idx];
+            }
+          });
         } else {
           userObj = {
             id: params[0],
             username: params[1],
             password_hash: params[2],
             nama: params[3],
-            role: params[4] || (upper.includes("'GURU'") ? 'guru' : upper.includes("'SISWA'") ? 'siswa' : 'guru'),
-            guru_id: null,
-            kelas: params[5] || null,
-            no_absen: params[6] || null,
+            role: params[4] || 'siswa',
+            guru_id: params[5] || null,
+            kelas: params[6] || null,
+            no_absen: params[7] || null,
           };
         }
-        userObj.created_at = new Date().toISOString();
+        if (!userObj.role) userObj.role = 'siswa';
+        if (!userObj.created_at) userObj.created_at = new Date().toISOString();
         userObj.updated_at = new Date().toISOString();
         fallbackStore.users.push(userObj);
         savePersistedStore(fallbackStore);

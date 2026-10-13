@@ -25,8 +25,13 @@ export default function SiswaManagementPage() {
     nama: '',
     kelas: '',
     no_absen: '',
-    password: 'guru123',
+    password: '123456',
   });
+
+  // Edit Student Modal (CRUD)
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   // Bulk Input Modal
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -88,7 +93,7 @@ export default function SiswaManagementPage() {
         return;
       }
       setAlert({ type: 'success', message: `Siswa "${singleForm.nama}" (${singleForm.username}) berhasil ditambahkan!` });
-      setSingleForm({ username: '', nama: '', kelas: singleForm.kelas, no_absen: '', password: 'guru123' });
+      setSingleForm({ username: '', nama: '', kelas: singleForm.kelas, no_absen: '', password: '123456' });
       loadSiswa();
     } catch {
       setAlert({ type: 'danger', message: 'Terjadi kesalahan sistem' });
@@ -111,7 +116,7 @@ export default function SiswaManagementPage() {
       const nama = parts[1]?.trim();
       const kelas = parts[2]?.trim() || bulkDefaultKelas || 'XII-IPA-1';
       const no_absen = parseInt(parts[3]?.trim()) || null;
-      const password = parts[4]?.trim() || 'guru123';
+      const password = parts[4]?.trim() || '123456';
 
       if (username && nama) {
         parsed.push({ username, nama, kelas, no_absen, password });
@@ -186,7 +191,7 @@ export default function SiswaManagementPage() {
           const kelas = rowNorm['kelas'] || rowNorm['class'] || bulkDefaultKelas || '';
           const noAbsenRaw = rowNorm['no absen'] || rowNorm['no. absen'] || rowNorm['absen'] || rowNorm['no'] || null;
           const no_absen = noAbsenRaw !== null ? parseInt(noAbsenRaw) || null : null;
-          const password = rowNorm['password'] || rowNorm['sandi'] || 'guru123';
+          const password = rowNorm['password'] || rowNorm['sandi'] || '123456';
 
           if (username && nama) {
             parsed.push({
@@ -264,6 +269,44 @@ export default function SiswaManagementPage() {
       }
     } catch {
       setAlert({ type: 'danger', message: 'Gagal menghapus siswa' });
+    }
+  };
+
+  const handleOpenEdit = (siswa) => {
+    setEditingStudent({
+      id: siswa.id,
+      username: siswa.username || '',
+      nama: siswa.nama || '',
+      kelas: siswa.kelas || '',
+      no_absen: siswa.no_absen !== null && siswa.no_absen !== undefined ? siswa.no_absen : '',
+      password: siswa.password_plain || '123456',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateStudent = async (e) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setEditSubmitting(true);
+    try {
+      const res = await authFetch('/api/siswa', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingStudent),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'danger', message: data.error || 'Gagal mengubah data siswa' });
+      } else {
+        setAlert({ type: 'success', message: data.message || 'Data siswa berhasil diperbarui' });
+        setShowEditModal(false);
+        setEditingStudent(null);
+        loadSiswa();
+      }
+    } catch {
+      setAlert({ type: 'danger', message: 'Gagal menghubungi server' });
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -580,7 +623,8 @@ export default function SiswaManagementPage() {
                       {isSuperadmin && <th>Guru Pengampu</th>}
                       <th>Kelas</th>
                       <th>Absen</th>
-                      <th style={{ width: 60, textAlign: 'center' }}>Aksi</th>
+                      <th>Password</th>
+                      <th style={{ width: 85, textAlign: 'center' }}>Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -613,18 +657,36 @@ export default function SiswaManagementPage() {
                           )}
                           <td><span className="badge badge-gray">{s.kelas || '-'}</span></td>
                           <td>{s.no_absen || '-'}</td>
+                          <td>
+                            <code style={{ background: '#f8fafc', color: '#1e293b', padding: '2px 6px', borderRadius: 4, fontWeight: 700, border: '1px solid #cbd5e1' }}>
+                              {s.password_plain || '123456'}
+                            </code>
+                          </td>
                           <td style={{ textAlign: 'center' }}>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              style={{ color: '#dc2626', padding: '2px 6px' }}
-                              onClick={() => handleDelete(s.id, s.nama)}
-                              title="Hapus Siswa"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                            </button>
+                            <div style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ color: '#0284c7', padding: '3px 6px' }}
+                                onClick={() => handleOpenEdit(s)}
+                                title="Edit Data Siswa"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ color: '#dc2626', padding: '3px 6px' }}
+                                onClick={() => handleDelete(s.id, s.nama)}
+                                title="Hapus Siswa"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -696,7 +758,7 @@ export default function SiswaManagementPage() {
                     value={singleForm.password}
                     onChange={(e) => setSingleForm({ ...singleForm, password: e.target.value })}
                   />
-                  <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>Default: guru123</span>
+                  <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>Default: 123456</span>
                 </div>
 
                 <button
@@ -1039,7 +1101,7 @@ export default function SiswaManagementPage() {
                 </div>
                 <div className="exam-card-row">
                   <span className="exam-card-label">Password</span>
-                  <span className="exam-card-val">: guru123</span>
+                  <span className="exam-card-val">: {siswa.password_plain || '123456'}</span>
                 </div>
               </div>
               <div className="exam-card-footer">
@@ -1050,6 +1112,129 @@ export default function SiswaManagementPage() {
           ))}
         </div>
       </div>
+
+      {/* Modal Edit Siswa (CRUD) */}
+      {showEditModal && editingStudent && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)',
+          backdropFilter: 'blur(3px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 16
+        }}>
+          <div className="card" style={{ maxWidth: 480, width: '100%', padding: 24, borderRadius: 12, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', background: '#ffffff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 20 }}>✏️</span>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                  Edit Data Peserta Ujian
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => { setShowEditModal(false); setEditingStudent(null); }}
+                style={{ fontSize: 16, padding: '2px 8px', color: '#64748b' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateStudent}>
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label" style={{ fontSize: 12, marginBottom: 4, fontWeight: 600 }}>
+                  Username (ID Login) *
+                </label>
+                <input
+                  className="form-input"
+                  style={{ fontSize: 13, background: '#f8fafc' }}
+                  value={editingStudent.username}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, username: e.target.value.toLowerCase().trim() })}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label" style={{ fontSize: 12, marginBottom: 4, fontWeight: 600 }}>
+                  Nama Lengkap Siswa *
+                </label>
+                <input
+                  className="form-input"
+                  style={{ fontSize: 13 }}
+                  value={editingStudent.nama}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, nama: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontSize: 12, marginBottom: 4, fontWeight: 600 }}>Kelas</label>
+                  <input
+                    className="form-input"
+                    style={{ fontSize: 13 }}
+                    value={editingStudent.kelas}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, kelas: e.target.value })}
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontSize: 12, marginBottom: 4, fontWeight: 600 }}>No. Absen</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    style={{ fontSize: 13 }}
+                    value={editingStudent.no_absen}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, no_absen: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 18 }}>
+                <label className="form-label" style={{ fontSize: 12, marginBottom: 4, fontWeight: 600 }}>
+                  Password Login Siswa *
+                </label>
+                <input
+                  className="form-input"
+                  style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 600, background: '#f8fafc' }}
+                  value={editingStudent.password}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, password: e.target.value })}
+                  placeholder="cth: 123456"
+                  required
+                />
+                <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                  Password ini digunakan saat siswa login dan tercetak pada kartu ujian peserta.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => { setShowEditModal(false); setEditingStudent(null); }}
+                  disabled={editSubmitting}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  style={{ background: '#0a66c2', fontWeight: 700 }}
+                  disabled={editSubmitting}
+                >
+                  {editSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Upgrade WhatsApp Modal when Demo Limit Reached */}
       <UpgradeModal
