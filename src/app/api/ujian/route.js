@@ -16,7 +16,11 @@ export async function GET(request) {
     const user = await requireAuth(request);
     const db = getDB();
 
-    if (user.role === 'superadmin') {
+    const { searchParams } = new URL(request.url);
+    const isMasterAll = searchParams.get('all') === 'true';
+
+    // Superadmin master view (e.g. from /superadmin/dashboard)
+    if (user.role === 'superadmin' && isMasterAll) {
       const ujianList = await db.getAll(
         `SELECT 
           u.id as id, u.guru_id as guru_id, u.judul as judul, u.mata_pelajaran as mata_pelajaran,
@@ -34,7 +38,8 @@ export async function GET(request) {
       return apiResponse({ ujian: ujianList });
     }
 
-    if (user.role === 'guru') {
+    // Teacher & personal view: strictly ONLY see exams owned by user.id!
+    if (user.role === 'guru' || user.role === 'superadmin') {
       const ujianListRaw = await db.getAll(
         `SELECT 
           u.id as id, u.guru_id as guru_id, u.judul as judul, u.mata_pelajaran as mata_pelajaran,
@@ -54,60 +59,44 @@ export async function GET(request) {
       return apiResponse({ ujian: validUjian });
     }
 
-    // For siswa, only show active exams created by their own teacher (guru_id) and for their class
-    let studentGuruId = user.guru_id;
+    // For siswa, show active exams created for student's class
     let studentKelas = user.kelas;
 
     // Fetch up-to-date user info if missing from token
-    if (!studentGuruId || !studentKelas) {
+    if (!studentKelas) {
       try {
-        const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
+        const studentProfile = await db.getOne('SELECT kelas FROM users WHERE id = ?', [user.id]);
         if (studentProfile) {
-          studentGuruId = studentGuruId || studentProfile.guru_id || 'usr_guru_001';
-          studentKelas = studentKelas || studentProfile.kelas;
+          studentKelas = studentProfile.kelas;
         }
       } catch {}
     }
 
-    let ujianList = [];
-    if (studentGuruId) {
-      ujianList = await db.getAll(
-        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro, u.akses_ujian,
-                (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
-         FROM ujian u
-         WHERE u.status = 'aktif' 
-         AND u.guru_id = ?
-         ORDER BY u.created_at DESC`,
-        [studentGuruId]
-      );
-    } else {
-      ujianList = await db.getAll(
-        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro, u.akses_ujian,
-                (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
-         FROM ujian u
-         WHERE u.status = 'aktif' 
-         ORDER BY u.created_at DESC`
-      );
-    }
+    const rawExams = await db.getAll(
+      `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro, u.akses_ujian, u.kode_ujian,
+              (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+       FROM ujian u
+       WHERE u.status = 'aktif' 
+       ORDER BY u.created_at DESC`
+    );
 
-    // Filter by student schedule with buffer and class
     const nowTime = Date.now();
-    ujianList = ujianList.filter(u => {
+    const normalizedKelas = (studentKelas || '').trim().toUpperCase();
+
+    const filteredExams = (rawExams || []).filter(u => {
+      // 1. Schedule match with 10-minute buffer
       const mulai = parseWaktuWIB(u.jadwal_mulai);
       const selesai = parseWaktuWIB(u.jadwal_selesai);
       if (!isNaN(mulai) && nowTime < mulai - 10 * 60 * 1000) return false;
       if (!isNaN(selesai) && nowTime > selesai) return false;
-      return true;
-    });
 
-    // Filter by student class if kelas_target is set and student has a class
-    if (studentKelas) {
-      const normalizedKelas = studentKelas.trim().toUpperCase();
-      ujianList = ujianList.filter(u => {
+      // 2. Class match
+      if (studentKelas) {
         if (!u.kelas_target || u.kelas_target === 'Semua Kelas' || u.kelas_target === '*') return true;
         return u.kelas_target.trim().toUpperCase() === normalizedKelas;
-      });
-    }
+      }
+      return true;
+    });
 
     // Filter by access mode:
     // If exam has akses_ujian = 'kode', student ONLY sees it if they have already joined (have a session)
@@ -118,13 +107,13 @@ export async function GET(request) {
     );
     const joinedExamIds = new Set((studentSessions || []).map(s => s.ujian_id));
 
-    ujianList = ujianList.filter(u => {
+    const finalUjianList = filteredExams.filter(u => {
       const isAuto = u.akses_ujian === 'otomatis';
       const hasJoined = joinedExamIds.has(u.id);
       return isAuto || hasJoined;
     });
 
-    return apiResponse({ ujian: ujianList });
+    return apiResponse({ ujian: finalUjianList });
   } catch (error) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return authErrorResponse(error);

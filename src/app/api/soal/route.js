@@ -22,11 +22,13 @@ export async function GET(request) {
     const tipe = searchParams.get('tipe');
     const guruIdParam = searchParams.get('guru_id');
 
+    const isMasterAll = searchParams.get('all') === 'true';
+
     let sql = '';
     const params = [];
 
-    if (user.role === 'superadmin') {
-      // Super Admin has god-mode access: can see all bank soal across all teachers!
+    if (user.role === 'superadmin' && isMasterAll) {
+      // Super Admin master view across all teachers
       sql = `SELECT s.*, u.nama as nama_guru, u.username as username_guru 
              FROM soal s 
              LEFT JOIN users u ON s.guru_id = u.id`;
@@ -48,8 +50,7 @@ export async function GET(request) {
       }
       sql += ' ORDER BY s.created_at DESC';
     } else {
-      // Regular teacher MUST strictly ONLY see their own questions!
-      // Teachers CANNOT see demo questions or other teachers' questions.
+      // Teachers and superadmin in personal bank-soal: STRICTLY ONLY see own questions!
       sql = 'SELECT * FROM soal WHERE guru_id = ?';
       params.push(user.id);
 

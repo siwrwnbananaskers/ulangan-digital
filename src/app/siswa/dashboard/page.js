@@ -302,6 +302,11 @@ export default function SiswaDashboard() {
                               Guru: {exam.nama_guru}
                             </span>
                           )}
+                          {exam.akses_ujian === 'otomatis' && (
+                            <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 700 }}>
+                              ⚡ Akses Otomatis (Tanpa Kode)
+                            </span>
+                          )}
                           {exam.mode_exambro === 0 ? (
                             <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600 }}>
                               Mode Fleksibel (Tugas)
@@ -342,27 +347,45 @@ export default function SiswaDashboard() {
                           </span>
                         </div>
                         <div style={{ marginTop: 6 }}>
-                          <code
-                            style={{
-                              background: '#edf3f8',
-                              color: '#0a66c2',
-                              padding: '2px 8px',
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 700,
-                            }}
-                          >
-                            Kode: {exam.kode_ujian}
-                          </code>
+                          {exam.akses_ujian === 'otomatis' ? (
+                            <span style={{ fontSize: 12, color: '#057642', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M20 6L9 17l-5-5"/>
+                              </svg>
+                              Bebas Masuk Tanpa Token/Kode
+                            </span>
+                          ) : (
+                            <code
+                              style={{
+                                background: '#edf3f8',
+                                color: '#0a66c2',
+                                padding: '2px 8px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 700,
+                              }}
+                            >
+                              Kode: {exam.kode_ujian}
+                            </code>
+                          )}
                         </div>
                       </div>
 
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => router.push(`/siswa/ujian/${exam.id}/instruksi`)}
-                        style={{ borderRadius: 9999, padding: '8px 18px', fontWeight: 600, background: '#0a66c2' }}
+                        style={{
+                          borderRadius: 9999,
+                          padding: '8px 20px',
+                          fontWeight: 700,
+                          background: exam.akses_ujian === 'otomatis' ? '#057642' : '#0a66c2',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        Ikuti Ujian
+                        {exam.akses_ujian === 'otomatis' ? 'Mulai Ujian Sekarang →' : 'Ikuti Ujian →'}
                       </button>
                     </div>
                   ))}

@@ -28,21 +28,15 @@ export async function POST(request) {
       return apiError('Kode ujian tidak ditemukan. Periksa kembali 6 digit kode yang dibagikan guru Anda.', 404);
     }
 
-    // Verify teacher ownership: the exam must belong to the student's teacher
-    let studentGuruId = user.guru_id;
+    // Verify target class if specified
     let studentKelas = user.kelas;
-    if (!studentGuruId || !studentKelas) {
+    if (!studentKelas) {
       try {
-        const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
+        const studentProfile = await db.getOne('SELECT kelas FROM users WHERE id = ?', [user.id]);
         if (studentProfile) {
-          studentGuruId = studentGuruId || studentProfile.guru_id || 'usr_guru_001';
-          studentKelas = studentKelas || studentProfile.kelas;
+          studentKelas = studentProfile.kelas;
         }
       } catch {}
-    }
-
-    if (studentGuruId && ujian.guru_id && ujian.guru_id !== studentGuruId && !(studentGuruId === 'usr_guru_001' && !ujian.guru_id)) {
-      return apiError('Kode ruang ujian ini bukan milik guru pengampu Anda.', 403);
     }
 
     // Verify target class if specified

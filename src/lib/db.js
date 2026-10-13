@@ -624,13 +624,7 @@ class D1Client {
         if (upper.includes('GURU_ID = ?') || upper.includes('GURU_ID=')) {
           const reqId = params[0];
           const reqUser = fallbackStore.users.find(u => u.id === reqId);
-          let exams = fallbackStore.ujian.filter(u => {
-            if (u.guru_id === reqId) return true;
-            if (reqUser && (reqUser.username === 'novisa' || reqUser.username === 'apim')) {
-              return u.guru_id === 'usr_guru_002' || !u.guru_id;
-            }
-            return false;
-          });
+          let exams = fallbackStore.ujian.filter(u => u.guru_id === reqId);
           if (upper.includes("STATUS = 'AKTIF'")) {
             exams = exams.filter(u => u.status === 'aktif');
           }
