@@ -189,7 +189,7 @@ export default function Navbar({ user, onLogout, role }) {
             <div
               className="linkedin-user-profile"
               onClick={() => setShowProfileModal(true)}
-              title="Klik untuk Edit Profil & Foto"
+              title="Klik untuk Edit Profil"
             >
               <div className="linkedin-avatar">
                 {currentUser?.foto_profil ? (
@@ -217,7 +217,7 @@ export default function Navbar({ user, onLogout, role }) {
             <button
               onClick={onLogout}
               className="linkedin-logout-btn"
-              title="Keluar / Logout"
+              title="Keluar"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -232,6 +232,7 @@ export default function Navbar({ user, onLogout, role }) {
               className="linkedin-mobile-trigger"
               onClick={() => setMobileOpen(true)}
               title="Menu Navigasi"
+              aria-label="Buka Menu Navigasi"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="3" y1="12" x2="21" y2="12" />
@@ -248,12 +249,13 @@ export default function Navbar({ user, onLogout, role }) {
         <div className="mobile-drawer">
           <div className="mobile-drawer-overlay" onClick={() => setMobileOpen(false)} />
           <div className="mobile-drawer-content">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+            <div className="mobile-drawer-header">
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                className="mobile-drawer-user-info"
                 onClick={() => { setMobileOpen(false); setShowProfileModal(true); }}
+                title="Klik untuk Edit Profil"
               >
-                <div className="linkedin-avatar">
+                <div className="mobile-drawer-avatar">
                   {currentUser?.foto_profil ? (
                     <img
                       src={currentUser.foto_profil}
@@ -264,49 +266,63 @@ export default function Navbar({ user, onLogout, role }) {
                     currentUser?.nama?.charAt(0)?.toUpperCase() || 'U'
                   )}
                 </div>
-                <div>
-                  <strong style={{ fontSize: 14 }}>{currentUser?.nama}</strong>
-                  <span className="badge badge-primary" style={{ display: 'block', fontSize: 10, width: 'fit-content', marginTop: 2 }}>
-                    {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru Pengawas' : 'Siswa'} • Edit Profil
+                <div className="mobile-drawer-user-text">
+                  <div className="mobile-drawer-user-name">{currentUser?.nama || 'Pengguna'}</div>
+                  <span className="mobile-drawer-user-badge">
+                    {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru' : 'Siswa'} • Edit Profil
                   </span>
                 </div>
               </div>
-              <button className="btn btn-ghost btn-icon" onClick={() => setMobileOpen(false)}>
-                ✕
+              <button
+                className="mobile-drawer-close-btn"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Tutup Menu"
+                title="Tutup Menu"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 12 }}>
+            <div className="mobile-drawer-nav">
               {links.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className={`nav-link ${pathname === link.href ? 'active' : ''}`}
+                  className={`mobile-drawer-item ${pathname === link.href ? 'active' : ''}`}
                   onClick={() => setMobileOpen(false)}
-                  style={{ padding: '10px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}
                 >
-                  <div style={{ width: 22, height: 22 }}>{link.icon}</div>
-                  <span>{link.label}</span>
+                  <div className="mobile-drawer-icon">{link.icon}</div>
+                  <span className="mobile-drawer-label">{link.label}</span>
+                  {link.badge && <span className="mobile-drawer-tag">{link.badge}</span>}
                 </a>
               ))}
 
               <button
                 type="button"
-                className="nav-link"
+                className="mobile-drawer-item mobile-drawer-profile-btn"
                 onClick={() => { setMobileOpen(false); setShowProfileModal(true); }}
-                style={{ padding: '10px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', textAlign: 'left', width: '100%', color: '#0a66c2', fontWeight: 600 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span>Edit Profil & Foto</span>
+                <div className="mobile-drawer-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <span className="mobile-drawer-label">Edit Profil</span>
               </button>
             </div>
 
-            <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--gray-200)' }}>
-              <button className="btn btn-danger btn-block" onClick={onLogout}>
-                Keluar / Logout
+            <div className="mobile-drawer-footer">
+              <button className="mobile-drawer-logout-btn" onClick={onLogout}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Keluar</span>
               </button>
             </div>
           </div>
