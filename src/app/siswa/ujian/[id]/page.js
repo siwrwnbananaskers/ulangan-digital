@@ -38,6 +38,7 @@ export default function LembarUjianPage() {
   // Submit Modal
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMobileNavDrawer, setShowMobileNavDrawer] = useState(false);
 
   // Violation handling via hook
   const handleViolationCallback = useCallback(async (violationData) => {
@@ -449,64 +450,101 @@ export default function LembarUjianPage() {
 
       {/* Top Bar with Timer, Status, and Controls */}
       <header className="exam-topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--gray-900)', margin: 0 }}>
-                {ujian?.judul}
-              </h3>
+        <div className="exam-topbar-main">
+          {/* Left: Exam Info & Student Identity */}
+          <div className="exam-meta-box">
+            <div className="exam-title-row">
+              <h1 className="exam-title-text" title={ujian?.judul}>
+                {ujian?.judul || 'Ujian Digital'}
+              </h1>
               {ujian?.mode_exambro === 0 ? (
-                <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '1px 6px', fontWeight: 600 }}>
-                  Mode Fleksibel (Tugas)
+                <span className="exam-mode-badge flexible">
+                  Mode Fleksibel
                 </span>
               ) : (
-                <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', padding: '1px 6px', fontWeight: 600 }}>
-                  Exambro Kiosk Ketat
+                <span className="exam-mode-badge kiosk">
+                  Exambro Aman
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted" style={{ margin: '2px 0 0' }}>
-              {ujian?.mata_pelajaran} • {user?.nama} ({user?.kelas || '-'})
-            </p>
+            <div className="exam-student-row">
+              <span className="exam-student-name">{user?.nama || 'Siswa'}</span>
+              <span className="exam-dot-separator">•</span>
+              <span className="exam-student-class">Kelas {user?.kelas || '-'}</span>
+              {ujian?.mata_pelajaran && (
+                <>
+                  <span className="exam-dot-separator">•</span>
+                  <span>{ujian.mata_pelajaran}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Timer Pill, Mobile Drawer Toggle, and Desktop Submit */}
+          <div className="exam-topbar-actions">
+            <div className={`exam-timer-pill ${timerWarningClass}`}>
+              <svg className="exam-timer-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span>{formatTimerString(timeLeft)}</span>
+            </div>
+
+            {/* Mobile Question Grid Drawer Button */}
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm exam-mobile-nav-toggle"
+              onClick={() => setShowMobileNavDrawer(true)}
+              style={{ padding: '6px 10px', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              </svg>
+              <span>{currentIndex + 1}/{soalList.length}</span>
+            </button>
+
+            {/* Desktop Direct Submit Button */}
+            <button
+              type="button"
+              className="btn btn-success btn-sm exam-desktop-finish-btn"
+              onClick={() => setShowSubmitModal(true)}
+              id="btn-kumpulkan-ujian"
+              style={{ fontWeight: 700 }}
+            >
+              Kumpulkan Ujian
+            </button>
           </div>
         </div>
 
-        {/* Center: Server-synced Countdown Timer */}
-        <div className={`exam-timer ${timerWarningClass}`}>
-          <svg className="exam-timer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span>{formatTimerString(timeLeft)}</span>
-        </div>
-
-        {/* Right: Autosave status & Submit button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', fontSize: 'var(--font-size-xs)' }}>
+        {/* Sub-bar: Autosave status & Answer Progress */}
+        <div className="exam-subbar">
+          <div className="exam-autosave-indicator">
             {autosaveStatus === 'menyimpan' && (
               <>
-                <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                <span className="exam-sync-dot spinning" />
                 <span className="text-muted">Menyimpan...</span>
               </>
             )}
             {autosaveStatus === 'tersimpan' && (
-              <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Tersimpan
-              </span>
+              <>
+                <span className="exam-sync-dot success" />
+                <span style={{ color: '#059669', fontWeight: 600 }}>Tersimpan</span>
+              </>
             )}
             {autosaveStatus === 'offline' && (
-              <span style={{ color: 'var(--warning)' }}>Tersimpan Offline</span>
+              <>
+                <span className="exam-sync-dot warning" />
+                <span style={{ color: '#d97706', fontWeight: 600 }}>Tersimpan Offline</span>
+              </>
             )}
           </div>
 
-          <button
-            className="btn btn-success btn-sm"
-            onClick={() => setShowSubmitModal(true)}
-            id="btn-kumpulkan-ujian"
-          >
-            Kumpulkan Ujian
-          </button>
+          <div className="exam-progress-info">
+            <span>Terjawab: <strong>{totalAnswered}</strong> dari {soalList.length} soal</span>
+          </div>
         </div>
       </header>
 
@@ -516,40 +554,46 @@ export default function LembarUjianPage() {
         <main className="exam-question-panel">
           {currentSoal ? (
             <div className="question-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-                <div className="question-number">
-                  <span>Soal Nomor {currentIndex + 1} dari {soalList.length}</span>
-                  <span className="question-type-badge">
+              {/* Question Card Header: Number pill, Type badge, Flag button */}
+              <div className="exam-card-head">
+                <div className="exam-qnum-badges">
+                  <span className="exam-qnum-pill">
+                    Soal {currentIndex + 1}
+                  </span>
+                  <span className="exam-qtype-pill">
                     {currentSoal.tipe === 'pg' ? 'Pilihan Ganda' :
                      currentSoal.tipe === 'isian' ? 'Isian Singkat' :
                      currentSoal.tipe === 'benar_salah' ? 'Benar / Salah' : 'Uraian'}
+                  </span>
+                  <span className="exam-qtotal-text">
+                    dari {soalList.length}
                   </span>
                 </div>
 
                 <button
                   type="button"
-                  className={`btn btn-sm ${isCurrentFlagged ? 'btn-warning' : 'btn-secondary'}`}
+                  className={`exam-flag-btn ${isCurrentFlagged ? 'flagged' : ''}`}
                   onClick={toggleFlag}
-                  style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}
+                  title={isCurrentFlagged ? 'Hilangkan tanda ragu' : 'Tandai ragu-ragu'}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill={isCurrentFlagged ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={isCurrentFlagged ? '#f59e0b' : 'none'} stroke={isCurrentFlagged ? '#f59e0b' : 'currentColor'} strokeWidth="2.2">
                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                     <line x1="4" y1="22" x2="4" y2="15" />
                   </svg>
-                  {isCurrentFlagged ? 'Ragu-ragu' : 'Tandai Ragu'}
+                  <span>{isCurrentFlagged ? 'Ragu-ragu' : 'Ragu'}</span>
                 </button>
               </div>
 
               {/* Question Text */}
-              <div className="question-text">
+              <div className="exam-question-text">
                 {currentSoal.pertanyaan}
               </div>
 
               {/* Input for Answers depending on Question Type */}
-              <div style={{ marginTop: 'var(--space-xl)' }}>
+              <div>
                 {/* 1. Multiple Choice (PG) */}
                 {currentSoal.tipe === 'pg' && (
-                  <div className="options-list">
+                  <div className="exam-options-list">
                     {['a', 'b', 'c', 'd', 'e'].map((letter) => {
                       const text = currentSoal[`pilihan_${letter}`];
                       if (!text) return null;
@@ -558,11 +602,16 @@ export default function LembarUjianPage() {
                       return (
                         <div
                           key={letter}
-                          className={`option-item ${isSelected ? 'selected' : ''}`}
+                          className={`exam-option-card ${isSelected ? 'selected' : ''}`}
                           onClick={() => handleAnswerChange(letter)}
                         >
-                          <div className="option-letter">{letter.toUpperCase()}</div>
-                          <div className="option-text">{text}</div>
+                          <div className={`exam-option-letter ${isSelected ? 'selected' : ''}`}>
+                            {letter.toUpperCase()}
+                          </div>
+                          <div className="exam-option-content">{text}</div>
+                          {isSelected && (
+                            <div className="exam-option-check">✓</div>
+                          )}
                         </div>
                       );
                     })}
@@ -571,35 +620,46 @@ export default function LembarUjianPage() {
 
                 {/* 2. Isian Singkat */}
                 {currentSoal.tipe === 'isian' && (
-                  <div>
-                    <label className="form-label" style={{ marginBottom: 'var(--space-xs)' }}>
-                      Ketikkan Jawaban Singkat Anda:
+                  <div className="exam-answer-box">
+                    <label className="exam-answer-label">
+                      Ketikkan Jawaban Anda:
                     </label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Masukkan jawaban..."
-                      value={currentAnswer}
-                      onChange={(e) => handleAnswerChange(e.target.value)}
-                      style={{ fontSize: 'var(--font-size-lg)', padding: 'var(--space-md)' }}
-                    />
+                    <div className="exam-input-wrap">
+                      <input
+                        type="text"
+                        className="exam-text-input"
+                        placeholder="Ketik jawaban singkat di sini..."
+                        value={currentAnswer}
+                        onChange={(e) => handleAnswerChange(e.target.value)}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck="false"
+                      />
+                      {currentAnswer && (
+                        <span className="exam-input-status">✓ Terisi</span>
+                      )}
+                    </div>
+                    <p className="exam-answer-hint">
+                      Jawaban Anda akan tersimpan otomatis saat Anda mengetik.
+                    </p>
                   </div>
                 )}
 
                 {/* 3. Benar / Salah */}
                 {currentSoal.tipe === 'benar_salah' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
+                  <div className="exam-truefalse-grid">
                     {['Benar', 'Salah'].map((val) => {
                       const isSelected = currentAnswer.toLowerCase() === val.toLowerCase();
+                      const isBenar = val === 'Benar';
                       return (
                         <button
                           key={val}
                           type="button"
-                          className={`btn ${isSelected ? (val === 'Benar' ? 'btn-success' : 'btn-danger') : 'btn-secondary'} btn-lg`}
-                          style={{ height: 60, fontSize: 'var(--font-size-lg)', fontWeight: 700 }}
+                          className={`exam-tf-card ${isBenar ? 'benar' : 'salah'} ${isSelected ? 'selected' : ''}`}
                           onClick={() => handleAnswerChange(val)}
                         >
-                          {val}
+                          <span className="exam-tf-icon">{isBenar ? '✓' : '✕'}</span>
+                          <span className="exam-tf-label">{val}</span>
                         </button>
                       );
                     })}
@@ -608,48 +668,66 @@ export default function LembarUjianPage() {
 
                 {/* 4. Uraian */}
                 {currentSoal.tipe === 'uraian' && (
-                  <div>
-                    <label className="form-label" style={{ marginBottom: 'var(--space-xs)' }}>
+                  <div className="exam-answer-box">
+                    <label className="exam-answer-label">
                       Tuliskan Uraian / Penjelasan Jawaban Lengkap:
                     </label>
                     <textarea
-                      className="form-textarea"
+                      className="exam-textarea-input"
                       rows={6}
-                      placeholder="Tuliskan jawaban Anda di sini..."
+                      placeholder="Tuliskan uraian jawaban Anda di sini..."
                       value={currentAnswer}
                       onChange={(e) => handleAnswerChange(e.target.value)}
-                      style={{ fontSize: 'var(--font-size-md)', lineHeight: 1.6 }}
                     />
+                    <p className="exam-answer-hint">
+                      Jawaban uraian akan dikoreksi dan dinilai langsung oleh guru.
+                    </p>
                   </div>
                 )}
               </div>
 
               {/* Bottom Nav Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginTop: 'var(--space-2xl)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--gray-200)' }}>
+              <div className="exam-card-foot">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary btn-sm"
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px' }}
                 >
-                  ← Soal Sebelumnya
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                  <span>Sebelumnya</span>
+                </button>
+
+                {/* Mobile Drawer Trigger button */}
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm exam-mobile-nav-toggle"
+                  onClick={() => setShowMobileNavDrawer(true)}
+                  style={{ fontSize: 13, fontWeight: 700, color: '#2563eb', padding: '6px 10px' }}
+                >
+                  📋 No. {currentIndex + 1} dari {soalList.length}
                 </button>
 
                 {currentIndex < soalList.length - 1 ? (
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-sm"
                     onClick={() => setCurrentIndex((prev) => Math.min(soalList.length - 1, prev + 1))}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, padding: '7px 16px' }}
                   >
-                    Soal Selanjutnya →
+                    <span>Selanjutnya</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                   </button>
                 ) : (
                   <button
                     type="button"
-                    className="btn btn-success"
+                    className="btn btn-success btn-sm"
                     onClick={() => setShowSubmitModal(true)}
+                    style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px' }}
                   >
-                    Kumpulkan Ujian
+                    <span>Kumpulkan Ujian</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                   </button>
                 )}
               </div>
@@ -724,6 +802,122 @@ export default function LembarUjianPage() {
           </div>
         </aside>
       </div>
+
+      {/* Mobile Question Navigator Drawer (Sheet) */}
+      {showMobileNavDrawer && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 999,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowMobileNavDrawer(false)}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              width: '100%',
+              maxWidth: 500,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: '20px 20px 28px',
+              boxShadow: '0 -10px 25px rgba(0,0,0,0.2)',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <div style={{ width: 40, height: 4, background: '#cbd5e1', borderRadius: 99 }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+                  Daftar Nomor Soal
+                </h3>
+                <span style={{ fontSize: 12, color: '#64748b' }}>
+                  Terjawab: <strong>{totalAnswered}</strong> dari {soalList.length} soal
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowMobileNavDrawer(false)}
+                style={{ fontSize: 18, padding: '2px 8px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Grid of numbers */}
+            <div className="question-nav-grid" style={{ marginBottom: 18 }}>
+              {soalList.map((soal, idx) => {
+                const ans = jawabanMap[soal.id];
+                const hasAnswer = ans !== undefined && ans !== '';
+                const isFlagged = flaggedMap[soal.id];
+                const isActive = idx === currentIndex;
+
+                let cls = 'question-nav-btn';
+                if (isActive) cls += ' active';
+                else if (isFlagged) cls += ' flagged';
+                else if (hasAnswer) cls += ' answered';
+
+                return (
+                  <button
+                    key={soal.id}
+                    className={cls}
+                    onClick={() => {
+                      setCurrentIndex(idx);
+                      setShowMobileNavDrawer(false);
+                    }}
+                    title={`Nomor ${idx + 1}`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="question-nav-legend" style={{ marginBottom: 20 }}>
+              <div className="legend-item">
+                <div className="legend-dot current" />
+                <span>Aktif</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-dot answered" />
+                <span>Dijawab</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-dot" style={{ background: '#fef3c7', borderColor: '#f59e0b' }} />
+                <span>Ragu</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-dot empty" />
+                <span>Belum</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-success btn-block btn-lg"
+              onClick={() => {
+                setShowMobileNavDrawer(false);
+                setShowSubmitModal(true);
+              }}
+              style={{ fontWeight: 700 }}
+            >
+              Kumpulkan Ujian Sekarang
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Submit Modal */}
       {showSubmitModal && (
