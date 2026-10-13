@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import UpgradeModal from '@/components/UpgradeModal';
@@ -29,6 +30,10 @@ export default function SiswaManagementPage() {
 
   // Bulk Input Modal
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkTab, setBulkTab] = useState('excel'); // 'excel' | 'paste'
+  const [excelParsedStudents, setExcelParsedStudents] = useState([]);
+  const [excelFileName, setExcelFileName] = useState('');
+  const [excelError, setExcelError] = useState('');
   const [bulkText, setBulkText] = useState('');
   const [bulkDefaultKelas, setBulkDefaultKelas] = useState('');
   const [bulkProcessing, setBulkProcessing] = useState(false);
@@ -134,6 +139,105 @@ export default function SiswaManagementPage() {
         setAlert({ type: 'success', message: data.message });
         setShowBulkModal(false);
         setBulkText('');
+        loadSiswa();
+      }
+    } catch {
+      setAlert({ type: 'danger', message: 'Gagal mengunggah data siswa' });
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleExcelFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setExcelError('');
+    setExcelFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (!rows || rows.length === 0) {
+          setExcelError('File Excel kosong atau tidak memiliki baris data.');
+          setExcelParsedStudents([]);
+          return;
+        }
+
+        const parsed = [];
+        for (const row of rows) {
+          const rowNorm = {};
+          for (const [k, v] of Object.entries(row)) {
+            rowNorm[k.trim().toLowerCase()] = typeof v === 'string' ? v.trim() : v;
+          }
+
+          const username = rowNorm['username'] || rowNorm['user'] || rowNorm['nis'] || rowNorm['nisn'] || rowNorm['id'] || '';
+          const nama = rowNorm['nama siswa'] || rowNorm['nama lengkap'] || rowNorm['nama'] || rowNorm['name'] || '';
+          const kelas = rowNorm['kelas'] || rowNorm['class'] || bulkDefaultKelas || '';
+          const noAbsenRaw = rowNorm['no absen'] || rowNorm['no. absen'] || rowNorm['absen'] || rowNorm['no'] || null;
+          const no_absen = noAbsenRaw !== null ? parseInt(noAbsenRaw) || null : null;
+          const password = rowNorm['password'] || rowNorm['sandi'] || 'guru123';
+
+          if (username && nama) {
+            parsed.push({
+              username: String(username).toLowerCase().replace(/\s+/g, ''),
+              nama: String(nama),
+              kelas: String(kelas),
+              no_absen,
+              password: String(password),
+            });
+          }
+        }
+
+        if (parsed.length === 0) {
+          setExcelError('Format kolom tidak cocok. Pastikan file memiliki kolom "Username" dan "Nama Siswa". Silakan unduh template resmi di atas.');
+          setExcelParsedStudents([]);
+        } else {
+          setExcelParsedStudents(parsed);
+        }
+      } catch (err) {
+        console.error('Error reading excel:', err);
+        setExcelError('Gagal membaca file Excel. Pastikan file berformat .xlsx, .xls, atau .csv yang valid.');
+        setExcelParsedStudents([]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleDownloadTemplate = () => {
+    window.location.href = '/api/siswa/template';
+  };
+
+  const handleBulkExcelSubmit = async (e) => {
+    e.preventDefault();
+    if (excelParsedStudents.length === 0) return;
+
+    setBulkProcessing(true);
+    try {
+      const res = await authFetch('/api/siswa', {
+        method: 'POST',
+        body: JSON.stringify({ siswa: excelParsedStudents }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.upgrade_required || data.error === 'LIMIT_DEMO_REACHED') {
+          setShowBulkModal(false);
+          setShowUpgradeModal(true);
+          setUpgradeMsg(data.message || 'Batas Akun Demo Tercapai! Anda hanya dapat menambah 1 siswa untuk uji coba.');
+          return;
+        }
+        setAlert({ type: 'danger', message: data.error || 'Gagal mengimpor siswa' });
+      } else {
+        setAlert({ type: 'success', message: data.message });
+        setShowBulkModal(false);
+        setExcelParsedStudents([]);
+        setExcelFileName('');
         loadSiswa();
       }
     } catch {
@@ -429,60 +533,288 @@ export default function SiswaManagementPage() {
       {/* Bulk Import Modal */}
       {showBulkModal && (
         <div className="modal-overlay no-print" onClick={(e) => e.target === e.currentTarget && setShowBulkModal(false)}>
-          <div className="modal modal-lg" style={{ maxWidth: 640 }}>
+          <div className="modal modal-lg" style={{ maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
-              <h2 className="modal-title" style={{ fontSize: 17, fontWeight: 700 }}>Tambah Siswa Secara Masal (Impor)</h2>
+              <div>
+                <h2 className="modal-title" style={{ fontSize: 18, fontWeight: 800 }}>Impor Siswa Masal via Excel</h2>
+                <p style={{ fontSize: 12, color: '#64748b', margin: '2px 0 0' }}>
+                  Unduh template Excel, isi data siswa, lalu upload file untuk membuat akun siswa secara otomatis.
+                </p>
+              </div>
               <button className="modal-close" onClick={() => setShowBulkModal(false)}>✕</button>
             </div>
 
-            <form onSubmit={handleBulkSubmit} style={{ padding: 20 }}>
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label">Kelas Default (jika baris tidak menyertakan kelas):</label>
-                <input
-                  className="form-input"
-                  placeholder="cth: XII-IPA-1"
-                  value={bulkDefaultKelas}
-                  onChange={(e) => setBulkDefaultKelas(e.target.value)}
-                />
-              </div>
+            {/* Modal Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '0 20px' }}>
+              <button
+                type="button"
+                onClick={() => setBulkTab('excel')}
+                style={{
+                  padding: '12px 18px',
+                  fontSize: 13,
+                  fontWeight: bulkTab === 'excel' ? 700 : 500,
+                  color: bulkTab === 'excel' ? '#0a66c2' : '#64748b',
+                  borderBottom: bulkTab === 'excel' ? '2.5px solid #0a66c2' : 'none',
+                  background: 'none',
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span>📊 Upload File Excel (.xlsx)</span>
+                <span style={{ fontSize: 10, background: '#dbeafe', color: '#1e40af', padding: '1px 6px', borderRadius: 9999 }}>Utama</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkTab('paste')}
+                style={{
+                  padding: '12px 18px',
+                  fontSize: 13,
+                  fontWeight: bulkTab === 'paste' ? 700 : 500,
+                  color: bulkTab === 'paste' ? '#0a66c2' : '#64748b',
+                  borderBottom: bulkTab === 'paste' ? '2.5px solid #0a66c2' : 'none',
+                  background: 'none',
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span>📋 Salin (Paste) Teks</span>
+              </button>
+            </div>
 
-              <div className="form-group" style={{ marginBottom: 14 }}>
-                <label className="form-label">
-                  Tempel (Paste) Data Siswa dari Excel / Spreadsheet:
-                </label>
-                <textarea
-                  className="form-textarea"
-                  rows={8}
-                  style={{ fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5 }}
-                  placeholder={`Format kolom (pisahkan dengan koma atau Tab):\nUsername, Nama Lengkap, Kelas, No Absen\n\nContoh:\nsiswa1, Budi Santoso, XII-IPA-1, 1\nsiswa2, Citra Kirana, XII-IPA-1, 2\nsiswa3, Dian Permata, XII-IPA-1, 3`}
-                  value={bulkText}
-                  onChange={(e) => setBulkText(e.target.value)}
-                  required
-                />
-                <span style={{ fontSize: 11, color: '#666666', marginTop: 4, display: 'block' }}>
-                  Tips: Anda bisa langsung copy baris dari Microsoft Excel / Google Sheets lalu paste ke kotak di atas.
-                </span>
-              </div>
+            {bulkTab === 'excel' ? (
+              <form onSubmit={handleBulkExcelSubmit} style={{ padding: 20 }}>
+                {/* Step 1: Download Template */}
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>Langkah 1:</span>
+                        <span>Unduh Format Template Resmi</span>
+                      </h4>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#15803d' }}>
+                        Format file <code>.xlsx</code> sudah memiliki kolom yang tepat: Username, Nama Siswa, Kelas, No Absen, Password.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleDownloadTemplate}
+                      className="btn btn-sm"
+                      style={{
+                        background: '#15803d',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '8px 16px',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Unduh Template Excel (.xlsx)
+                    </button>
+                  </div>
+                </div>
 
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowBulkModal(false)}
-                  disabled={bulkProcessing}
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ background: '#0a66c2' }}
-                  disabled={bulkProcessing || !bulkText.trim()}
-                >
-                  {bulkProcessing ? 'Memproses Impor...' : 'Impor Siswa Sekarang'}
-                </button>
-              </div>
-            </form>
+                {/* Step 2: Fallback Class */}
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>
+                    Langkah 2: Kelas Default (digunakan jika baris siswa tidak menyertakan kelas):
+                  </label>
+                  <input
+                    className="form-input"
+                    placeholder="cth: XII-IPA-1 atau 5-A"
+                    value={bulkDefaultKelas}
+                    onChange={(e) => setBulkDefaultKelas(e.target.value)}
+                  />
+                </div>
+
+                {/* Step 3: Upload Excel File */}
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>
+                    Langkah 3: Unggah (Upload) File Excel Yang Telah Diisi:
+                  </label>
+                  <div
+                    style={{
+                      border: '2px dashed #cbd5e1',
+                      borderRadius: 10,
+                      padding: '24px 16px',
+                      textAlign: 'center',
+                      background: '#f8fafc',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'border-color 150ms ease',
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls, .csv"
+                      onChange={handleExcelFileChange}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer',
+                      }}
+                    />
+                    <div style={{ width: 44, height: 44, borderRadius: 9999, background: '#dbeafe', color: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                    </div>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#1e293b' }}>
+                      {excelFileName ? `File Terpilih: ${excelFileName}` : 'Klik untuk Pilih File Excel (.xlsx, .xls, .csv)'}
+                    </p>
+                    <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b' }}>
+                      Bisa langsung upload file template yang sudah Anda isi dengan nama dan username siswa
+                    </p>
+                  </div>
+                </div>
+
+                {excelError && (
+                  <div className="alert alert-danger" style={{ marginBottom: 16, fontSize: 12 }}>
+                    {excelError}
+                  </div>
+                )}
+
+                {/* Preview Table */}
+                {excelParsedStudents.length > 0 && (
+                  <div style={{ marginBottom: 16, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#15803d' }}>
+                        ✅ Terdeteksi {excelParsedStudents.length} Siswa Siap Diimpor:
+                      </span>
+                      <span style={{ fontSize: 11, color: '#64748b' }}>
+                        Menampilkan preview 5 baris pertama
+                      </span>
+                    </div>
+                    <div style={{ overflowX: 'auto', maxHeight: 180 }}>
+                      <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
+                            <th style={{ padding: '6px 8px' }}>No</th>
+                            <th style={{ padding: '6px 8px' }}>Username</th>
+                            <th style={{ padding: '6px 8px' }}>Nama Lengkap</th>
+                            <th style={{ padding: '6px 8px' }}>Kelas</th>
+                            <th style={{ padding: '6px 8px' }}>Absen</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {excelParsedStudents.slice(0, 5).map((s, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '6px 8px' }}>{idx + 1}</td>
+                              <td style={{ padding: '6px 8px', fontWeight: 600 }}>{s.username}</td>
+                              <td style={{ padding: '6px 8px' }}>{s.nama}</td>
+                              <td style={{ padding: '6px 8px' }}>{s.kelas || '-'}</td>
+                              <td style={{ padding: '6px 8px' }}>{s.no_absen || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {excelParsedStudents.length > 5 && (
+                      <p style={{ margin: '6px 0 0', fontSize: 11, color: '#64748b', textAlign: 'center' }}>
+                        ... dan {excelParsedStudents.length - 5} siswa lainnya
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowBulkModal(false)}
+                    disabled={bulkProcessing}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ background: '#0a66c2', fontWeight: 700, padding: '8px 22px' }}
+                    disabled={bulkProcessing || excelParsedStudents.length === 0}
+                  >
+                    {bulkProcessing ? (
+                      'Membuat Akun Siswa...'
+                    ) : (
+                      `🚀 Buat Akun (${excelParsedStudents.length}) Siswa Sekarang`
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleBulkSubmit} style={{ padding: 20 }}>
+                <div className="form-group" style={{ marginBottom: 12 }}>
+                  <label className="form-label">Kelas Default (jika baris tidak menyertakan kelas):</label>
+                  <input
+                    className="form-input"
+                    placeholder="cth: XII-IPA-1"
+                    value={bulkDefaultKelas}
+                    onChange={(e) => setBulkDefaultKelas(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label className="form-label">
+                    Tempel (Paste) Data Siswa dari Excel / Spreadsheet:
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={8}
+                    style={{ fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5 }}
+                    placeholder={`Format kolom (pisahkan dengan koma atau Tab):\nUsername, Nama Lengkap, Kelas, No Absen\n\nContoh:\nsiswa1, Budi Santoso, XII-IPA-1, 1\nsiswa2, Citra Kirana, XII-IPA-1, 2\nsiswa3, Dian Permata, XII-IPA-1, 3`}
+                    value={bulkText}
+                    onChange={(e) => setBulkText(e.target.value)}
+                    required
+                  />
+                  <span style={{ fontSize: 11, color: '#666666', marginTop: 4, display: 'block' }}>
+                    Tips: Anda bisa langsung copy baris dari Microsoft Excel / Google Sheets lalu paste ke kotak di atas.
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowBulkModal(false)}
+                    disabled={bulkProcessing}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ background: '#0a66c2', fontWeight: 700 }}
+                    disabled={bulkProcessing || !bulkText.trim()}
+                  >
+                    {bulkProcessing ? 'Memproses Impor...' : 'Impor Siswa Sekarang'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

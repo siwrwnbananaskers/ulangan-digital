@@ -274,119 +274,153 @@ export default function SiswaDashboard() {
                   </p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {activeExams.map((exam) => (
                     <div
                       key={exam.id}
                       style={{
-                        border: '1px solid #e0dfdc',
-                        borderRadius: 8,
-                        padding: '14px 16px',
+                        border: exam.sudah_selesai ? '1.5px solid #86efac' : '1px solid #e2e8f0',
+                        borderRadius: 12,
+                        padding: '16px 18px',
+                        background: exam.sudah_selesai ? '#fcfdfd' : '#ffffff',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        background: '#ffffff',
-                        transition: 'border-color 150ms ease',
+                        flexDirection: 'column',
+                        gap: 10,
+                        transition: 'all 150ms ease',
                       }}
                     >
+                      {/* Top Badges */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        {exam.sudah_selesai ? (
+                          <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            ✓ Sudah Dikerjakan (Selesai)
+                          </span>
+                        ) : exam.sesi_status === 'berlangsung' ? (
+                          <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            ⏳ Sedang Berlangsung
+                          </span>
+                        ) : (
+                          <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11 }}>
+                            🟢 Siap Dikerjakan
+                          </span>
+                        )}
+
+                        <span style={{ background: '#f1f5f9', color: '#475569', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11 }}>
+                          {exam.mata_pelajaran} • {exam.kelas_target}
+                        </span>
+
+                        {exam.akses_ujian === 'otomatis' ? (
+                          <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11 }}>
+                            ⚡ Akses Langsung
+                          </span>
+                        ) : (
+                          <span style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11 }}>
+                            🔑 Wajib Kode
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Title & Teacher */}
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                          <span className="badge badge-primary" style={{ fontSize: 11 }}>
-                            {exam.mata_pelajaran}
-                          </span>
-                          <span className="badge badge-gray" style={{ fontSize: 11 }}>
-                            Kelas: {exam.kelas_target}
-                          </span>
-                          {exam.nama_guru && (
-                            <span className="badge" style={{ fontSize: 10, background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>
-                              Guru: {exam.nama_guru}
-                            </span>
-                          )}
-                          {exam.akses_ujian === 'otomatis' && (
-                            <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 700 }}>
-                              ⚡ Akses Otomatis (Tanpa Kode)
-                            </span>
-                          )}
-                          {exam.mode_exambro === 0 ? (
-                            <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600 }}>
-                              Mode Fleksibel (Tugas)
-                            </span>
-                          ) : (
-                            <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', fontWeight: 600 }}>
-                              Exambro Kiosk Ketat
-                            </span>
-                          )}
-                        </div>
-                        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: '4px 0' }}>
+                        <h4 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 2px 0', lineHeight: 1.3 }}>
                           {exam.judul}
                         </h4>
-                        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#666666', marginTop: 4, alignItems: 'center' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            {exam.durasi_menit} Menit
-                          </span>
-                          <span>•</span>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                            {exam.jumlah_soal} Soal
-                          </span>
-                          <span>•</span>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                              <circle cx="12" cy="12" r="6" />
-                              <circle cx="12" cy="12" r="2" />
-                            </svg>
-                            KKM: {exam.kkm}
-                          </span>
-                        </div>
-                        <div style={{ marginTop: 6 }}>
-                          {exam.akses_ujian === 'otomatis' ? (
-                            <span style={{ fontSize: 12, color: '#057642', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        {exam.nama_guru && (
+                          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+                            Guru Pengampu: <strong style={{ color: '#334155' }}>{exam.nama_guru}</strong>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Specs Row */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', fontSize: 12, color: '#475569', background: '#f8fafc', padding: '8px 12px', borderRadius: 8, alignItems: 'center' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          Durasi: <strong>{exam.durasi_menit} Menit</strong>
+                        </span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          Jumlah: <strong>{exam.jumlah_soal} Butir Soal</strong>
+                        </span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <circle cx="12" cy="12" r="6" />
+                            <circle cx="12" cy="12" r="2" />
+                          </svg>
+                          KKM: <strong>{exam.kkm}</strong>
+                        </span>
+                      </div>
+
+                      {/* Action Footer */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, paddingTop: 4 }}>
+                        <div>
+                          {exam.sudah_selesai ? (
+                            <div>
+                              {exam.tampilkan_nilai && exam.total_nilai !== null ? (
+                                <span style={{ color: '#166534', fontWeight: 700, fontSize: 13 }}>
+                                  Nilai Anda: <strong style={{ fontSize: 16, color: '#15803d' }}>{exam.total_nilai}</strong>
+                                </span>
+                              ) : (
+                                <span style={{ color: '#15803d', fontSize: 12, fontWeight: 600 }}>
+                                  ✓ Jawaban Anda telah tersimpan
+                                </span>
+                              )}
+                            </div>
+                          ) : exam.akses_ujian === 'otomatis' ? (
+                            <span style={{ fontSize: 12, color: '#15803d', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <path d="M20 6L9 17l-5-5"/>
                               </svg>
                               Bebas Masuk Tanpa Token/Kode
                             </span>
                           ) : (
-                            <code
-                              style={{
-                                background: '#edf3f8',
-                                color: '#0a66c2',
-                                padding: '2px 8px',
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 700,
-                              }}
-                            >
+                            <code style={{ background: '#edf3f8', color: '#0a66c2', padding: '3px 8px', borderRadius: 4, fontSize: 12, fontWeight: 700 }}>
                               Kode: {exam.kode_ujian}
                             </code>
                           )}
                         </div>
-                      </div>
 
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => router.push(`/siswa/ujian/${exam.id}/instruksi`)}
-                        style={{
-                          borderRadius: 9999,
-                          padding: '8px 20px',
-                          fontWeight: 700,
-                          background: exam.akses_ujian === 'otomatis' ? '#057642' : '#0a66c2',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {exam.akses_ujian === 'otomatis' ? 'Mulai Ujian Sekarang →' : 'Ikuti Ujian →'}
-                      </button>
+                        <div>
+                          {exam.sudah_selesai ? (
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => router.push('/siswa/hasil')}
+                              style={{ borderRadius: 9999, padding: '7px 16px', fontWeight: 600, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            >
+                              <span>Lihat Riwayat & Nilai</span>
+                              <span>→</span>
+                            </button>
+                          ) : (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => router.push(`/siswa/ujian/${exam.id}/instruksi`)}
+                              style={{
+                                borderRadius: 9999,
+                                padding: '8px 20px',
+                                fontWeight: 700,
+                                fontSize: 13,
+                                background: exam.sesi_status === 'berlangsung' ? '#f59e0b' : (exam.akses_ujian === 'otomatis' ? '#057642' : '#0a66c2'),
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {exam.sesi_status === 'berlangsung' ? 'Lanjutkan Ujian →' : (exam.akses_ujian === 'otomatis' ? 'Mulai Ujian Sekarang →' : 'Ikuti Ujian →')}
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

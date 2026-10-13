@@ -59,26 +59,40 @@ export async function GET(request) {
       return apiResponse({ ujian: validUjian });
     }
 
-    // For siswa, show active exams created for student's class
+    // For siswa, show active exams created by their own teacher and for student's class
+    let studentGuruId = user.guru_id;
     let studentKelas = user.kelas;
 
     // Fetch up-to-date user info if missing from token
-    if (!studentKelas) {
+    if (!studentGuruId || !studentKelas) {
       try {
-        const studentProfile = await db.getOne('SELECT kelas FROM users WHERE id = ?', [user.id]);
+        const studentProfile = await db.getOne('SELECT guru_id, kelas FROM users WHERE id = ?', [user.id]);
         if (studentProfile) {
-          studentKelas = studentProfile.kelas;
+          studentGuruId = studentGuruId || studentProfile.guru_id;
+          studentKelas = studentKelas || studentProfile.kelas;
         }
       } catch {}
     }
 
-    const rawExams = await db.getAll(
-      `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro, u.akses_ujian, u.kode_ujian,
-              (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
-       FROM ujian u
-       WHERE u.status = 'aktif' 
-       ORDER BY u.created_at DESC`
-    );
+    let rawExams = [];
+    if (studentGuruId) {
+      rawExams = await db.getAll(
+        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro, u.akses_ujian, u.kode_ujian, u.tampilkan_nilai,
+                (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+         FROM ujian u
+         WHERE u.status = 'aktif' AND u.guru_id = ?
+         ORDER BY u.created_at DESC`,
+        [studentGuruId]
+      );
+    } else {
+      rawExams = await db.getAll(
+        `SELECT u.id, u.judul, u.mata_pelajaran, u.kelas_target, u.durasi_menit, u.jadwal_mulai, u.jadwal_selesai, u.jumlah_soal, u.status, u.guru_id, u.kkm, u.mode_exambro, u.akses_ujian, u.kode_ujian, u.tampilkan_nilai,
+                (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+         FROM ujian u
+         WHERE u.status = 'aktif'
+         ORDER BY u.created_at DESC`
+      );
+    }
 
     const nowTime = Date.now();
     const normalizedKelas = (studentKelas || '').trim().toUpperCase();
@@ -98,18 +112,31 @@ export async function GET(request) {
       return true;
     });
 
-    // Filter by access mode:
-    // If exam has akses_ujian = 'kode', student ONLY sees it if they have already joined (have a session)
-    // If exam has akses_ujian = 'otomatis', it is automatically visible on their dashboard
+    // Fetch existing student sessions to mark completion status and allow resuming joined exams
     const studentSessions = await db.getAll(
-      'SELECT DISTINCT ujian_id FROM sesi_ujian WHERE siswa_id = ?',
+      'SELECT id, ujian_id, status, total_nilai, waktu_selesai, jumlah_pelanggaran FROM sesi_ujian WHERE siswa_id = ?',
       [user.id]
     );
-    const joinedExamIds = new Set((studentSessions || []).map(s => s.ujian_id));
+    const sessionMap = new Map();
+    (studentSessions || []).forEach(s => {
+      sessionMap.set(s.ujian_id, s);
+    });
 
-    const finalUjianList = filteredExams.filter(u => {
+    // Attach completion flags and filter:
+    // If exam has akses_ujian = 'kode', student ONLY sees it if they have already joined (have a session)
+    // If exam has akses_ujian = 'otomatis', it is automatically visible on their dashboard
+    const finalUjianList = filteredExams.map(u => {
+      const sesi = sessionMap.get(u.id);
+      return {
+        ...u,
+        sesi_id: sesi?.id || null,
+        sesi_status: sesi?.status || null, // 'selesai', 'berlangsung', 'ditangguhkan'
+        sudah_selesai: sesi?.status === 'selesai',
+        total_nilai: sesi?.total_nilai ?? null,
+      };
+    }).filter(u => {
       const isAuto = u.akses_ujian === 'otomatis';
-      const hasJoined = joinedExamIds.has(u.id);
+      const hasJoined = sessionMap.has(u.id);
       return isAuto || hasJoined;
     });
 
