@@ -41,10 +41,11 @@ export async function POST(request, { params }) {
       });
     }
 
-    // Log violation
+    // Log violation with explicit ISO timestamp
+    const nowIso = new Date().toISOString();
     await db.run(
-      `INSERT INTO audit_log (id, sesi_id, siswa_id, ujian_id, tipe_pelanggaran, detail)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO audit_log (id, sesi_id, siswa_id, ujian_id, tipe_pelanggaran, detail, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         generateId('log'),
         sesi_id,
@@ -52,6 +53,7 @@ export async function POST(request, { params }) {
         id,
         sanitizeInput(tipe_pelanggaran),
         detail ? sanitizeInput(detail) : null,
+        nowIso,
       ]
     );
 

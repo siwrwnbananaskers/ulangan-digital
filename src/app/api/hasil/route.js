@@ -163,25 +163,29 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
-    const user = await requireAuth(request);
-    if (user.role !== 'guru') {
-      return apiError('Akses ditolak', 403);
-    }
+    const user = await requireRole(request, 'guru');
 
     const body = await request.json();
-    const { sesi_id, action } = body;
-
-    if (!sesi_id) {
-      return apiError('sesi_id wajib diisi', 400);
-    }
+    const { sesi_id, siswa_id, ujian_id, action } = body;
 
     const db = getDB();
 
     if (action === 'unfreeze') {
-      await db.run(
-        "UPDATE sesi_ujian SET status = 'berlangsung', jumlah_pelanggaran = 0 WHERE id = ?",
-        [sesi_id]
-      );
+      if (!sesi_id && (!siswa_id || !ujian_id)) {
+        return apiError('sesi_id atau siswa_id & ujian_id wajib diisi', 400);
+      }
+
+      if (sesi_id) {
+        await db.run(
+          "UPDATE sesi_ujian SET status = 'berlangsung', jumlah_pelanggaran = 0 WHERE id = ?",
+          [sesi_id]
+        );
+      } else {
+        await db.run(
+          "UPDATE sesi_ujian SET status = 'berlangsung', jumlah_pelanggaran = 0 WHERE siswa_id = ? AND ujian_id = ?",
+          [siswa_id, ujian_id]
+        );
+      }
       return apiResponse({ success: true, message: 'Sesi berhasil dipulihkan' });
     }
 

@@ -895,7 +895,7 @@ class D1Client {
           ujian_id: params[3],
           tipe_pelanggaran: params[4],
           detail: params[5],
-          timestamp: new Date().toISOString(),
+          timestamp: params[6] || new Date().toISOString(),
         });
         savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: 1 } };
@@ -999,7 +999,7 @@ class D1Client {
         }
 
         if (upper.includes("STATUS = 'BERLANGSUNG'") && upper.includes('JUMLAH_PELANGGARAN = 0')) {
-          const s = fallbackStore.sesi_ujian.find(x => x.id === params[0]);
+          const s = fallbackStore.sesi_ujian.find(x => x.id === params[0] || (params[1] && x.siswa_id === params[0] && x.ujian_id === params[1]));
           if (s) {
             s.status = 'berlangsung';
             s.jumlah_pelanggaran = 0;

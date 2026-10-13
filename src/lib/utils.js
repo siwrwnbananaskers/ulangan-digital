@@ -25,12 +25,24 @@ export function generateKodeUjian() {
 }
 
 /**
- * Format date to Indonesian locale
+ * Format date to Indonesian locale in WIB (Asia/Jakarta)
  */
 export function formatTanggal(dateStr) {
   if (!dateStr) return '-';
-  const date = new Date(dateStr);
+  let str = String(dateStr).trim();
+
+  // If SQLite datetime('now') format "YYYY-MM-DD HH:mm:ss" without timezone, it is stored in UTC
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z';
+  } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(str) && !str.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(str)) {
+    str = str + 'Z';
+  }
+
+  const date = new Date(str);
+  if (isNaN(date.getTime())) return String(dateStr);
+
   return date.toLocaleDateString('id-ID', {
+    timeZone: 'Asia/Jakarta',
     weekday: 'long',
     year: 'numeric',
     month: 'long',

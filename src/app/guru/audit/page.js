@@ -65,16 +65,21 @@ export default function GuruAuditPage() {
     }
   };
 
-  const handleUnfreeze = async (sesiId) => {
+  const handleUnfreeze = async (sesiId, siswaId) => {
     if (!confirm('Pulihkan status ujian siswa ini agar dapat melanjutkan kembali tanpa reload browser?')) return;
     try {
       const res = await authFetch('/api/hasil', {
         method: 'PATCH',
-        body: JSON.stringify({ sesi_id: sesiId, action: 'unfreeze' }),
+        body: JSON.stringify({
+          sesi_id: sesiId,
+          siswa_id: siswaId,
+          ujian_id: selectedUjianId,
+          action: 'unfreeze',
+        }),
       });
       if (res.ok) {
         // Optimistically update all violation records of this session to restored
-        setViolations(prev => prev.map(v => v.sesi_id === sesiId ? { ...v, sesi_status: 'berlangsung', jumlah_pelanggaran: 0 } : v));
+        setViolations(prev => prev.map(v => (v.sesi_id === sesiId || (siswaId && v.siswa_id === siswaId)) ? { ...v, sesi_status: 'berlangsung', jumlah_pelanggaran: 0 } : v));
         loadViolations(selectedUjianId);
       } else {
         const d = await res.json();
@@ -248,7 +253,7 @@ export default function GuruAuditPage() {
                                 <button
                                   className="btn btn-warning btn-sm"
                                   style={{ fontSize: 11, padding: '5px 12px', fontWeight: 600, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
-                                  onClick={() => handleUnfreeze(v.sesi_id)}
+                                  onClick={() => handleUnfreeze(v.sesi_id, v.siswa_id)}
                                   title="Buka kembali kunci ujian siswa"
                                 >
                                   <span>🔓</span> Pulihkan Ujian
@@ -286,7 +291,7 @@ export default function GuruAuditPage() {
                                 <button
                                   className="btn btn-secondary btn-sm"
                                   style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}
-                                  onClick={() => handleUnfreeze(v.sesi_id)}
+                                  onClick={() => handleUnfreeze(v.sesi_id, v.siswa_id)}
                                   title="Reset hitungan pelanggaran menjadi 0"
                                 >
                                   Reset
