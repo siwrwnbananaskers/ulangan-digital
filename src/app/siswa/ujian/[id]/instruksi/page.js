@@ -118,12 +118,12 @@ export default function InstruksiUjianPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)', flexWrap: 'wrap' }}>
               <span className="badge badge-primary">{ujian?.mata_pelajaran}</span>
               {ujian?.mode_exambro === 0 ? (
-                <span className="badge badge-success" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
-                  📋 Mode Fleksibel (Tugas / Ulangan Harian)
+                <span className="badge badge-success" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600 }}>
+                  Mode Fleksibel (Tugas / Ulangan Harian)
                 </span>
               ) : (
-                <span className="badge badge-success">
-                  🔒 Mode Asesmen Terproteksi (Exambro)
+                <span className="badge badge-success" style={{ fontWeight: 600 }}>
+                  Mode Asesmen Terproteksi (Exambro)
                 </span>
               )}
             </div>

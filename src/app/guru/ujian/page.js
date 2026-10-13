@@ -36,6 +36,7 @@ export default function UjianPage() {
       jadwal_selesai: formatDt(nextWeek),
       kkm: 75,
       mode_exambro: 1,
+      akses_ujian: 'kode',
       acak_soal: false,
       acak_jawaban: false,
       tampilkan_nilai: true,
@@ -109,6 +110,7 @@ export default function UjianPage() {
       jadwal_selesai: formatForInput(ujian.jadwal_selesai),
       kkm: ujian.kkm || 75,
       mode_exambro: ujian.mode_exambro !== undefined ? (ujian.mode_exambro ? 1 : 0) : 1,
+      akses_ujian: ujian.akses_ujian || ujian['u.akses_ujian'] || 'kode',
       acak_soal: !!ujian.acak_soal,
       acak_jawaban: !!ujian.acak_jawaban,
       tampilkan_nilai: !!ujian.tampilkan_nilai,
@@ -208,11 +210,12 @@ export default function UjianPage() {
   };
 
   const handleDelete = async (id, judul) => {
-    if (!confirm(`Hapus lembar ujian "${judul}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (!confirm(`Hapus lembar ujian "${judul}"? Seluruh riwayat sesi dan catatan ujian akan dibersihkan permanen.`)) return;
     try {
       const res = await authFetch(`/api/ujian?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setAlert({ type: 'success', message: 'Ujian berhasil dihapus' });
+        setAlert({ type: 'success', message: 'Ujian berhasil dihapus permanen' });
+        setUjianList(prev => prev.filter(u => u.id !== id));
         loadData();
       } else {
         const d = await res.json();
@@ -374,20 +377,25 @@ export default function UjianPage() {
                           {mataPelajaran} — Kelas: <strong>{kelasTarget}</strong>
                         </p>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                        <span className={`badge ${
-                          status === 'aktif' ? 'badge-success' :
-                          status === 'selesai' ? 'badge-gray' : 'badge-warning'
-                        }`} style={{ fontSize: 11, padding: '3px 10px' }}>
-                          {status === 'aktif' ? 'Aktif' : status === 'selesai' ? 'Selesai' : 'Draft'}
-                        </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          <span className={`badge ${
+                            status === 'aktif' ? 'badge-success' :
+                            status === 'selesai' ? 'badge-gray' : 'badge-warning'
+                          }`} style={{ fontSize: 11, padding: '3px 8px' }}>
+                            {status === 'aktif' ? 'Aktif' : status === 'selesai' ? 'Selesai' : 'Draft'}
+                          </span>
+                          <span className="badge" style={{ fontSize: 10, padding: '2px 8px', background: ujian.akses_ujian === 'otomatis' ? '#f0fdf4' : '#f8fafc', color: ujian.akses_ujian === 'otomatis' ? '#166534' : '#475569', border: '1px solid #cbd5e1' }}>
+                            {ujian.akses_ujian === 'otomatis' ? 'Akses Otomatis' : 'Wajib Kode'}
+                          </span>
+                        </div>
                         {ujian.mode_exambro === 0 ? (
                           <span className="badge" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontSize: 10, padding: '2px 8px', fontWeight: 600 }}>
-                            📋 Mode Fleksibel (Tugas/Harian)
+                            Mode Fleksibel
                           </span>
                         ) : (
                           <span className="badge" style={{ background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', fontSize: 10, padding: '2px 8px', fontWeight: 600 }}>
-                            🔒 Exambro Kiosk Ketat
+                            Exambro Kiosk
                           </span>
                         )}
                       </div>
@@ -409,7 +417,7 @@ export default function UjianPage() {
                           style={{ fontSize: 11, padding: '3px 8px', color: copiedId === ujian.id ? '#16a34a' : '#0a66c2', fontWeight: 600 }}
                           title="Salin Kode Ruang Ujian"
                         >
-                          {copiedId === ujian.id ? '✓ Tersalin' : '📋 Salin Kode'}
+                          {copiedId === ujian.id ? 'Tersalin' : 'Salin Kode'}
                         </button>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4, flexWrap: 'wrap', gap: 6 }}>
@@ -436,7 +444,7 @@ export default function UjianPage() {
                       onClick={() => handleStatusChange(ujian.id, 'aktif')}
                       style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, fontWeight: 700 }}
                     >
-                      ⚡ Buka Ruang Ujian (Aktifkan)
+                      Buka Ruang Ujian (Aktifkan)
                     </button>
                   )}
                   {status === 'aktif' && (
@@ -624,7 +632,7 @@ export default function UjianPage() {
                     />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>🔒 Exambro Aktif (Ketat)</span>
+                        <span>Mode Asesmen Ketat (Exambro Kiosk)</span>
                         <span className="badge badge-primary" style={{ fontSize: 9 }}>Direkomendasikan</span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
@@ -655,11 +663,80 @@ export default function UjianPage() {
                     />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>📋 Mode Fleksibel (Tugas / Latihan)</span>
+                        <span>Mode Fleksibel (Tugas / Ulangan Harian)</span>
                         <span className="badge badge-success" style={{ fontSize: 9 }}>Fleksibel</span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
-                        Tidak wajib fullscreen, siswa bebas membuka tab atau referensi belajar, tanpa penangguhan akun. Cocok untuk <strong>Ulangan Harian, Tugas, Latihan, PR</strong>.
+                        Tidak wajib fullscreen, siswa bebas membuka tab atau catatan belajar, tanpa penangguhan akun. Cocok untuk <strong>Ulangan Harian, Tugas Mandiri, Latihan</strong>.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Setting: Metode Akses Siswa ke Ujian */}
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                  Metode Akses Siswa ke Ujian:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      border: form.akses_ujian === 'kode' ? '2px solid #0a66c2' : '1px solid #cbd5e1',
+                      background: form.akses_ujian === 'kode' ? '#eff6ff' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="akses_ujian"
+                      checked={form.akses_ujian === 'kode'}
+                      onChange={() => setForm({ ...form, akses_ujian: 'kode' })}
+                      style={{ marginTop: 3 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
+                        Wajib Masukkan Kode Ruang Ujian
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
+                        Siswa harus memasukkan 6-digit kode ruang ujian dari guru. Ujian tidak langsung muncul di beranda siswa sebelum kode diisi.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      padding: '12px 14px',
+                      borderRadius: 8,
+                      border: form.akses_ujian === 'otomatis' ? '2px solid #057642' : '1px solid #cbd5e1',
+                      background: form.akses_ujian === 'otomatis' ? '#f0fdf4' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="akses_ujian"
+                      checked={form.akses_ujian === 'otomatis'}
+                      onChange={() => setForm({ ...form, akses_ujian: 'otomatis' })}
+                      style={{ marginTop: 3 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>Otomatis Ditugaskan ke Beranda</span>
+                        <span className="badge badge-success" style={{ fontSize: 9 }}>Siswa Gaptek Friendly</span>
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
+                        Ujian langsung muncul otomatis di beranda seluruh siswa kelas target tanpa perlu memasukkan kode ruang ujian.
                       </p>
                     </div>
                   </label>

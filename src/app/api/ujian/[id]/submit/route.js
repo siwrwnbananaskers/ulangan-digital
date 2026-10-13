@@ -82,26 +82,42 @@ export async function POST(request, { params }) {
     let jumlahBenar = 0;
     let jumlahSalah = 0;
     let jumlahKosong = 0;
-    let totalBobot = 0;
-    let nilaiBobot = 0;
+    let totalBobotObjektif = 0;
+    let nilaiBobotObjektif = 0;
+    let totalBobotSemua = 0;
+    let jumlahManual = 0;
 
     for (const soal of soalList) {
-      totalBobot += soal.bobot;
+      totalBobotSemua += soal.bobot;
       const jawaban = jawabanMap[soal.id];
 
+      // Isian and Uraian are MANUALLY graded by the teacher according to weights
+      if (soal.tipe === 'isian' || soal.tipe === 'uraian') {
+        jumlahManual++;
+        if (!jawaban || jawaban.trim() === '') {
+          jumlahKosong++;
+          await db.run(
+            `UPDATE jawaban SET is_benar = 0, nilai_soal = 0 WHERE sesi_id = ? AND soal_id = ?`,
+            [sesi_id, soal.id]
+          );
+        } else {
+          // Do NOT mark as wrong! Leave for teacher review
+          await db.run(
+            `UPDATE jawaban SET is_benar = NULL, nilai_soal = NULL WHERE sesi_id = ? AND soal_id = ?`,
+            [sesi_id, soal.id]
+          );
+        }
+        continue;
+      }
+
+      // Objective questions (pg & benar_salah)
+      totalBobotObjektif += soal.bobot;
       if (!jawaban || jawaban.trim() === '') {
         jumlahKosong++;
-        // Update jawaban record
         await db.run(
           `UPDATE jawaban SET is_benar = 0, nilai_soal = 0 WHERE sesi_id = ? AND soal_id = ?`,
           [sesi_id, soal.id]
         );
-        continue;
-      }
-
-      // Auto-grade for objective types
-      if (soal.tipe === 'uraian') {
-        // Uraian needs manual grading, skip auto-grade
         continue;
       }
 
@@ -112,7 +128,7 @@ export async function POST(request, { params }) {
 
       if (isBenar) {
         jumlahBenar++;
-        nilaiBobot += soal.bobot;
+        nilaiBobotObjektif += soal.bobot;
       } else {
         jumlahSalah++;
       }
@@ -123,7 +139,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const totalNilai = totalBobot > 0 ? Math.round((nilaiBobot / totalBobot) * 100 * 100) / 100 : 0;
+    const totalNilai = totalBobotSemua > 0 ? Math.round((nilaiBobotObjektif / totalBobotSemua) * 100 * 100) / 100 : 0;
 
     // Update session
     await db.run(
@@ -146,6 +162,8 @@ export async function POST(request, { params }) {
         jumlah_salah: jumlahSalah,
         jumlah_kosong: jumlahKosong,
         total_soal: soalList.length,
+        jumlah_manual: jumlahManual,
+        menunggu_koreksi: jumlahManual > 0,
       },
     });
   } catch (error) {

@@ -118,9 +118,11 @@ export async function GET(request) {
       return apiResponse({ exams });
     }
 
-    // Student results
+    // Student results with manual grading status
     const results = await db.getAll(
-      `SELECT su.*, uj.judul, uj.mata_pelajaran, uj.kkm, uj.tampilkan_nilai
+      `SELECT su.*, uj.judul, uj.mata_pelajaran, uj.kkm, uj.tampilkan_nilai,
+        (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = su.ujian_id AND s.tipe IN ('isian', 'uraian')) as jumlah_manual,
+        (SELECT COUNT(*) FROM jawaban j JOIN soal s ON s.id = j.soal_id WHERE j.sesi_id = su.id AND s.tipe IN ('isian', 'uraian') AND j.nilai_soal IS NOT NULL) as jumlah_terkoreksi_manual
        FROM sesi_ujian su
        JOIN ujian uj ON uj.id = su.ujian_id
        WHERE su.siswa_id = ? AND su.status = 'selesai'
@@ -128,12 +130,25 @@ export async function GET(request) {
       [user.id]
     );
 
-    // Only include scores if teacher allows it
+    // Filter results according to teacher's visibility settings and manual grading progress
     const filteredResults = results.map(r => {
+      const jmlManual = Number(r.jumlah_manual) || 0;
+      const jmlTerkoreksi = Number(r.jumlah_terkoreksi_manual) || 0;
+      const menungguKoreksi = jmlManual > 0 && jmlTerkoreksi < jmlManual;
+
       if (!r.tampilkan_nilai) {
-        return { ...r, total_nilai: null, jumlah_benar: null, jumlah_salah: null };
+        return {
+          ...r,
+          total_nilai: null,
+          jumlah_benar: null,
+          jumlah_salah: null,
+          menunggu_koreksi: menungguKoreksi,
+        };
       }
-      return r;
+      return {
+        ...r,
+        menunggu_koreksi: menungguKoreksi,
+      };
     });
 
     return apiResponse({ results: filteredResults });

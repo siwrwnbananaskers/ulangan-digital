@@ -66,14 +66,15 @@ export default function GuruAuditPage() {
   };
 
   const handleUnfreeze = async (sesiId) => {
-    if (!confirm('Pulihkan status ujian siswa ini agar dapat melanjutkan kembali?')) return;
+    if (!confirm('Pulihkan status ujian siswa ini agar dapat melanjutkan kembali tanpa reload browser?')) return;
     try {
       const res = await authFetch('/api/hasil', {
         method: 'PATCH',
         body: JSON.stringify({ sesi_id: sesiId, action: 'unfreeze' }),
       });
       if (res.ok) {
-        alert('Sesi berhasil dipulihkan!');
+        // Optimistically update all violation records of this session to restored
+        setViolations(prev => prev.map(v => v.sesi_id === sesiId ? { ...v, sesi_status: 'berlangsung' } : v));
         loadViolations(selectedUjianId);
       } else {
         const d = await res.json();
@@ -232,18 +233,27 @@ export default function GuruAuditPage() {
                         <td>{getViolationBadge(v.tipe_pelanggaran)}</td>
                         <td style={{ maxWidth: 360 }}>
                           <span className="text-sm" style={{ color: 'var(--gray-700)' }}>
-                            {v.detail || '-'}
+                            {String(v.detail || '-').replace(/&#x2F;/g, '/').replace(/&amp;/g, '&')}
                           </span>
                         </td>
                         <td>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ color: 'var(--primary-600)' }}
-                            onClick={() => handleUnfreeze(v.sesi_id)}
-                            title="Pulihkan sesi siswa jika ditangguhkan"
-                          >
-                            Verifikasi / Pulihkan
-                          </button>
+                          {v.sesi_status === 'ditangguhkan' ? (
+                            <button
+                              className="btn btn-warning btn-sm"
+                              style={{ fontSize: 11, padding: '4px 10px', fontWeight: 600, borderRadius: 6 }}
+                              onClick={() => handleUnfreeze(v.sesi_id)}
+                              title="Buka kembali kunci ujian siswa"
+                            >
+                              Pulihkan Ujian
+                            </button>
+                          ) : (
+                            <span
+                              className="badge"
+                              style={{ fontSize: 11, padding: '3px 8px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}
+                            >
+                              Sudah Dipulihkan
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

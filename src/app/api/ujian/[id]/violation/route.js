@@ -98,9 +98,11 @@ export async function GET(request, { params }) {
     const db = getDB();
 
     const violations = await db.getAll(
-      `SELECT al.*, u.nama as siswa_nama, u.kelas as siswa_kelas
+      `SELECT al.*, u.nama as siswa_nama, u.kelas as siswa_kelas,
+              su.status as sesi_status, su.jumlah_pelanggaran
        FROM audit_log al
        JOIN users u ON u.id = al.siswa_id
+       LEFT JOIN sesi_ujian su ON su.id = al.sesi_id
        WHERE al.ujian_id = ?
        ORDER BY al.timestamp DESC`,
       [id]

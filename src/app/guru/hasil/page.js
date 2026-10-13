@@ -506,21 +506,21 @@ export default function GuruHasilPage() {
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
                             {Number(item.nilai_soal) >= Number(item.bobot) && (
-                              <span className="badge badge-success">✓ Nilai Maksimal: {item.nilai_soal} Poin</span>
+                              <span className="badge badge-success">Nilai Maksimal: {item.nilai_soal} Poin</span>
                             )}
                             {Number(item.nilai_soal) > 0 && Number(item.nilai_soal) < Number(item.bobot) && (
                               <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
-                                ⚡ Nilai Parsial: {item.nilai_soal} / {item.bobot} Poin
+                                Nilai Parsial: {item.nilai_soal} / {item.bobot} Poin
                               </span>
                             )}
                             {(Number(item.nilai_soal) === 0 || item.nilai_soal === null) && !isKosong && (
-                              <span className="badge badge-danger">✗ 0 / {item.bobot} Poin</span>
+                              <span className="badge badge-danger">0 / {item.bobot} Poin</span>
                             )}
                             {isKosong && (Number(item.nilai_soal) === 0 || item.nilai_soal === null) && (
-                              <span className="badge badge-gray">⚪ Tidak Dijawab</span>
+                              <span className="badge badge-gray">Tidak Dijawab</span>
                             )}
                             {isUraian && item.is_benar === null && (
-                              <span className="badge badge-warning">⏳ Perlu Dinilai Guru</span>
+                              <span className="badge badge-warning">Perlu Penilaian Guru</span>
                             )}
                           </div>
                         </div>
@@ -546,11 +546,11 @@ export default function GuruHasilPage() {
                               if (isKeyChoice && isStudentChoice) {
                                 bg = '#dcfce7';
                                 border = '2px solid var(--success)';
-                                label = <span className="badge badge-success" style={{ fontSize: 9 }}>Jawaban Siswa (Tepat ✓)</span>;
+                                label = <span className="badge badge-success" style={{ fontSize: 9 }}>Jawaban Siswa (Tepat)</span>;
                               } else if (isStudentChoice && !isKeyChoice) {
                                 bg = '#fee2e2';
                                 border = '2px solid var(--danger)';
-                                label = <span className="badge badge-danger" style={{ fontSize: 9 }}>Jawaban Siswa (Salah ✗)</span>;
+                                label = <span className="badge badge-danger" style={{ fontSize: 9 }}>Jawaban Siswa (Salah)</span>;
                               } else if (isKeyChoice) {
                                 bg = '#ecfdf5';
                                 border = '1px solid var(--success)';
@@ -674,7 +674,7 @@ export default function GuruHasilPage() {
                                 disabled={gradingLoadingId === item.soal_id || Number(item.nilai_soal) === 0}
                                 title="Beri skor 0 (Salah)"
                               >
-                                ✗ 0 Poin
+                                0 Poin
                               </button>
                               {(item.bobot || 10) >= 2 && (
                                 <button
@@ -695,7 +695,7 @@ export default function GuruHasilPage() {
                                 disabled={gradingLoadingId === item.soal_id || Number(item.nilai_soal) === (item.bobot || 10)}
                                 title={`Beri skor penuh (${item.bobot || 10} poin)`}
                               >
-                                ✓ Penuh ({item.bobot || 10})
+                                Penuh ({item.bobot || 10})
                               </button>
                             </div>
                           </div>
@@ -719,7 +719,7 @@ export default function GuruHasilPage() {
                               disabled={gradingLoadingId === item.soal_id || isBenar}
                               title="Tandai jawaban ini sebagai Benar (Penuh)"
                             >
-                              ✓ Benar (+{item.bobot || 10})
+                              Benar (+{item.bobot || 10})
                             </button>
                             <button
                               type="button"
@@ -728,7 +728,7 @@ export default function GuruHasilPage() {
                               disabled={gradingLoadingId === item.soal_id || (isSalah && !isKosong)}
                               title="Tandai jawaban ini sebagai Salah (0 poin)"
                             >
-                              ✗ Salah (0)
+                              Salah (0)
                             </button>
                           </div>
                         )}

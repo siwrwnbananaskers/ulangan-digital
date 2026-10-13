@@ -76,6 +76,9 @@ function sanitizeStore(store) {
       if (u.mode_exambro === undefined) {
         u.mode_exambro = 1;
       }
+      if (!u.akses_ujian) {
+        u.akses_ujian = 'kode';
+      }
       return true;
     });
   }
@@ -823,6 +826,10 @@ class D1Client {
         if (params.length > 17 && params[17] !== undefined) {
           modeExambro = params[17] ? 1 : 0;
         }
+        let aksesUjian = 'kode';
+        if (params.length > 18 && params[18] !== undefined) {
+          aksesUjian = params[18] || 'kode';
+        }
         fallbackStore.ujian.unshift({
           id: params[0],
           guru_id: params[1],
@@ -842,6 +849,7 @@ class D1Client {
           batas_pelanggaran: params[15],
           status: params[16] || 'aktif',
           mode_exambro: modeExambro,
+          akses_ujian: aksesUjian,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -1063,24 +1071,46 @@ class D1Client {
         return { results: [], meta: { changes: before - fallbackStore.ujian_soal.length } };
       }
 
-      if (upper.includes('FROM UJIAN')) {
-        const ujianId = params[0];
-        const before = fallbackStore.ujian.length;
-        fallbackStore.ujian = fallbackStore.ujian.filter(u => u.id !== ujianId);
+      if (upper.includes('FROM AUDIT_LOG')) {
+        const id = params[0];
+        const before = fallbackStore.audit_log.length;
+        fallbackStore.audit_log = fallbackStore.audit_log.filter(a => a.ujian_id !== id && a.sesi_id !== id && a.id !== id);
         savePersistedStore(fallbackStore);
-        return { results: [], meta: { changes: Math.max(1, before - fallbackStore.ujian.length) } };
+        return { results: [], meta: { changes: before - fallbackStore.audit_log.length } };
+      }
+
+      if (upper.includes('FROM JAWABAN')) {
+        const id = params[0];
+        const before = fallbackStore.jawaban.length;
+        const sesiIds = fallbackStore.sesi_ujian.filter(s => s.ujian_id === id).map(s => s.id);
+        fallbackStore.jawaban = fallbackStore.jawaban.filter(j => j.sesi_id !== id && !sesiIds.includes(j.sesi_id));
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: before - fallbackStore.jawaban.length } };
       }
 
       if (upper.includes('FROM SESI_UJIAN')) {
-        const siswaId = params[0];
+        const id = params[0];
         const before = fallbackStore.sesi_ujian.length;
-        fallbackStore.sesi_ujian = fallbackStore.sesi_ujian.filter(s => s.siswa_id !== siswaId);
+        const removedSessions = fallbackStore.sesi_ujian.filter(s => s.siswa_id === id || s.ujian_id === id);
+        const removedIds = removedSessions.map(s => s.id);
+        fallbackStore.sesi_ujian = fallbackStore.sesi_ujian.filter(s => s.siswa_id !== id && s.ujian_id !== id);
+        fallbackStore.jawaban = fallbackStore.jawaban.filter(j => !removedIds.includes(j.sesi_id));
         savePersistedStore(fallbackStore);
         return { results: [], meta: { changes: before - fallbackStore.sesi_ujian.length } };
       }
 
-      if (upper.includes('FROM JAWABAN') || upper.includes('FROM AUDIT_LOG')) {
-        return { results: [], meta: { changes: 1 } };
+      if (upper.includes('FROM UJIAN')) {
+        const ujianId = params[0];
+        const before = fallbackStore.ujian.length;
+        fallbackStore.ujian = fallbackStore.ujian.filter(u => u.id !== ujianId);
+        // Cascade delete all related records in fallback store
+        const sessionIds = fallbackStore.sesi_ujian.filter(s => s.ujian_id === ujianId).map(s => s.id);
+        fallbackStore.jawaban = fallbackStore.jawaban.filter(j => !sessionIds.includes(j.sesi_id));
+        fallbackStore.sesi_ujian = fallbackStore.sesi_ujian.filter(s => s.ujian_id !== ujianId);
+        fallbackStore.audit_log = fallbackStore.audit_log.filter(a => a.ujian_id !== ujianId);
+        fallbackStore.ujian_soal = fallbackStore.ujian_soal.filter(j => j.ujian_id !== ujianId);
+        savePersistedStore(fallbackStore);
+        return { results: [], meta: { changes: Math.max(1, before - fallbackStore.ujian.length) } };
       }
     }
 

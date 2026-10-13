@@ -187,6 +187,36 @@ export default function LembarUjianPage() {
     return () => clearInterval(interval);
   }, [sesi, isSuspended, jawabanMap]);
 
+  // Real-time unfreeze listener: when suspended, polls server every 2.5s to auto-unlock without browser reload!
+  useEffect(() => {
+    if (!isSuspended || !examId) return;
+
+    const unfreezePoll = setInterval(async () => {
+      try {
+        const res = await authFetch(`/api/ujian/${examId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sesi && data.sesi.status === 'berlangsung') {
+            setIsSuspended(false);
+            setShowWarning(false);
+            setViolations(0);
+            setSesi(data.sesi);
+            // Re-request fullscreen if exam requires exambro
+            if (data.ujian?.mode_exambro !== 0) {
+              try {
+                if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+                  document.documentElement.requestFullscreen().catch(() => {});
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+    }, 2500);
+
+    return () => clearInterval(unfreezePoll);
+  }, [isSuspended, examId]);
+
   const performAutosave = async () => {
     if (!sesi?.id) return;
     setAutosaveStatus('menyimpan');
@@ -369,8 +399,15 @@ export default function LembarUjianPage() {
             </div>
 
             {isSuspended ? (
-              <div style={{ background: 'var(--danger-light)', padding: 'var(--space-md)', borderRadius: 'var(--radius-lg)', color: '#991b1b', fontSize: 'var(--font-size-sm)' }}>
-                <strong>Akses Terkunci:</strong> Anda telah mencapai batas maksimal pelanggaran ({ujian?.batas_pelanggaran || 3}x). Silakan angkat tangan dan lapor kepada Guru Pengawas untuk verifikasi dan pembukaan kunci ujian.
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '16px', borderRadius: '12px', color: '#991b1b', fontSize: 13, textAlign: 'left', lineHeight: 1.6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, marginBottom: 4, color: '#b91c1c' }}>
+                  <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2, borderColor: '#ef4444', borderTopColor: 'transparent', display: 'inline-block' }} />
+                  <span>Ujian Terkunci — Menunggu Verifikasi Pengawas</span>
+                </div>
+                <p style={{ margin: '4px 0 0', color: '#7f1d1d' }}>
+                  Batas pelanggaran tercapai ({ujian?.batas_pelanggaran || 3}x). Segera angkat tangan dan hubungi Guru Pengawas.
+                  Kunci ujian akan terbuka otomatis tanpa refresh begitu guru menyetujui pemulihan.
+                </p>
               </div>
             ) : (
               <button
@@ -393,12 +430,12 @@ export default function LembarUjianPage() {
                 {ujian?.judul}
               </h3>
               {ujian?.mode_exambro === 0 ? (
-                <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '1px 6px' }}>
-                  📋 Mode Fleksibel (Tugas/Harian)
+                <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '1px 6px', fontWeight: 600 }}>
+                  Mode Fleksibel (Tugas)
                 </span>
               ) : (
-                <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', padding: '1px 6px' }}>
-                  🔒 Exambro Kiosk Ketat
+                <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', padding: '1px 6px', fontWeight: 600 }}>
+                  Exambro Kiosk Ketat
                 </span>
               )}
             </div>

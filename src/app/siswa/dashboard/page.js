@@ -303,12 +303,12 @@ export default function SiswaDashboard() {
                             </span>
                           )}
                           {exam.mode_exambro === 0 ? (
-                            <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
-                              📋 Mode Fleksibel (Tugas/Harian)
+                            <span className="badge" style={{ fontSize: 10, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600 }}>
+                              Mode Fleksibel (Tugas)
                             </span>
                           ) : (
-                            <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd' }}>
-                              🔒 Exambro Kiosk Ketat
+                            <span className="badge" style={{ fontSize: 10, background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', fontWeight: 600 }}>
+                              Exambro Kiosk Ketat
                             </span>
                           )}
                         </div>

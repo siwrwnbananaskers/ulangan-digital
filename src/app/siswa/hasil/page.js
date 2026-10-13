@@ -98,7 +98,11 @@ export default function SiswaHasilPage() {
                           {res.waktu_selesai ? formatTanggal(res.waktu_selesai) : '-'}
                         </td>
                         <td>
-                          {hasScore ? (
+                          {res.menunggu_koreksi ? (
+                            <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                              Menunggu Koreksi Guru
+                            </span>
+                          ) : hasScore ? (
                             <span className={`badge ${isLulus ? 'badge-success' : 'badge-danger'}`}>
                               {isLulus ? 'Tuntas KKM' : 'Perlu Remedial'} (KKM: {res.kkm || 75})
                             </span>
@@ -107,7 +111,16 @@ export default function SiswaHasilPage() {
                           )}
                         </td>
                         <td>
-                          {hasScore ? (
+                          {res.menunggu_koreksi ? (
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: '#b45309' }}>
+                                Proses Penilaian Guru
+                              </span>
+                              <span className="text-xs text-muted">
+                                ({res.jumlah_benar || 0} PG Benar)
+                              </span>
+                            </div>
+                          ) : hasScore ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
                               <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: isLulus ? 'var(--success)' : 'var(--danger)' }}>
                                 {res.total_nilai}
