@@ -74,7 +74,7 @@ export default function GuruAuditPage() {
       });
       if (res.ok) {
         // Optimistically update all violation records of this session to restored
-        setViolations(prev => prev.map(v => v.sesi_id === sesiId ? { ...v, sesi_status: 'berlangsung' } : v));
+        setViolations(prev => prev.map(v => v.sesi_id === sesiId ? { ...v, sesi_status: 'berlangsung', jumlah_pelanggaran: 0 } : v));
         loadViolations(selectedUjianId);
       } else {
         const d = await res.json();
@@ -237,23 +237,63 @@ export default function GuruAuditPage() {
                           </span>
                         </td>
                         <td>
-                          {v.sesi_status === 'ditangguhkan' ? (
-                            <button
-                              className="btn btn-warning btn-sm"
-                              style={{ fontSize: 11, padding: '4px 10px', fontWeight: 600, borderRadius: 6 }}
-                              onClick={() => handleUnfreeze(v.sesi_id)}
-                              title="Buka kembali kunci ujian siswa"
-                            >
-                              Pulihkan Ujian
-                            </button>
-                          ) : (
-                            <span
-                              className="badge"
-                              style={{ fontSize: 11, padding: '3px 8px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}
-                            >
-                              Sudah Dipulihkan
-                            </span>
-                          )}
+                          {(() => {
+                            const batas = Number(currentExam?.batas_pelanggaran) || 3;
+                            const vCount = Number(v.jumlah_pelanggaran) || 0;
+                            const isSuspended = v.sesi_status === 'ditangguhkan' || vCount >= batas;
+                            const isRestored = v.sesi_status === 'berlangsung' && vCount === 0;
+
+                            if (isSuspended) {
+                              return (
+                                <button
+                                  className="btn btn-warning btn-sm"
+                                  style={{ fontSize: 11, padding: '5px 12px', fontWeight: 600, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
+                                  onClick={() => handleUnfreeze(v.sesi_id)}
+                                  title="Buka kembali kunci ujian siswa"
+                                >
+                                  <span>🔓</span> Pulihkan Ujian
+                                </button>
+                              );
+                            }
+
+                            if (isRestored) {
+                              return (
+                                <span
+                                  className="badge"
+                                  style={{ fontSize: 11, padding: '4px 10px', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600, whiteSpace: 'nowrap' }}
+                                >
+                                  ✓ Sudah Dipulihkan
+                                </span>
+                              );
+                            }
+
+                            if (v.sesi_status === 'selesai') {
+                              return (
+                                <span className="badge badge-gray" style={{ fontSize: 11, padding: '3px 8px', whiteSpace: 'nowrap' }}>
+                                  Ujian Selesai
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                <span
+                                  className="badge"
+                                  style={{ fontSize: 11, padding: '3px 8px', background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}
+                                >
+                                  Peringatan ({vCount}/{batas})
+                                </span>
+                                <button
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}
+                                  onClick={() => handleUnfreeze(v.sesi_id)}
+                                  title="Reset hitungan pelanggaran menjadi 0"
+                                >
+                                  Reset
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </td>
                       </tr>
                     ))}

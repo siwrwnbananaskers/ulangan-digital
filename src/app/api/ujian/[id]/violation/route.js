@@ -55,18 +55,24 @@ export async function POST(request, { params }) {
       ]
     );
 
-    // Increment violation count
-    const newCount = (sesi.jumlah_pelanggaran || 0) + 1;
+    // Increment violation count atomically
     await db.run(
-      'UPDATE sesi_ujian SET jumlah_pelanggaran = ? WHERE id = ?',
-      [newCount, sesi_id]
+      'UPDATE sesi_ujian SET jumlah_pelanggaran = COALESCE(jumlah_pelanggaran, 0) + 1 WHERE id = ?',
+      [sesi_id]
     );
 
-    // Check violation limit
-    const limitReached = newCount >= (ujian?.batas_pelanggaran || 3);
+    // Fetch updated session
+    const freshSesi = await db.getOne(
+      'SELECT id, jumlah_pelanggaran, status FROM sesi_ujian WHERE id = ?',
+      [sesi_id]
+    );
+
+    const currentCount = freshSesi ? Number(freshSesi.jumlah_pelanggaran) : ((sesi.jumlah_pelanggaran || 0) + 1);
+    const batas = Number(ujian?.batas_pelanggaran) || 3;
+    const limitReached = currentCount >= batas;
 
     if (limitReached) {
-      // Suspend exam
+      // Lock exam immediately
       await db.run(
         "UPDATE sesi_ujian SET status = 'ditangguhkan' WHERE id = ?",
         [sesi_id]
@@ -75,8 +81,8 @@ export async function POST(request, { params }) {
 
     return apiResponse({
       success: true,
-      jumlah_pelanggaran: newCount,
-      batas: ujian?.batas_pelanggaran || 3,
+      jumlah_pelanggaran: currentCount,
+      batas: batas,
       ditangguhkan: limitReached,
     });
   } catch (error) {
@@ -98,8 +104,11 @@ export async function GET(request, { params }) {
     const db = getDB();
 
     const violations = await db.getAll(
-      `SELECT al.*, u.nama as siswa_nama, u.kelas as siswa_kelas,
-              su.status as sesi_status, su.jumlah_pelanggaran
+      `SELECT al.id as id, al.sesi_id as sesi_id, al.siswa_id as siswa_id, al.ujian_id as ujian_id,
+              al.tipe_pelanggaran as tipe_pelanggaran, al.detail as detail, al.timestamp as timestamp,
+              u.nama as siswa_nama, u.kelas as siswa_kelas,
+              COALESCE(su.status, 'berlangsung') as sesi_status,
+              COALESCE(su.jumlah_pelanggaran, 0) as jumlah_pelanggaran
        FROM audit_log al
        JOIN users u ON u.id = al.siswa_id
        LEFT JOIN sesi_ujian su ON su.id = al.sesi_id

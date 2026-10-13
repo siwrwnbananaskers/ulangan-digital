@@ -727,16 +727,19 @@ class D1Client {
 
       // 1.8 AUDIT LOG
       if (upper.includes('FROM AUDIT_LOG')) {
-        if (upper.includes('UJIAN_ID =')) {
-          const logs = fallbackStore.audit_log.filter(l => l.ujian_id === params[0]).map(l => {
-            const u = fallbackStore.users.find(usr => usr.id === l.siswa_id) || {};
-            return { ...l, siswa_nama: u.nama, siswa_kelas: u.kelas, nama_siswa: u.nama };
-          });
-          return { results: logs, meta: {} };
-        }
-        const logs = fallbackStore.audit_log.map(l => {
+        const examId = upper.includes('UJIAN_ID =') ? params[0] : null;
+        const targetLogs = examId ? fallbackStore.audit_log.filter(l => l.ujian_id === examId) : fallbackStore.audit_log;
+        const logs = targetLogs.map(l => {
           const u = fallbackStore.users.find(usr => usr.id === l.siswa_id) || {};
-          return { ...l, siswa_nama: u.nama, siswa_kelas: u.kelas, nama_siswa: u.nama };
+          const su = fallbackStore.sesi_ujian.find(s => s.id === l.sesi_id || (s.siswa_id === l.siswa_id && s.ujian_id === l.ujian_id));
+          return {
+            ...l,
+            siswa_nama: u.nama,
+            siswa_kelas: u.kelas,
+            nama_siswa: u.nama,
+            sesi_status: su ? su.status : 'ditangguhkan',
+            jumlah_pelanggaran: su ? su.jumlah_pelanggaran : 3,
+          };
         });
         return { results: logs, meta: {} };
       }
@@ -1000,6 +1003,15 @@ class D1Client {
           if (s) {
             s.status = 'berlangsung';
             s.jumlah_pelanggaran = 0;
+          }
+          savePersistedStore(fallbackStore);
+          return { results: [], meta: { changes: 1 } };
+        }
+
+        if (upper.includes('COALESCE(JUMLAH_PELANGGARAN') || upper.includes('JUMLAH_PELANGGARAN + 1')) {
+          const s = fallbackStore.sesi_ujian.find(x => x.id === params[0]);
+          if (s) {
+            s.jumlah_pelanggaran = (Number(s.jumlah_pelanggaran) || 0) + 1;
           }
           savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };

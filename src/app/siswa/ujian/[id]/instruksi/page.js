@@ -251,7 +251,7 @@ export default function InstruksiUjianPage() {
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="instruction-actions-row">
               <a href="/siswa/dashboard" className="btn btn-secondary">
                 Batal / Kembali
               </a>

@@ -373,7 +373,10 @@ img {
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  word-break: break-word;
+  box-sizing: border-box;
   line-height: 1.4;
 }
 
@@ -1013,6 +1016,22 @@ img {
   text-align: center;
   animation: shake 0.5s ease;
   box-shadow: 0 0 60px rgba(239, 68, 68, 0.3);
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .violation-card {
+    padding: 24px 16px;
+    width: 94%;
+    border-radius: var(--radius-xl);
+  }
+  .violation-card h2 {
+    font-size: var(--font-size-xl) !important;
+  }
+  .violation-card .btn {
+    padding: 0.75rem 1rem;
+    font-size: var(--font-size-sm);
+  }
 }
 
 .violation-icon {
@@ -1059,6 +1078,27 @@ img {
   max-width: 800px;
   margin: var(--space-2xl) auto;
   padding: 0 var(--space-md);
+}
+
+.instruction-actions-row {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .instruction-actions-row {
+    flex-direction: column-reverse;
+    width: 100%;
+    gap: var(--space-sm);
+  }
+  .instruction-actions-row .btn,
+  .instruction-actions-row a {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
 }
 
 .instruction-card {

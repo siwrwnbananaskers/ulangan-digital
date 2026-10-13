@@ -188,19 +188,33 @@ export default function LembarUjianPage() {
   }, [sesi, isSuspended, jawabanMap]);
 
   // Real-time unfreeze listener: when suspended, polls server every 2.5s to auto-unlock without browser reload!
+  const batasPelanggaranVal = Number(ujian?.batas_pelanggaran) || 3;
+  const isCurrentlyLocked = isSuspended || violations >= batasPelanggaranVal || sesi?.status === 'ditangguhkan';
+
   useEffect(() => {
-    if (!isSuspended || !examId) return;
+    if (!isCurrentlyLocked || !examId) return;
 
     const unfreezePoll = setInterval(async () => {
       try {
         const res = await authFetch(`/api/ujian/${examId}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.sesi && data.sesi.status === 'berlangsung') {
+          const serverSesi = data.sesi;
+          const serverBatas = Number(data.ujian?.batas_pelanggaran) || 3;
+          const serverViolations = Number(serverSesi?.jumlah_pelanggaran) || 0;
+
+          // STRICT CHECK: An exam is ONLY restored if teacher explicitly un-froze it,
+          // which resets status = 'berlangsung' AND jumlah_pelanggaran = 0.
+          const isExplicitlyUnfrozenByTeacher =
+            serverSesi &&
+            serverSesi.status === 'berlangsung' &&
+            serverViolations === 0;
+
+          if (isExplicitlyUnfrozenByTeacher) {
             setIsSuspended(false);
             setShowWarning(false);
             setViolations(0);
-            setSesi(data.sesi);
+            setSesi(serverSesi);
             // Re-request fullscreen if exam requires exambro
             if (data.ujian?.mode_exambro !== 0) {
               try {
@@ -209,13 +223,18 @@ export default function LembarUjianPage() {
                 }
               } catch (_) {}
             }
+          } else if (serverSesi?.status === 'ditangguhkan' || serverViolations >= serverBatas) {
+            // Re-affirm lock from server authoritative data
+            setIsSuspended(true);
+            setShowWarning(true);
+            setViolations(Math.max(violations, serverViolations));
           }
         }
       } catch (_) {}
     }, 2500);
 
     return () => clearInterval(unfreezePoll);
-  }, [isSuspended, examId]);
+  }, [isCurrentlyLocked, examId, violations, setIsSuspended, setViolations]);
 
   const performAutosave = async () => {
     if (!sesi?.id) return;
@@ -377,7 +396,7 @@ export default function LembarUjianPage() {
       {/* Violation / Suspended Overlay */}
       {showWarning && (
         <div className="violation-overlay">
-          <div className={`violation-card ${isSuspended ? 'suspended-card' : ''}`}>
+          <div className={`violation-card ${isCurrentlyLocked ? 'suspended-card' : ''}`}>
             <div className="violation-icon">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2.5">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -386,8 +405,12 @@ export default function LembarUjianPage() {
               </svg>
             </div>
 
-            <h2>{isSuspended ? 'Ujian Ditangguhkan!' : 'Peringatan Pelanggaran!'}</h2>
-            <p>{warningMessage}</p>
+            <h2>{isCurrentlyLocked ? 'Ujian Ditangguhkan!' : 'Peringatan Pelanggaran!'}</h2>
+            <p>
+              {isCurrentlyLocked
+                ? 'Akun ujian Anda dinonaktifkan sementara karena mencapai batas pelanggaran integritas.'
+                : warningMessage || 'Terdeteksi aktivitas meninggalkan halaman ujian. Silakan kembali ke lembar ujian.'}
+            </p>
 
             <div style={{ marginBottom: 'var(--space-xl)' }}>
               <span className="violation-count">
@@ -398,23 +421,26 @@ export default function LembarUjianPage() {
               </p>
             </div>
 
-            {isSuspended ? (
+            {isCurrentlyLocked ? (
               <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '16px', borderRadius: '12px', color: '#991b1b', fontSize: 13, textAlign: 'left', lineHeight: 1.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, marginBottom: 4, color: '#b91c1c' }}>
                   <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2, borderColor: '#ef4444', borderTopColor: 'transparent', display: 'inline-block' }} />
                   <span>Ujian Terkunci — Menunggu Verifikasi Pengawas</span>
                 </div>
                 <p style={{ margin: '4px 0 0', color: '#7f1d1d' }}>
-                  Batas pelanggaran tercapai ({ujian?.batas_pelanggaran || 3}x). Segera angkat tangan dan hubungi Guru Pengawas.
-                  Kunci ujian akan terbuka otomatis tanpa refresh begitu guru menyetujui pemulihan.
+                  Batas pelanggaran tercapai ({ujian?.batas_pelanggaran || 3}x). Segera hubungi Guru Pengawas untuk pemulihan.
+                  Lembar ujian akan terbuka otomatis tanpa refresh begitu Guru Pengawas menekan tombol Pulihkan di dashboard.
                 </p>
+                <div style={{ marginTop: 10, padding: '6px 10px', background: '#fee2e2', borderRadius: 6, fontSize: 11, color: '#991b1b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🔄</span> Mengecek status pemulihan secara real-time...
+                </div>
               </div>
             ) : (
               <button
                 className="btn btn-danger btn-lg btn-block"
                 onClick={dismissWarning}
               >
-                Saya Mengerti, Kembali ke Ujian (Layar Penuh)
+                Saya Mengerti, Kembali ke Ujian
               </button>
             )}
           </div>

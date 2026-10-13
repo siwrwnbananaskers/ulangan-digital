@@ -21,6 +21,11 @@ export function useExamMode({
   const violationRef = useRef(0);
   const isActiveRef = useRef(true);
 
+  // Keep violationRef in sync with state (e.g. after teacher unfreeze reset)
+  useEffect(() => {
+    violationRef.current = violations;
+  }, [violations]);
+
   // Enter fullscreen
   const enterFullscreen = useCallback(async () => {
     try {
@@ -78,12 +83,14 @@ export function useExamMode({
     }
   }, [enabled, batasPelanggaran, isSuspended, onViolation, sesiId]);
 
-  // Dismiss warning and return to fullscreen
+  // Dismiss warning and return to fullscreen - strictly forbidden if suspended or limit reached
   const dismissWarning = useCallback(() => {
-    if (isSuspended) return;
+    if (isSuspended || violationRef.current >= batasPelanggaran || violations >= batasPelanggaran) {
+      return;
+    }
     setShowWarning(false);
     enterFullscreen();
-  }, [isSuspended, enterFullscreen]);
+  }, [isSuspended, batasPelanggaran, violations, enterFullscreen]);
 
   // Grace period ref to prevent false positives when entering the page
   const readyRef = useRef(false);
