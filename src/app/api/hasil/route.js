@@ -4,7 +4,7 @@
  */
 
 import { getDB } from '@/lib/db';
-import { requireAuth, authErrorResponse } from '@/lib/auth';
+import { requireAuth, requireRole, authErrorResponse } from '@/lib/auth';
 import { apiResponse, apiError, generateId } from '@/lib/utils';
 
 export async function GET(request) {
@@ -260,10 +260,11 @@ export async function PATCH(request) {
 
     return apiError('Aksi tidak valid', 400);
   } catch (error) {
+    console.error('PATCH /api/hasil error:', error);
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return authErrorResponse(error);
     }
-    return apiError('Gagal memperbarui status sesi', 500);
+    return apiError(error.message || 'Gagal memperbarui status sesi', 500);
   }
 }
 
