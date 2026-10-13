@@ -38,6 +38,9 @@ export default function SiswaManagementPage() {
   const [bulkDefaultKelas, setBulkDefaultKelas] = useState('');
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deletingBulk, setDeletingBulk] = useState(false);
+
   // Print Mode State
   const [printKelas, setPrintKelas] = useState('');
 
@@ -48,6 +51,7 @@ export default function SiswaManagementPage() {
 
   const loadSiswa = async () => {
     setLoading(true);
+    setSelectedIds([]);
     try {
       const qParams = [];
       if (filterKelas) qParams.push(`kelas=${encodeURIComponent(filterKelas)}`);
@@ -263,6 +267,75 @@ export default function SiswaManagementPage() {
     }
   };
 
+  const handleToggleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(siswaList.map(s => s.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelectRow = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    const isAll = selectedIds.length === siswaList.length;
+    const confirmMsg = isAll
+      ? `PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA (${selectedIds.length}) siswa? Seluruh riwayat ujian dan nilai siswa ini akan dihapus secara permanen.`
+      : `Hapus ${selectedIds.length} siswa yang ditandai? Seluruh riwayat ujian siswa yang dipilih akan dihapus.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    setDeletingBulk(true);
+    try {
+      const res = await authFetch('/api/siswa', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || `Berhasil menghapus ${selectedIds.length} siswa` });
+        setSelectedIds([]);
+        loadSiswa();
+      } else {
+        setAlert({ type: 'danger', message: data.error || 'Gagal menghapus siswa terpilih' });
+      }
+    } catch {
+      setAlert({ type: 'danger', message: 'Gagal menghubungi server' });
+    } finally {
+      setDeletingBulk(false);
+    }
+  };
+
+  const handleDeleteAllStudents = async () => {
+    if (siswaList.length === 0) return;
+    if (!confirm(`PERINGATAN KERAS: Apakah Anda yakin ingin MENGHAPUS SEMUA (${siswaList.length}) siswa sekaligus? Seluruh data nilai dan sesi ujian siswa Anda akan dihapus permanen.`)) return;
+
+    setDeletingBulk(true);
+    try {
+      const res = await authFetch('/api/siswa?all=true', {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({ type: 'success', message: data.message || 'Semua siswa berhasil dihapus' });
+        setSelectedIds([]);
+        loadSiswa();
+      } else {
+        setAlert({ type: 'danger', message: data.error || 'Gagal menghapus seluruh siswa' });
+      }
+    } catch {
+      setAlert({ type: 'danger', message: 'Gagal menghubungi server' });
+    } finally {
+      setDeletingBulk(false);
+    }
+  };
+
   const filteredPrintStudents = siswaList.filter(s => !printKelas || s.kelas === printKelas);
 
   const handlePrintCards = () => {
@@ -374,8 +447,109 @@ export default function SiswaManagementPage() {
                     ))}
                   </select>
                 </div>
+
+                {siswaList.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={handleDeleteAllStudents}
+                    disabled={deletingBulk}
+                    style={{
+                      fontSize: 12,
+                      padding: '5px 12px',
+                      background: '#fff1f2',
+                      color: '#be123c',
+                      border: '1px solid #fecdd3',
+                      fontWeight: 600,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}
+                    title="Hapus seluruh peserta ujian di akun Anda"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    Hapus Semua Siswa
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Floating / Active Bulk Selection Action Banner */}
+            {selectedIds.length > 0 && (
+              <div style={{
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: 8,
+                padding: '10px 14px',
+                marginBottom: 16,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 10,
+                boxShadow: '0 2px 4px rgba(59,130,246,0.08)'
+              }}>
+                <div style={{ fontSize: 13, color: '#1e40af', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    background: '#2563eb',
+                    color: '#fff',
+                    borderRadius: 99,
+                    width: 22,
+                    height: 22,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 700
+                  }}>
+                    {selectedIds.length}
+                  </span>
+                  <span>
+                    <strong>{selectedIds.length}</strong> siswa ditandai (dari total {siswaList.length})
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setSelectedIds([])}
+                    style={{ fontSize: 12, color: '#64748b' }}
+                  >
+                    Batal Pilihan
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={handleDeleteSelected}
+                    disabled={deletingBulk}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: '#dc2626',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '6px 14px',
+                      borderRadius: 6,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    {deletingBulk ? 'Menghapus...' : `Hapus ${selectedIds.length} Siswa Ditandai`}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {loading ? (
               <div style={{ textAlign: 'center', padding: 40 }}>
@@ -391,6 +565,15 @@ export default function SiswaManagementPage() {
                 <table className="table" style={{ fontSize: 13 }}>
                   <thead>
                     <tr>
+                      <th style={{ width: 38, textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          style={{ cursor: 'pointer', width: 16, height: 16, accentColor: '#2563eb' }}
+                          checked={siswaList.length > 0 && selectedIds.length === siswaList.length}
+                          onChange={handleToggleSelectAll}
+                          title="Tandai Semua Siswa"
+                        />
+                      </th>
                       <th style={{ width: 40 }}>No</th>
                       <th>Username (Login)</th>
                       <th>Nama Lengkap</th>
@@ -401,39 +584,51 @@ export default function SiswaManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {siswaList.map((s, idx) => (
-                      <tr key={s.id}>
-                        <td>{idx + 1}</td>
-                        <td>
-                          <code style={{ background: '#f1f5f9', color: '#0f172a', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
-                            {s.username}
-                          </code>
-                        </td>
-                        <td><strong>{s.nama}</strong></td>
-                        {isSuperadmin && (
-                          <td>
-                            <span className="badge badge-primary" style={{ fontSize: 11, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
-                              {s.nama_guru || 'Guru'}
-                            </span>
+                    {siswaList.map((s, idx) => {
+                      const isSelected = selectedIds.includes(s.id);
+                      return (
+                        <tr key={s.id} style={{ background: isSelected ? '#eff6ff' : undefined }}>
+                          <td style={{ textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              style={{ cursor: 'pointer', width: 16, height: 16, accentColor: '#2563eb' }}
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectRow(s.id)}
+                              title={`Tandai ${s.nama}`}
+                            />
                           </td>
-                        )}
-                        <td><span className="badge badge-gray">{s.kelas || '-'}</span></td>
-                        <td>{s.no_absen || '-'}</td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ color: '#dc2626', padding: '2px 6px' }}
-                            onClick={() => handleDelete(s.id, s.nama)}
-                            title="Hapus Siswa"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          <td>{idx + 1}</td>
+                          <td>
+                            <code style={{ background: '#f1f5f9', color: '#0f172a', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                              {s.username}
+                            </code>
+                          </td>
+                          <td><strong>{s.nama}</strong></td>
+                          {isSuperadmin && (
+                            <td>
+                              <span className="badge badge-primary" style={{ fontSize: 11, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                                {s.nama_guru || 'Guru'}
+                              </span>
+                            </td>
+                          )}
+                          <td><span className="badge badge-gray">{s.kelas || '-'}</span></td>
+                          <td>{s.no_absen || '-'}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: '#dc2626', padding: '2px 6px' }}
+                              onClick={() => handleDelete(s.id, s.nama)}
+                              title="Hapus Siswa"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -140,10 +140,32 @@ export async function POST(request) {
           continue;
         }
 
-        const exists = await db.getOne('SELECT id FROM users WHERE username = ?', [username]);
+        const exists = await db.getOne('SELECT id, role FROM users WHERE username = ?', [username]);
         if (exists) {
-          skippedCount++;
-          continue;
+          if (exists.role === 'siswa') {
+            // Update existing student and link to current teacher
+            const passwordHash = await hashPassword(rawPassword);
+            await db.run(
+              `UPDATE users 
+               SET nama = ?, kelas = ?, no_absen = ?, password_hash = ?, guru_id = ?, updated_at = datetime('now')
+               WHERE id = ?`,
+              [sanitizeInput(nama), kelas || null, no_absen, passwordHash, targetGuruId, exists.id]
+            );
+            createdList.push({
+              id: exists.id,
+              username,
+              nama,
+              kelas,
+              no_absen,
+              raw_password: rawPassword,
+              updated: true,
+            });
+            createdCount++;
+            continue;
+          } else {
+            skippedCount++;
+            continue;
+          }
         }
 
         const id = generateId('usr');
@@ -152,7 +174,7 @@ export async function POST(request) {
         await db.run(
           `INSERT INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
            VALUES (?, ?, ?, ?, 'siswa', ?, ?, ?)`,
-          [id, username, passwordHash, nama, targetGuruId, kelas || null, no_absen]
+          [id, username, passwordHash, sanitizeInput(nama), targetGuruId, kelas || null, no_absen]
         );
 
         createdList.push({
@@ -168,7 +190,9 @@ export async function POST(request) {
 
       return apiResponse({
         success: true,
-        message: `Berhasil menambahkan ${createdCount} siswa (${skippedCount} dilewati/duplikat)`,
+        message: skippedCount > 0 
+          ? `Berhasil memproses ${createdCount} siswa (${skippedCount} dilewati karena bentrok akun guru/admin)`
+          : `Berhasil menambahkan/memperbarui seluruh ${createdCount} siswa!`,
         created_count: createdCount,
         skipped_count: skippedCount,
         created_siswa: createdList,
@@ -182,14 +206,36 @@ export async function POST(request) {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    const exists = await db.getOne('SELECT id FROM users WHERE username = ?', [cleanUsername]);
+    const exists = await db.getOne('SELECT id, role, guru_id FROM users WHERE username = ?', [cleanUsername]);
+    const rawPassword = password?.trim() || 'guru123';
+    const passwordHash = await hashPassword(rawPassword);
+
     if (exists) {
-      return apiError(`Username "${cleanUsername}" sudah digunakan`, 409);
+      if (exists.role === 'siswa') {
+        // Update existing student and link to target teacher
+        await db.run(
+          `UPDATE users 
+           SET nama = ?, kelas = ?, no_absen = ?, password_hash = ?, guru_id = ?, updated_at = datetime('now')
+           WHERE id = ?`,
+          [sanitizeInput(nama.trim()), kelas?.trim() || null, parseInt(no_absen) || null, passwordHash, targetGuruId, exists.id]
+        );
+        return apiResponse({
+          success: true,
+          message: 'Data siswa berhasil diperbarui',
+          siswa: {
+            id: exists.id,
+            username: cleanUsername,
+            nama: nama.trim(),
+            guru_id: targetGuruId,
+            kelas: kelas?.trim() || null,
+            no_absen: parseInt(no_absen) || null,
+          },
+        });
+      }
+      return apiError(`Username "${cleanUsername}" sudah digunakan oleh akun guru atau admin`, 409);
     }
 
     const id = generateId('usr');
-    const rawPassword = password?.trim() || 'guru123';
-    const passwordHash = await hashPassword(rawPassword);
 
     await db.run(
       `INSERT INTO users (id, username, password_hash, nama, role, guru_id, kelas, no_absen)
@@ -221,31 +267,62 @@ export async function POST(request) {
 export async function DELETE(request) {
   try {
     const user = await requireRole(request, 'guru');
+    const db = getDB();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const isAll = searchParams.get('all') === 'true';
 
-    if (!id) {
-      return apiError('ID siswa wajib diisi', 400);
+    let idsToDelete = [];
+
+    if (id) {
+      idsToDelete = [id];
+    } else if (isAll) {
+      // Find all students belonging to this teacher
+      let studentQuery = "SELECT id FROM users WHERE role = 'siswa'";
+      const qParams = [];
+      if (user.role !== 'superadmin') {
+        studentQuery += " AND (guru_id = ? OR guru_id IS NULL)";
+        qParams.push(user.id);
+      }
+      const allStudents = await db.getAll(studentQuery, qParams);
+      idsToDelete = (allStudents || []).map(s => s.id);
+    } else {
+      // Parse JSON body for array of ids
+      try {
+        const body = await request.json();
+        if (Array.isArray(body?.ids)) {
+          idsToDelete = body.ids;
+        }
+      } catch {}
     }
 
-    const db = getDB();
-    const target = await db.getOne("SELECT id, role, guru_id FROM users WHERE id = ? AND role = 'siswa'", [id]);
-    if (!target) {
-      return apiError('Data siswa tidak ditemukan', 404);
+    if (idsToDelete.length === 0) {
+      return apiError('Pilih minimal 1 siswa untuk dihapus', 400);
     }
 
-    // Non-superadmin teachers can only delete their own students
-    if (user.role === 'guru' && target.guru_id && target.guru_id !== user.id) {
-      return apiError('Anda tidak memiliki izin menghapus siswa milik guru lain', 403);
+    let deletedCount = 0;
+    for (const sid of idsToDelete) {
+      const target = await db.getOne("SELECT id, role, guru_id FROM users WHERE id = ? AND role = 'siswa'", [sid]);
+      if (!target) continue;
+
+      // Non-superadmin teachers can only delete their own students
+      if (user.role === 'guru' && target.guru_id && target.guru_id !== user.id) {
+        continue;
+      }
+
+      // Cascade delete student responses, logs, and sessions
+      await db.run('DELETE FROM jawaban WHERE sesi_id IN (SELECT id FROM sesi_ujian WHERE siswa_id = ?)', [sid]);
+      await db.run('DELETE FROM audit_log WHERE sesi_id IN (SELECT id FROM sesi_ujian WHERE siswa_id = ?)', [sid]);
+      await db.run('DELETE FROM sesi_ujian WHERE siswa_id = ?', [sid]);
+      await db.run('DELETE FROM users WHERE id = ?', [sid]);
+      deletedCount++;
     }
 
-    // Clean up student responses and sessions
-    await db.run('DELETE FROM jawaban WHERE sesi_id IN (SELECT id FROM sesi_ujian WHERE siswa_id = ?)', [id]);
-    await db.run('DELETE FROM audit_log WHERE sesi_id IN (SELECT id FROM sesi_ujian WHERE siswa_id = ?)', [id]);
-    await db.run('DELETE FROM sesi_ujian WHERE siswa_id = ?', [id]);
-    await db.run('DELETE FROM users WHERE id = ?', [id]);
-
-    return apiResponse({ success: true, message: 'Data siswa berhasil dihapus' });
+    return apiResponse({ 
+      success: true, 
+      message: `Berhasil menghapus ${deletedCount} siswa`,
+      deleted_count: deletedCount 
+    });
   } catch (error) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return authErrorResponse(error);
