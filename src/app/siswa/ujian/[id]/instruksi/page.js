@@ -25,7 +25,7 @@ export default function InstruksiUjianPage() {
 
   const loadExamDetail = async () => {
     try {
-      const res = await authFetch(`/api/ujian/${examId}`);
+      const res = await authFetch(`/api/ujian/${examId}?_t=${Date.now()}`);
       const data = await res.json();
 
       if (!res.ok) {

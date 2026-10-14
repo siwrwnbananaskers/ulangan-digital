@@ -5,7 +5,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireAuth, authErrorResponse } from '@/lib/auth';
-import { apiResponse, apiError, shuffleArray, parseWaktuWIB } from '@/lib/utils';
+import { apiResponse, apiError, shuffleQuestionsByType, orderQuestionsByType, parseWaktuWIB } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -15,6 +15,11 @@ export async function GET(request, { params }) {
     const user = await requireAuth(request);
     const { id } = await params;
     const db = getDB();
+
+    // Ensure urutan_soal column exists in sesi_ujian
+    try {
+      await db.run('ALTER TABLE sesi_ujian ADD COLUMN urutan_soal TEXT');
+    } catch (_) {}
 
     const ujian = await db.getOne('SELECT * FROM ujian WHERE id = ?', [id]);
     if (!ujian) {
@@ -72,9 +77,61 @@ export async function GET(request, { params }) {
         return apiError('Ujian sudah berakhir', 403);
       }
 
-      // Shuffle questions if enabled
-      if (ujian.acak_soal) {
-        soalList = shuffleArray(soalList);
+      // Get student session first to check if a persistent question order exists
+      let sesi = await db.getOne(
+        'SELECT * FROM sesi_ujian WHERE ujian_id = ? AND siswa_id = ?',
+        [id, user.id]
+      );
+
+      let isOrdered = false;
+      if (sesi && sesi.urutan_soal) {
+        try {
+          const idOrder = JSON.parse(sesi.urutan_soal);
+          if (Array.isArray(idOrder) && idOrder.length > 0) {
+            const map = new Map(soalList.map(s => [s.id, s]));
+            const reordered = [];
+            for (const qId of idOrder) {
+              if (map.has(qId)) {
+                reordered.push(map.get(qId));
+                map.delete(qId);
+              }
+            }
+            if (map.size > 0) {
+              const remaining = orderQuestionsByType(Array.from(map.values()));
+              reordered.push(...remaining);
+            }
+            soalList = reordered;
+            isOrdered = true;
+          }
+        } catch (err) {
+          console.warn('Failed to parse sesi.urutan_soal:', err.message);
+        }
+      }
+
+      // If not yet ordered from session:
+      if (!isOrdered) {
+        const isAcak = ujian.acak_soal == 1 || ujian.acak_soal === true || ujian.acak_soal === '1';
+        if (isAcak) {
+          // Shuffle strictly grouped by type: PG at top, Uraian at bottom.
+          // Seed is deterministic for this student and exam, so every refresh produces identical order.
+          const seed = `${user.id}_${id}_${sesi?.id || 'sesi'}`;
+          soalList = shuffleQuestionsByType(soalList, seed);
+        } else {
+          // Standard type hierarchy: PG first, then Benar-Salah, Isian, and Uraian/Essay at the bottom
+          soalList = orderQuestionsByType(soalList);
+        }
+
+        // Persist question order into session if session already created
+        if (sesi?.id) {
+          try {
+            const idList = soalList.map(s => s.id);
+            const idListJson = JSON.stringify(idList);
+            await db.run('UPDATE sesi_ujian SET urutan_soal = ? WHERE id = ?', [idListJson, sesi.id]);
+            sesi.urutan_soal = idListJson;
+          } catch (saveErr) {
+            console.warn('Failed to persist urutan_soal to sesi_ujian:', saveErr.message);
+          }
+        }
       }
 
       // Remove answer keys for students
@@ -82,12 +139,6 @@ export async function GET(request, { params }) {
         const { kunci_jawaban, ...rest } = s;
         return rest;
       });
-
-      // Get or create session
-      let sesi = await db.getOne(
-        'SELECT * FROM sesi_ujian WHERE ujian_id = ? AND siswa_id = ?',
-        [id, user.id]
-      );
 
       // Get existing answers
       let jawabanSiswa = [];
@@ -115,7 +166,8 @@ export async function GET(request, { params }) {
       });
     }
 
-    // Guru gets full details
+    // Guru gets full details with standard type hierarchy
+    soalList = orderQuestionsByType(soalList);
     const peserta = await db.getAll(
       `SELECT su.*, u.nama, u.kelas, u.no_absen
        FROM sesi_ujian su

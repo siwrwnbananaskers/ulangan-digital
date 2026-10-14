@@ -40,7 +40,7 @@ export default function UjianPage() {
       kkm: 75,
       mode_exambro: 1,
       akses_ujian: 'kode',
-      acak_soal: false,
+      acak_soal: true,
       acak_jawaban: false,
       tampilkan_nilai: true,
       batas_pelanggaran: 3,
@@ -937,22 +937,34 @@ export default function UjianPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap' }}>
-                <label className="form-checkbox" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14, marginBottom: 18, background: '#f8fafc', padding: '12px 14px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                <label className="form-checkbox" style={{ cursor: 'pointer', margin: 0, alignItems: 'flex-start' }}>
                   <input
                     type="checkbox"
                     checked={form.acak_soal}
                     onChange={(e) => setForm({ ...form, acak_soal: e.target.checked })}
+                    style={{ marginTop: 3 }}
                   />
-                  <span>Acak urutan butir soal per siswa</span>
+                  <div>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>Acak urutan butir soal per siswa</span>
+                    <span style={{ display: 'block', fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: 1.4 }}>
+                      Diacak mandiri per siswa sesuai jenisnya: Pilihan Ganda tetap di atas, Uraian/Essay tetap di paling bawah.
+                    </span>
+                  </div>
                 </label>
-                <label className="form-checkbox" style={{ cursor: 'pointer' }}>
+                <label className="form-checkbox" style={{ cursor: 'pointer', margin: 0, alignItems: 'flex-start' }}>
                   <input
                     type="checkbox"
                     checked={form.tampilkan_nilai}
                     onChange={(e) => setForm({ ...form, tampilkan_nilai: e.target.checked })}
+                    style={{ marginTop: 3 }}
                   />
-                  <span>Tampilkan perolehan nilai langsung saat siswa selesai</span>
+                  <div>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>Tampilkan nilai langsung saat selesai</span>
+                    <span style={{ display: 'block', fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: 1.4 }}>
+                      Siswa langsung melihat perolehan skor setelah menekan tombol kumpulkan ujian.
+                    </span>
+                  </div>
                 </label>
               </div>
 

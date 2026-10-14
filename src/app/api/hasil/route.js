@@ -38,7 +38,7 @@ export async function GET(request) {
           return apiError('Anda tidak memiliki akses ke sesi ujian ini', 403);
         }
 
-        const listJawaban = await db.getAll(
+        let listJawaban = await db.getAll(
           `SELECT 
             s.id as soal_id,
             s.pertanyaan,
@@ -67,6 +67,26 @@ export async function GET(request) {
           `SELECT * FROM audit_log WHERE sesi_id = ? ORDER BY timestamp DESC`,
           [sesiId]
         );
+
+        if (sesi.urutan_soal) {
+          try {
+            const idOrder = JSON.parse(sesi.urutan_soal);
+            if (Array.isArray(idOrder) && idOrder.length > 0) {
+              const jMap = new Map(listJawaban.map(j => [j.soal_id, j]));
+              const ordered = [];
+              for (const qId of idOrder) {
+                if (jMap.has(qId)) {
+                  ordered.push(jMap.get(qId));
+                  jMap.delete(qId);
+                }
+              }
+              for (const rem of jMap.values()) {
+                ordered.push(rem);
+              }
+              listJawaban = ordered;
+            }
+          } catch (_) {}
+        }
 
         return apiResponse({
           sesi,

@@ -80,7 +80,9 @@ export default function LembarUjianPage() {
 
   const loadExamData = async () => {
     try {
-      const res = await authFetch(`/api/ujian/${examId}`);
+      const res = await authFetch(`/api/ujian/${examId}?_t=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -197,7 +199,7 @@ export default function LembarUjianPage() {
 
     const unfreezePoll = setInterval(async () => {
       try {
-        const res = await authFetch(`/api/ujian/${examId}`);
+        const res = await authFetch(`/api/ujian/${examId}?_t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
           const serverSesi = data.sesi;

@@ -6,7 +6,7 @@
 
 import { getDB } from '@/lib/db';
 import { requireAuth, requireRole, authErrorResponse, sanitizeInput } from '@/lib/auth';
-import { apiResponse, apiError, generateId, generateKodeUjian, validateRequired, parseWaktuWIB } from '@/lib/utils';
+import { apiResponse, apiError, generateId, generateKodeUjian, validateRequired, parseWaktuWIB, orderQuestionsByType } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -243,11 +243,25 @@ export async function POST(request) {
       ]
     );
 
+    // Sort selected questions by standard pedagogical hierarchy (PG first, Benar-Salah, Isian, and Uraian at bottom)
+    let sortedSoalIds = [...body.soal_ids];
+    try {
+      const placeholders = body.soal_ids.map(() => '?').join(',');
+      const selectedSoals = await db.getAll(
+        `SELECT id, tipe FROM soal WHERE id IN (${placeholders})`,
+        body.soal_ids
+      );
+      if (selectedSoals && selectedSoals.length > 0) {
+        const sorted = orderQuestionsByType(selectedSoals);
+        sortedSoalIds = sorted.map(s => s.id);
+      }
+    } catch (_) {}
+
     // Insert exam-question mappings
-    for (let i = 0; i < body.soal_ids.length; i++) {
+    for (let i = 0; i < sortedSoalIds.length; i++) {
       await db.run(
         'INSERT INTO ujian_soal (id, ujian_id, soal_id, urutan) VALUES (?, ?, ?, ?)',
-        [generateId('us'), id, body.soal_ids[i], i + 1]
+        [generateId('us'), id, sortedSoalIds[i], i + 1]
       );
     }
 
@@ -323,10 +337,24 @@ export async function PUT(request) {
     // If soal_ids provided, replace questions mapping
     if (Array.isArray(body.soal_ids) && body.soal_ids.length > 0) {
       await db.run('DELETE FROM ujian_soal WHERE ujian_id = ?', [body.id]);
-      for (let i = 0; i < body.soal_ids.length; i++) {
+
+      let sortedSoalIds = [...body.soal_ids];
+      try {
+        const placeholders = body.soal_ids.map(() => '?').join(',');
+        const selectedSoals = await db.getAll(
+          `SELECT id, tipe FROM soal WHERE id IN (${placeholders})`,
+          body.soal_ids
+        );
+        if (selectedSoals && selectedSoals.length > 0) {
+          const sorted = orderQuestionsByType(selectedSoals);
+          sortedSoalIds = sorted.map(s => s.id);
+        }
+      } catch (_) {}
+
+      for (let i = 0; i < sortedSoalIds.length; i++) {
         await db.run(
           'INSERT INTO ujian_soal (id, ujian_id, soal_id, urutan) VALUES (?, ?, ?, ?)',
-          [generateId('us'), body.id, body.soal_ids[i], i + 1]
+          [generateId('us'), body.id, sortedSoalIds[i], i + 1]
         );
       }
     }

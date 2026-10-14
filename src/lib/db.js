@@ -350,7 +350,23 @@ class D1Client {
     this.accountId = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
     this.databaseId = (process.env.CLOUDFLARE_D1_DATABASE_ID || '').trim();
     this.apiToken = (process.env.CLOUDFLARE_API_TOKEN || '').trim();
-    this.isCloudflare = !!(this.accountId && this.databaseId && this.apiToken);
+  this.isCloudflare = !!(this.accountId && this.databaseId && this.apiToken);
+  }
+
+  async ensureMigrations() {
+    if (!this.isCloudflare || this._migrationRan) return;
+    this._migrationRan = true;
+    try {
+      const url = `${CLOUDFLARE_API_BASE}/accounts/${this.accountId}/d1/database/${this.databaseId}/query`;
+      await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sql: 'ALTER TABLE sesi_ujian ADD COLUMN urutan_soal TEXT' }),
+      });
+    } catch (_) {}
   }
 
   normalizeRow(row) {
@@ -381,6 +397,7 @@ class D1Client {
    */
   async query(sql, params = []) {
     if (this.isCloudflare) {
+      await this.ensureMigrations();
       const url = `${CLOUDFLARE_API_BASE}/accounts/${this.accountId}/d1/database/${this.databaseId}/query`;
 
       try {
@@ -840,6 +857,10 @@ class D1Client {
       }
 
       if (upper.includes('INTO SESI_UJIAN')) {
+        let urutanSoal = null;
+        if (upper.includes('URUTAN_SOAL')) {
+          urutanSoal = params[params.length - 1] || null;
+        }
         const item = {
           id: params[0],
           ujian_id: params[1],
@@ -847,6 +868,7 @@ class D1Client {
           waktu_mulai: new Date().toISOString(),
           status: 'berlangsung',
           jumlah_pelanggaran: 0,
+          urutan_soal: urutanSoal,
           created_at: new Date().toISOString(),
         };
         fallbackStore.sesi_ujian.push(item);
@@ -999,6 +1021,29 @@ class D1Client {
         if (upper.includes('JUMLAH_PELANGGARAN =')) {
           const s = fallbackStore.sesi_ujian.find(x => x.id === params[1]);
           if (s) s.jumlah_pelanggaran = params[0];
+          savePersistedStore(fallbackStore);
+          return { results: [], meta: { changes: 1 } };
+        }
+
+        if (upper.includes('URUTAN_SOAL =') || upper.includes('URUTAN_SOAL=')) {
+          const s = fallbackStore.sesi_ujian.find(x => x.id === params[1]);
+          if (s) s.urutan_soal = params[0];
+          savePersistedStore(fallbackStore);
+          return { results: [], meta: { changes: s ? 1 : 0 } };
+        }
+
+        // Generic SET fallback for SESI_UJIAN
+        const s = fallbackStore.sesi_ujian.find(x => x.id === params[params.length - 1]);
+        if (s) {
+          const setMatch = sql.match(/SET\s+([\s\S]+?)\s+WHERE/i);
+          if (setMatch) {
+            const clauses = setMatch[1].split(',').map(c => c.trim().split('=')[0].trim().toLowerCase());
+            clauses.forEach((col, idx) => {
+              if (col && idx < params.length && params[idx] !== undefined && col !== 'id') {
+                s[col] = params[idx];
+              }
+            });
+          }
           savePersistedStore(fallbackStore);
           return { results: [], meta: { changes: 1 } };
         }

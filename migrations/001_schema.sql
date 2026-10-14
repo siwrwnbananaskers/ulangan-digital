@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS sesi_ujian (
   jumlah_salah INTEGER DEFAULT 0,
   jumlah_kosong INTEGER DEFAULT 0,
   jumlah_pelanggaran INTEGER DEFAULT 0,
+  urutan_soal TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (ujian_id) REFERENCES ujian(id),
   FOREIGN KEY (siswa_id) REFERENCES users(id),
