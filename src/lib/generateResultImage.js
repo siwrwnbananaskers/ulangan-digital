@@ -194,31 +194,35 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     const heroScoreWidth = 240;
     const heroScoreHeight = scoreHeroHeight;
 
-    // Left Box: Nilai Akhir
-    ctx.fillStyle = isLulus ? '#f0fdf4' : '#fef2f2';
-    ctx.strokeStyle = isLulus ? '#86efac' : '#fca5a5';
+    // Left Box: Nilai Akhir (White background, centered text)
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1.5;
     drawRoundedRect(ctx, padding, currentY, heroScoreWidth, heroScoreHeight, 14, true, true);
 
+    const heroCenterX = padding + heroScoreWidth / 2;
+    ctx.textAlign = 'center';
+
     ctx.fillStyle = '#64748b';
     ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('NILAI AKHIR SISWA', padding + 22, currentY + 30);
+    ctx.fillText('NILAI AKHIR SISWA', heroCenterX, currentY + 30);
 
     ctx.fillStyle = isLulus ? '#16a34a' : '#dc2626';
     ctx.font = '900 60px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(String(totalNilai), padding + 22, currentY + 95);
+    ctx.fillText(String(totalNilai), heroCenterX, currentY + 95);
 
-    // KKM Pill
+    // KKM Pill (Centered inside Hero Score Box)
     const pillText = isLulus ? `TUNTAS KKM (${kkm})` : `REMIDIAL (KKM: ${kkm})`;
     ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const pillWidth = ctx.measureText(pillText).width + 16;
+    const pillWidth = ctx.measureText(pillText).width + 20;
+    const pillX = padding + (heroScoreWidth - pillWidth) / 2;
     ctx.fillStyle = isLulus ? '#dcfce7' : '#fee2e2';
-    drawRoundedRect(ctx, padding + 22, currentY + 112, pillWidth, 24, 6, true, false);
+    drawRoundedRect(ctx, pillX, currentY + 112, pillWidth, 24, 6, true, false);
 
     ctx.fillStyle = isLulus ? '#15803d' : '#b91c1c';
-    ctx.fillText(pillText, padding + 30, currentY + 128);
+    ctx.fillText(pillText, heroCenterX, currentY + 128);
 
-    // Right Side: 4 Stat Cards (2x2 Grid)
+    // Right Side: 4 Stat Cards (2x2 Grid) - White cards with centered text
     const statsX = padding + heroScoreWidth + 14;
     const statsWidth = innerWidth - heroScoreWidth - 14;
     const statCardW = (statsWidth - 12) / 2;
@@ -230,23 +234,23 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
         val: `${sesi?.jumlah_benar ?? 0} Butir`,
         sub: 'Poin Penuh',
         color: '#16a34a',
-        bg: '#f0fdf4',
-        border: '#bbf7d0',
+        bg: '#ffffff',
+        border: '#e2e8f0',
       },
       {
         label: 'Jawaban Salah',
         val: `${sesi?.jumlah_salah ?? 0} Butir`,
         sub: 'Skor Nol / Kurang',
         color: '#dc2626',
-        bg: '#fef2f2',
-        border: '#fecaca',
+        bg: '#ffffff',
+        border: '#e2e8f0',
       },
       {
         label: 'Tidak Dijawab',
         val: `${sesi?.jumlah_kosong ?? 0} Butir`,
         sub: 'Butir Kosong',
         color: '#64748b',
-        bg: '#f8fafc',
+        bg: '#ffffff',
         border: '#e2e8f0',
       },
       {
@@ -254,8 +258,8 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
         val: `${sesi?.jumlah_pelanggaran ?? 0}x`,
         sub: (sesi?.jumlah_pelanggaran || 0) > 0 ? 'Pelanggaran Tab' : 'Sangat Tertib',
         color: (sesi?.jumlah_pelanggaran || 0) > 0 ? '#dc2626' : '#16a34a',
-        bg: (sesi?.jumlah_pelanggaran || 0) > 0 ? '#fef2f2' : '#f0fdf4',
-        border: (sesi?.jumlah_pelanggaran || 0) > 0 ? '#fecaca' : '#bbf7d0',
+        bg: '#ffffff',
+        border: '#e2e8f0',
       },
     ];
 
@@ -270,18 +274,24 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
       ctx.lineWidth = 1;
       drawRoundedRect(ctx, bx, by, statCardW, statCardH, 10, true, true);
 
+      const cardCenterX = bx + statCardW / 2;
+      ctx.textAlign = 'center';
+
       ctx.fillStyle = '#64748b';
       ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(item.label, bx + 14, by + 22);
+      ctx.fillText(item.label, cardCenterX, by + 22);
 
       ctx.fillStyle = item.color;
       ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(item.val, bx + 14, by + 46);
+      ctx.fillText(item.val, cardCenterX, by + 46);
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(item.sub, bx + 14, by + 62);
+      ctx.fillText(item.sub, cardCenterX, by + 63);
     });
+
+    // Reset textAlign to default left
+    ctx.textAlign = 'left';
 
     currentY += scoreHeroHeight + 16;
 

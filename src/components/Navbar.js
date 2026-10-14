@@ -203,8 +203,8 @@ export default function Navbar({ user, onLogout, role }) {
                 )}
               </div>
               <div className="linkedin-user-text">
-                <span className="linkedin-user-name">
-                  {currentUser?.nama ? currentUser.nama.split(',')[0].split(' ')[0] : 'Akun'}
+                <span className="linkedin-user-name" title={currentUser?.nama || 'Akun'}>
+                  {currentUser?.nama || 'Akun'}
                 </span>
                 <span className="linkedin-user-role-badge">
                   {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru' : 'Siswa'}

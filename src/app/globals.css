@@ -322,6 +322,7 @@ img {
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .stat-card::before {
@@ -350,12 +351,14 @@ img {
   color: var(--gray-900);
   line-height: 1;
   margin-bottom: var(--space-xs);
+  text-align: center;
 }
 
 .stat-label {
   font-size: var(--font-size-sm);
   color: var(--gray-500);
   font-weight: 500;
+  text-align: center;
 }
 
 /* === Buttons === */
@@ -2480,11 +2483,14 @@ img {
 }
 
 .linkedin-user-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #191919;
   line-height: 1.2;
   white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .linkedin-user-role-badge {
@@ -3007,5 +3013,57 @@ img {
     gap: 10px;
   }
 }
+
+/* Responsive Modal Footers & Utility Classes */
+.hide-mobile {
+  display: inline-flex;
+}
+
+.modal-footer-responsive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--gray-200);
+  margin-top: var(--space-md);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-footer-responsive-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  .modal-footer-responsive {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .modal-footer-responsive-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .modal-footer-responsive button,
+  .modal-footer-responsive-group button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+  .modal-footer-close-btn {
+    width: 100% !important;
+    margin-top: 2px !important;
+  }
+}
+
 
 

@@ -885,9 +885,9 @@ export default function GuruHasilPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
                   type="button"
-                  className="btn btn-success btn-sm"
+                  className="btn btn-success btn-sm hide-mobile"
                   onClick={() => handleOpenImageModal(modalJawaban.sesi, modalJawaban.jawaban, 'ringkas')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, whiteSpace: 'nowrap' }}
                   title="Cetak kartu hasil siswa dalam format gambar siap kirim ke WhatsApp"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1233,13 +1233,13 @@ export default function GuruHasilPage() {
             </div>
 
             {/* Modal Footer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--gray-200)', marginTop: 'var(--space-md)', flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="modal-footer-responsive">
+              <div className="modal-footer-responsive-group">
                 <button
                   type="button"
                   className="btn btn-success btn-sm"
                   onClick={() => handleOpenImageModal(modalJawaban.sesi, modalJawaban.jawaban, 'ringkas')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
                   title="Cetak hasil siswa dalam format gambar untuk dibagikan ke siswa/wali"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1253,7 +1253,7 @@ export default function GuruHasilPage() {
                   type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={() => window.print()}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                   Cetak Dokumen
@@ -1261,7 +1261,7 @@ export default function GuruHasilPage() {
               </div>
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm modal-footer-close-btn"
                 onClick={() => setModalJawaban(null)}
               >
                 Tutup
@@ -1374,23 +1374,14 @@ export default function GuruHasilPage() {
             )}
 
             {/* Modal Actions Footer */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingTop: 14,
-              borderTop: '1px solid var(--gray-200)',
-              marginTop: 14,
-              flexWrap: 'wrap',
-              gap: 8,
-            }}>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div className="modal-footer-responsive">
+              <div className="modal-footer-responsive-group">
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={handleDownloadCurrentImg}
                   disabled={imageModal.loading || !imageModal.dataUrl}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1405,7 +1396,7 @@ export default function GuruHasilPage() {
                   className="btn btn-secondary"
                   onClick={handleCopyCurrentImg}
                   disabled={imageModal.loading || !imageModal.dataUrl}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
                   title="Salin gambar ke clipboard agar bisa langsung di-paste di WhatsApp"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1418,7 +1409,7 @@ export default function GuruHasilPage() {
 
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="btn btn-ghost modal-footer-close-btn"
                 onClick={() => setImageModal((prev) => ({ ...prev, open: false }))}
               >
                 Tutup
