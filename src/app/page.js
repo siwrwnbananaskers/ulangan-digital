@@ -131,6 +131,18 @@ export default function LoginPage() {
             Demo: <strong>guru</strong> / <strong>guru123</strong> • <strong>siswa1</strong> / <strong>guru123</strong>
           </p>
         </div>
+
+        <div className="login-card-footer">
+          <span>© 2026 Digitalised by</span>
+          <a
+            href="https://about-wrwn.site/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="login-card-footer-link"
+          >
+            WiraWebSolusi
+          </a>
+        </div>
       </div>
     </div>
   );

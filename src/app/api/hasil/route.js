@@ -19,7 +19,7 @@ export async function GET(request) {
       if (sesiId) {
         // Get specific student session and answers
         const sesi = await db.getOne(
-          `SELECT su.*, u.nama, u.username, u.kelas, u.no_absen,
+          `SELECT su.*, u.nama, u.username, u.kelas, u.no_absen, u.foto_profil,
                   uj.judul as ujian_judul, uj.mata_pelajaran, uj.kkm, uj.durasi_menit, uj.guru_id,
                   guru.nama as guru_nama
            FROM sesi_ujian su
@@ -78,7 +78,7 @@ export async function GET(request) {
       if (ujianId) {
         // Get detailed results for specific exam
         const results = await db.getAll(
-          `SELECT su.*, u.nama, u.kelas, u.no_absen, u.username,
+          `SELECT su.*, u.nama, u.kelas, u.no_absen, u.username, u.foto_profil,
             (SELECT COUNT(*) FROM audit_log al WHERE al.sesi_id = su.id) as total_pelanggaran
            FROM sesi_ujian su
            JOIN users u ON u.id = su.siswa_id

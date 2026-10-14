@@ -1,6 +1,15 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
+
 export default function Footer({ className = '', style = {} }) {
+  const pathname = usePathname();
+
+  // On login page ('/'), footer text is integrated directly inside login-card
+  if (pathname === '/') {
+    return null;
+  }
+
   return (
     <footer
       className={`app-site-footer ${className}`}
@@ -8,9 +17,13 @@ export default function Footer({ className = '', style = {} }) {
         width: '100%',
         backgroundColor: '#ffffff',
         borderTop: '1px solid #e2e8f0',
-        padding: '13px 16px',
+        padding: '28px 24px',
+        minHeight: '76px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         textAlign: 'center',
-        fontSize: '12px',
+        fontSize: '13px',
         color: '#1e293b',
         marginTop: 'auto',
         boxSizing: 'border-box',
@@ -23,9 +36,9 @@ export default function Footer({ className = '', style = {} }) {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '5px',
+          gap: '6px',
           flexWrap: 'wrap',
-          lineHeight: 1.5,
+          lineHeight: 1.6,
           color: '#1e293b',
           fontWeight: 500,
         }}

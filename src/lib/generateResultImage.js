@@ -41,8 +41,28 @@ function fitText(ctx, text, maxWidth) {
   return res + '...';
 }
 
-export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guruNama = '' }) {
+function loadImage(src) {
   return new Promise((resolve) => {
+    if (!src) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function getStudentInitials(name) {
+  if (!name) return 'S';
+  const clean = String(name).replace(/[^a-zA-Z0-9\s]/g, '').trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'S';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guruNama = '' }) {
+  return new Promise(async (resolve) => {
     if (typeof window === 'undefined') {
       resolve(null);
       return;
@@ -106,15 +126,45 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     ctx.fillStyle = bannerGradient;
     drawRoundedRect(ctx, padding, currentY, innerWidth, headerHeight, bannerRadius, true, false);
 
-    // Header Logo Icon & Text
-    // Small icon box
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    drawRoundedRect(ctx, padding + 18, currentY + 18, 54, 54, 12, true, false);
+    // Student Profile Avatar / Personalized Initials in Header
+    const avatarX = padding + 18;
+    const avatarY = currentY + 18;
+    const avatarSize = 54;
 
-    // Icon glyph
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('UD', padding + 27, currentY + 53);
+    let avatarImg = null;
+    if (sesi?.foto_profil) {
+      try {
+        avatarImg = await loadImage(sesi.foto_profil);
+      } catch (e) {
+        avatarImg = null;
+      }
+    }
+
+    if (avatarImg) {
+      ctx.save();
+      drawRoundedRect(ctx, avatarX, avatarY, avatarSize, avatarSize, 12, false, false);
+      ctx.clip();
+      ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 1.5;
+      drawRoundedRect(ctx, avatarX, avatarY, avatarSize, avatarSize, 12, false, true);
+    } else {
+      // Rounded badge with student's actual initials (e.g. 'AR' for Abdul Rahman)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 1;
+      drawRoundedRect(ctx, avatarX, avatarY, avatarSize, avatarSize, 12, true, true);
+
+      const initials = getStudentInitials(sesi?.nama);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 1);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
 
     // App Title & Subtitle
     ctx.fillStyle = '#ffffff';
