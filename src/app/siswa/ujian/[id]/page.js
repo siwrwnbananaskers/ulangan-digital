@@ -481,6 +481,16 @@ export default function LembarUjianPage() {
                 </>
               )}
             </div>
+
+            {/* Mobile: Compact Status & Progress in single header bar */}
+            <div className="exam-mobile-status-row">
+              <span className="exam-status-chip">
+                <span className={`exam-sync-dot ${autosaveStatus === 'tersimpan' ? 'success' : autosaveStatus === 'offline' ? 'warning' : 'spinning'}`} />
+                <span>{autosaveStatus === 'tersimpan' ? 'Tersimpan' : autosaveStatus === 'offline' ? 'Offline' : 'Menyimpan...'}</span>
+              </span>
+              <span className="exam-dot-separator">•</span>
+              <span className="exam-mobile-progress-text">{totalAnswered}/{soalList.length} Terjawab</span>
+            </div>
           </div>
 
           {/* Right: Timer Pill, Mobile Drawer Toggle, and Desktop Submit */}
@@ -590,7 +600,7 @@ export default function LembarUjianPage() {
               </div>
 
               {/* Input for Answers depending on Question Type */}
-              <div>
+              <div className="exam-answer-area">
                 {/* 1. Multiple Choice (PG) */}
                 {currentSoal.tipe === 'pg' && (
                   <div className="exam-options-list">
