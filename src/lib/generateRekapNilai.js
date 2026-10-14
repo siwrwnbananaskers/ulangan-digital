@@ -8,7 +8,7 @@
  * Strict Design: Anti-AI slop, zero emojis, humanistic typography, monochrome/slate accents.
  */
 
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { formatWIB } from './utils';
 
 /**
@@ -27,7 +27,7 @@ function getFormalIndonesianDate(d = new Date()) {
 }
 
 /**
- * Export student grade ledger to Excel (.xlsx)
+ * Export student grade ledger to Excel (.xlsx) with professional accountant formatting
  */
 export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) {
   if (typeof window === 'undefined') return;
@@ -46,7 +46,7 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
 
   const selesai = sorted.filter((r) => r.status === 'selesai');
   const nilaiArr = selesai.map((r) => Number(r.total_nilai)).filter((n) => !isNaN(n));
-  const rataRata = nilaiArr.length > 0 ? (nilaiArr.reduce((a, b) => a + b, 0) / nilaiArr.length).toFixed(1) : 0;
+  const rataRata = nilaiArr.length > 0 ? (nilaiArr.reduce((a, b) => a + b, 0) / nilaiArr.length).toFixed(1) : '0';
   const nilaiTertinggi = nilaiArr.length > 0 ? Math.max(...nilaiArr) : 0;
   const nilaiTerendah = nilaiArr.length > 0 ? Math.min(...nilaiArr) : 0;
   const lulusKkm = selesai.filter((r) => Number(r.total_nilai) >= kkm).length;
@@ -56,33 +56,48 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
   // Build rows array for SheetJS
   const rows = [];
 
-  // Title Block
+  // Row 0 (Excel Row 1): Document Title
   rows.push(['LEGER REKAPITULASI NILAI ASESMEN SISWA']);
-  rows.push(['Sistem Asesmen Ulangan Digital']);
+  // Row 1 (Excel Row 2): Document Subtitle
+  rows.push(['SISTEM ASESMEN ULANGAN DIGITAL • DOKUMEN REKAPITULASI RESMI SEKOLAH']);
+  // Row 2 (Excel Row 3): Spacer
   rows.push([]);
 
-  // Metadata Block
-  rows.push(['Mata Pelajaran', ':', examDetail?.mata_pelajaran || '-', '', 'Standar Kelulusan (KKM)', ':', kkm]);
-  rows.push(['Judul Ujian', ':', examDetail?.judul || '-', '', 'Target Kelas', ':', examDetail?.kelas_target || 'Semua Kelas']);
-  rows.push(['Guru Pengampu', ':', teacherName, '', 'Tanggal Cetak', ':', currentDate]);
-  rows.push([]);
-
-  // Table Headers
+  // Row 3 (Excel Row 4): Metadata Row 1
   rows.push([
-    'No',
-    'No. Absen',
-    'NISN / ID',
-    'Nama Lengkap Siswa',
-    'Kelas',
-    'Jml Benar',
-    'Jml Salah',
-    'Jml Kosong',
-    'Nilai Akhir',
-    'KKM',
-    'Keterangan',
+    'Mata Pelajaran', '', `: ${examDetail?.mata_pelajaran || '-'}`, '', '', '',
+    'Standar Kelulusan (KKM)', '', `: ${kkm}`, '', ''
   ]);
+  // Row 4 (Excel Row 5): Metadata Row 2
+  rows.push([
+    'Nama Asesmen / Ujian', '', `: ${examDetail?.judul || '-'}`, '', '', '',
+    'Target Rombel / Kelas', '', `: ${examDetail?.kelas_target || 'Semua Kelas'}`, '', ''
+  ]);
+  // Row 5 (Excel Row 6): Metadata Row 3
+  rows.push([
+    'Guru Pengampu', '', `: ${teacherName}`, '', '', '',
+    'Tanggal Cetak Berkas', '', `: ${currentDate}`, '', ''
+  ]);
+  // Row 6 (Excel Row 7): Spacer
+  rows.push([]);
 
-  // Data Rows
+  // Row 7 (Excel Row 8): Table Headers
+  const headerCols = [
+    'NO',
+    'NO. ABSEN',
+    'NISN / ID SISWA',
+    'NAMA LENGKAP SISWA',
+    'KELAS',
+    'BENAR',
+    'SALAH',
+    'KOSONG',
+    'NILAI AKHIR',
+    'KKM',
+    'STATUS KELULUSAN',
+  ];
+  rows.push(headerCols);
+
+  // Rows 8.. (Excel Row 9..): Student Data Rows
   sorted.forEach((item, idx) => {
     const isSelesai = item.status === 'selesai';
     const nilai = isSelesai && item.total_nilai !== null ? Number(item.total_nilai) : 0;
@@ -97,7 +112,7 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
 
     rows.push([
       idx + 1,
-      item.no_absen || '-',
+      item.no_absen ? Number(item.no_absen) : '-',
       item.username || '-',
       item.nama || 'Siswa',
       item.kelas || '-',
@@ -110,44 +125,323 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
     ]);
   });
 
-  // Summary Statistics Block
-  rows.push([]);
-  rows.push(['', '', '', 'RINGKASAN STATISTIK KELAS']);
-  rows.push(['', '', '', 'Total Siswa Terdaftar', sorted.length]);
-  rows.push(['', '', '', 'Total Siswa Selesai', selesai.length]);
-  rows.push(['', '', '', 'Rata-Rata Nilai Kelas', Number(rataRata)]);
-  rows.push(['', '', '', 'Nilai Tertinggi', nilaiTertinggi]);
-  rows.push(['', '', '', 'Nilai Terendah', nilaiTerendah]);
-  rows.push(['', '', '', 'Jumlah Siswa Tuntas (≥ KKM)', `${lulusKkm} Siswa (${persenLulus}%)`]);
-  rows.push(['', '', '', 'Jumlah Siswa Remedial (< KKM)', `${remedial} Siswa`]);
+  // Spacer row
   rows.push([]);
 
-  // Signature Block
-  rows.push([]);
-  rows.push(['', '', '', '', '', '', '', 'Mengetahui,']);
-  rows.push(['', '', '', '', '', '', '', 'Guru Pengampu Mata Pelajaran,']);
-  rows.push([]);
-  rows.push([]);
-  rows.push([]);
-  rows.push(['', '', '', '', '', '', '', `( ${teacherName} )`]);
+  // Summary and Signature Section
+  const summaryStartRow = rows.length; // 0-indexed row in rows
+  rows.push(['', '', 'RINGKASAN STATISTIK KELAS', '', '', '', '', '', `${currentDate}`, '', '']);
+  rows.push(['', '', 'Total Siswa Terdaftar', '', `${sorted.length} Siswa`, '', '', '', 'Mengetahui / Guru Pengampu,', '', '']);
+  rows.push(['', '', 'Total Siswa Selesai Mengikuti', '', `${selesai.length} Siswa`, '', '', '', '', '', '']);
+  rows.push(['', '', 'Rata-Rata Nilai Kelas', '', Number(rataRata), '', '', '', '', '', '']);
+  rows.push(['', '', 'Nilai Tertinggi Kelas', '', nilaiTertinggi, '', '', '', '', '', '']);
+  rows.push(['', '', 'Nilai Terendah Kelas', '', nilaiTerendah, '', '', '', `( ${teacherName} )`, '', '']);
+  rows.push(['', '', `Ketuntasan KKM (≥ ${kkm})`, '', `${lulusKkm} Siswa (${persenLulus}%)`, '', '', '', '', '', '']);
+  rows.push(['', '', `Siswa Remedial (< ${kkm})`, '', `${remedial} Siswa`, '', '', '', '', '', '']);
 
   // Create sheet
   const ws = XLSX.utils.aoa_to_sheet(rows);
 
-  // Column widths
-  ws['!cols'] = [
-    { wch: 6 },  // No
-    { wch: 10 }, // Absen
-    { wch: 16 }, // NISN
-    { wch: 34 }, // Nama
-    { wch: 12 }, // Kelas
-    { wch: 10 }, // Benar
-    { wch: 10 }, // Salah
-    { wch: 11 }, // Kosong
-    { wch: 12 }, // Nilai
-    { wch: 8 },  // KKM
-    { wch: 16 }, // Keterangan
+  // Define All Merges
+  const merges = [
+    // Title
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
+    // Metadata Row 1
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+    { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } },
+    { s: { r: 3, c: 6 }, e: { r: 3, c: 7 } },
+    { s: { r: 3, c: 8 }, e: { r: 3, c: 10 } },
+    // Metadata Row 2
+    { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } },
+    { s: { r: 4, c: 2 }, e: { r: 4, c: 4 } },
+    { s: { r: 4, c: 6 }, e: { r: 4, c: 7 } },
+    { s: { r: 4, c: 8 }, e: { r: 4, c: 10 } },
+    // Metadata Row 3
+    { s: { r: 5, c: 0 }, e: { r: 5, c: 1 } },
+    { s: { r: 5, c: 2 }, e: { r: 5, c: 4 } },
+    { s: { r: 5, c: 6 }, e: { r: 5, c: 7 } },
+    { s: { r: 5, c: 8 }, e: { r: 5, c: 10 } },
+    // Summary Header
+    { s: { r: summaryStartRow, c: 2 }, e: { r: summaryStartRow, c: 4 } },
+    // Summary Rows
+    { s: { r: summaryStartRow + 1, c: 2 }, e: { r: summaryStartRow + 1, c: 3 } },
+    { s: { r: summaryStartRow + 2, c: 2 }, e: { r: summaryStartRow + 2, c: 3 } },
+    { s: { r: summaryStartRow + 3, c: 2 }, e: { r: summaryStartRow + 3, c: 3 } },
+    { s: { r: summaryStartRow + 4, c: 2 }, e: { r: summaryStartRow + 4, c: 3 } },
+    { s: { r: summaryStartRow + 5, c: 2 }, e: { r: summaryStartRow + 5, c: 3 } },
+    { s: { r: summaryStartRow + 6, c: 2 }, e: { r: summaryStartRow + 6, c: 3 } },
+    { s: { r: summaryStartRow + 7, c: 2 }, e: { r: summaryStartRow + 7, c: 3 } },
+    // Signature Merges (Columns I to K = 8 to 10)
+    { s: { r: summaryStartRow, c: 8 }, e: { r: summaryStartRow, c: 10 } },
+    { s: { r: summaryStartRow + 1, c: 8 }, e: { r: summaryStartRow + 1, c: 10 } },
+    { s: { r: summaryStartRow + 5, c: 8 }, e: { r: summaryStartRow + 5, c: 10 } },
   ];
+  ws['!merges'] = merges;
+
+  const thinBorder = {
+    top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    right: { style: 'thin', color: { rgb: 'CBD5E1' } },
+  };
+
+  const ensureCell = (r, c) => {
+    const ref = XLSX.utils.encode_cell({ r, c });
+    if (!ws[ref]) ws[ref] = { v: '', t: 's' };
+    return ws[ref];
+  };
+
+  // 1. Style Title (Row 0)
+  for (let c = 0; c <= 10; c++) {
+    const cell = ensureCell(0, c);
+    cell.s = {
+      fill: { fgColor: { rgb: '0F172A' } },
+      font: { name: 'Calibri', sz: 15, bold: true, color: { rgb: 'FFFFFF' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    };
+  }
+
+  // 2. Style Subtitle (Row 1)
+  for (let c = 0; c <= 10; c++) {
+    const cell = ensureCell(1, c);
+    cell.s = {
+      fill: { fgColor: { rgb: '1E293B' } },
+      font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'CBD5E1' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    };
+  }
+
+  // 3. Style Metadata Rows (Rows 3, 4, 5)
+  for (let r = 3; r <= 5; r++) {
+    // Left Label (A:B)
+    for (let c = 0; c <= 1; c++) {
+      const cell = ensureCell(r, c);
+      cell.s = {
+        fill: { fgColor: { rgb: 'F1F5F9' } },
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '334155' } },
+        alignment: { horizontal: 'left', vertical: 'center' },
+        border: thinBorder,
+      };
+    }
+    // Left Value (C:E)
+    for (let c = 2; c <= 4; c++) {
+      const cell = ensureCell(r, c);
+      cell.s = {
+        fill: { fgColor: { rgb: 'FFFFFF' } },
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '0F172A' } },
+        alignment: { horizontal: 'left', vertical: 'center' },
+        border: thinBorder,
+      };
+    }
+    // Right Label (G:H)
+    for (let c = 6; c <= 7; c++) {
+      const cell = ensureCell(r, c);
+      cell.s = {
+        fill: { fgColor: { rgb: 'F1F5F9' } },
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '334155' } },
+        alignment: { horizontal: 'left', vertical: 'center' },
+        border: thinBorder,
+      };
+    }
+    // Right Value (I:K)
+    for (let c = 8; c <= 10; c++) {
+      const cell = ensureCell(r, c);
+      cell.s = {
+        fill: { fgColor: { rgb: 'FFFFFF' } },
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '0F172A' } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: thinBorder,
+      };
+    }
+  }
+
+  // 4. Style Table Header (Row 7)
+  for (let c = 0; c <= 10; c++) {
+    const cell = ensureCell(7, c);
+    cell.s = {
+      fill: { fgColor: { rgb: '0F172A' } },
+      font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: 'FFFFFF' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'medium', color: { rgb: '0F172A' } },
+        bottom: { style: 'medium', color: { rgb: '0F172A' } },
+        left: { style: 'thin', color: { rgb: '334155' } },
+        right: { style: 'thin', color: { rgb: '334155' } },
+      },
+    };
+  }
+
+  // 5. Style Data Rows (Rows 8 to 8 + sorted.length - 1)
+  const dataStartRow = 8;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const r = dataStartRow + i;
+    const isEven = i % 2 === 0;
+    const rowBg = isEven ? 'FFFFFF' : 'F8FAFC';
+    const item = sorted[i];
+    const isSelesai = item.status === 'selesai';
+    const nilai = isSelesai && item.total_nilai !== null ? Number(item.total_nilai) : 0;
+    const isLulus = nilai >= kkm;
+
+    for (let c = 0; c <= 10; c++) {
+      const cell = ensureCell(r, c);
+      let align = 'center';
+      let fontColor = '1E293B';
+      let fontBold = false;
+      let fontSize = 10;
+      let cellBg = rowBg;
+
+      if (c === 0) {
+        fontColor = '64748B';
+      } else if (c === 1) {
+        fontBold = true;
+        fontColor = '334155';
+      } else if (c === 2) {
+        fontColor = '475569';
+      } else if (c === 3) {
+        align = 'left';
+        fontBold = true;
+        fontColor = '0F172A';
+      } else if (c === 4) {
+        fontColor = '334155';
+      } else if (c === 5) {
+        fontBold = true;
+        fontColor = '16A34A';
+      } else if (c === 6) {
+        fontBold = true;
+        fontColor = 'DC2626';
+      } else if (c === 7) {
+        fontColor = '64748B';
+      } else if (c === 8) {
+        fontBold = true;
+        fontSize = 11;
+        fontColor = isLulus ? '0F172A' : 'DC2626';
+      } else if (c === 9) {
+        fontColor = '64748B';
+      } else if (c === 10) {
+        fontBold = true;
+        fontSize = 9.5;
+        if (isSelesai) {
+          if (isLulus) {
+            cellBg = 'DCFCE7';
+            fontColor = '15803D';
+          } else {
+            cellBg = 'FEE2E2';
+            fontColor = 'B91C1C';
+          }
+        } else {
+          cellBg = 'FEF3C7';
+          fontColor = 'B45309';
+        }
+      }
+
+      cell.s = {
+        fill: { fgColor: { rgb: cellBg } },
+        font: { name: 'Calibri', sz: fontSize, bold: fontBold, color: { rgb: fontColor } },
+        alignment: { horizontal: align, vertical: 'center' },
+        border: thinBorder,
+      };
+    }
+  }
+
+  // 6. Style Summary Statistics Block
+  // Header row
+  for (let c = 2; c <= 4; c++) {
+    const cell = ensureCell(summaryStartRow, c);
+    cell.s = {
+      fill: { fgColor: { rgb: '1E293B' } },
+      font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: 'FFFFFF' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder,
+    };
+  }
+
+  // Summary Metrics Rows
+  for (let sr = 1; sr <= 7; sr++) {
+    const r = summaryStartRow + sr;
+    for (let c = 2; c <= 3; c++) {
+      const cell = ensureCell(r, c);
+      cell.s = {
+        fill: { fgColor: { rgb: 'F8FAFC' } },
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '475569' } },
+        alignment: { horizontal: 'left', vertical: 'center' },
+        border: thinBorder,
+      };
+    }
+    const valCell = ensureCell(r, 4);
+    let valBg = 'FFFFFF';
+    let valColor = '0F172A';
+    if (sr === 4) valColor = '16A34A';
+    if (sr === 5) valColor = 'DC2626';
+    if (sr === 6) { valBg = 'DCFCE7'; valColor = '15803D'; }
+    if (sr === 7) { valBg = 'FEE2E2'; valColor = 'B91C1C'; }
+
+    valCell.s = {
+      fill: { fgColor: { rgb: valBg } },
+      font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: valColor } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder,
+    };
+  }
+
+  // 7. Style Signature Block (Columns 8 to 10 = I to K)
+  for (let c = 8; c <= 10; c++) {
+    const cell = ensureCell(summaryStartRow, c);
+    cell.s = {
+      font: { name: 'Calibri', sz: 10.5, color: { rgb: '334155' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    };
+  }
+  for (let c = 8; c <= 10; c++) {
+    const cell = ensureCell(summaryStartRow + 1, c);
+    cell.s = {
+      font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: '0F172A' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    };
+  }
+  for (let c = 8; c <= 10; c++) {
+    const cell = ensureCell(summaryStartRow + 5, c);
+    cell.s = {
+      font: { name: 'Calibri', sz: 11.5, bold: true, color: { rgb: '0F172A' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: {
+        top: { style: 'medium', color: { rgb: '0F172A' } },
+      },
+    };
+  }
+
+  // Column Widths
+  ws['!cols'] = [
+    { wch: 7 },  // No
+    { wch: 13 }, // Absen
+    { wch: 18 }, // NISN
+    { wch: 38 }, // Nama
+    { wch: 12 }, // Kelas
+    { wch: 12 }, // Benar
+    { wch: 12 }, // Salah
+    { wch: 12 }, // Kosong
+    { wch: 15 }, // Nilai
+    { wch: 10 }, // KKM
+    { wch: 22 }, // Keterangan
+  ];
+
+  // Row Heights
+  const rowsHeights = [];
+  rowsHeights[0] = { hpt: 30 }; // Title
+  rowsHeights[1] = { hpt: 20 }; // Subtitle
+  rowsHeights[2] = { hpt: 8 };  // Spacer
+  rowsHeights[3] = { hpt: 20 }; // Meta 1
+  rowsHeights[4] = { hpt: 20 }; // Meta 2
+  rowsHeights[5] = { hpt: 20 }; // Meta 3
+  rowsHeights[6] = { hpt: 10 }; // Spacer
+  rowsHeights[7] = { hpt: 26 }; // Table Header
+
+  for (let r = 8; r < 8 + sorted.length; r++) {
+    rowsHeights[r] = { hpt: 20 }; // Data rows
+  }
+  ws['!rows'] = rowsHeights;
+  ws['!views'] = [{ showGridLines: true }];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Rekap Nilai');
@@ -171,7 +465,7 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const scale = 2; // Crisp 2x retina
+    const scale = 3; // Ultra-HD 3x resolution for pin-sharp document print & zoom (zero blur/pixelation)
 
     const kkm = Number(examDetail?.kkm) || 75;
     const teacherName = guruNama || examDetail?.guru_nama || 'Guru Pengampu';
@@ -210,6 +504,8 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
     canvas.width = width * scale;
     canvas.height = totalHeight * scale;
     ctx.scale(scale, scale);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // 1. Pure White Background
     ctx.fillStyle = '#ffffff';

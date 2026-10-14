@@ -50,7 +50,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const scale = 2; // Retina 2x for razor-sharp text
+    const scale = 3; // Ultra-HD 3x resolution for crystal-clear sharing and printing (zero blur/pixelation)
 
     const width = 850;
     const padding = 28;
@@ -84,6 +84,8 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     canvas.width = width * scale;
     canvas.height = contentHeight * scale;
     ctx.scale(scale, scale);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // 1. Outer Background
     ctx.fillStyle = '#ffffff';
