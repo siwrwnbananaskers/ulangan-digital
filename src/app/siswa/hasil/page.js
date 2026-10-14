@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import { formatTanggal } from '@/lib/utils';
+import { generateResultImage, downloadResultImage } from '@/lib/generateResultImage';
 
 export default function SiswaHasilPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('siswa');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -24,6 +26,38 @@ export default function SiswaHasilPage() {
       console.error('Error fetching results', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadCard = async (resItem) => {
+    setDownloadingId(resItem.id);
+    try {
+      const dataUrl = await generateResultImage({
+        sesi: {
+          nama: user?.nama || 'Siswa',
+          kelas: user?.kelas || '-',
+          no_absen: user?.no_absen || '-',
+          ujian_judul: resItem.judul,
+          mata_pelajaran: resItem.mata_pelajaran,
+          kkm: resItem.kkm || 75,
+          total_nilai: resItem.total_nilai,
+          jumlah_benar: resItem.jumlah_benar,
+          jumlah_salah: resItem.jumlah_salah,
+          jumlah_kosong: resItem.jumlah_kosong,
+          jumlah_pelanggaran: resItem.total_pelanggaran,
+          status: 'selesai',
+          waktu_selesai: resItem.waktu_selesai,
+        },
+        jawaban: [],
+        mode: 'ringkas',
+      });
+      const safeName = (user?.nama || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const safeJudul = (resItem.judul || 'Ujian').replace(/[^a-zA-Z0-9_-]/g, '_');
+      downloadResultImage(dataUrl, `Hasil_${safeName}_${safeJudul}.png`);
+    } catch (err) {
+      console.error('Failed to generate student card', err);
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -121,13 +155,30 @@ export default function SiswaHasilPage() {
                               </span>
                             </div>
                           ) : hasScore ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                              <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: isLulus ? 'var(--success)' : 'var(--danger)' }}>
-                                {res.total_nilai}
-                              </span>
-                              <span className="text-xs text-muted">
-                                ({res.jumlah_benar || 0} Benar)
-                              </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                                <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: isLulus ? 'var(--success)' : 'var(--danger)' }}>
+                                  {res.total_nilai}
+                                </span>
+                                <span className="text-xs text-muted">
+                                  ({res.jumlah_benar || 0} Benar)
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-xs"
+                                onClick={() => handleDownloadCard(res)}
+                                disabled={downloadingId === res.id}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, width: 'fit-content', fontWeight: 600, padding: '3px 8px', fontSize: 11 }}
+                                title="Unduh kartu hasil ujian ini dalam format gambar"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                                  <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                {downloadingId === res.id ? 'Menyusun...' : 'Unduh Gambar'}
+                              </button>
                             </div>
                           ) : (
                             <span className="text-xs text-muted">Belum Dipublikasikan</span>
