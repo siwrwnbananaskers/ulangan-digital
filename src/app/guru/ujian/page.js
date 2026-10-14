@@ -19,6 +19,8 @@ export default function UjianPage() {
   const [activeTab, setActiveTab] = useState('semua');
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [kelasList, setKelasList] = useState([]);
+  const [isCustomKelas, setIsCustomKelas] = useState(false);
 
   const getInitialForm = () => {
     const now = new Date();
@@ -62,6 +64,20 @@ export default function UjianPage() {
       const soalData = await soalRes.json();
       setUjianList(ujianData.ujian || []);
       setSoalList(soalData.soal || []);
+
+      let classes = ujianData.kelas_options || [];
+      if (!classes || classes.length === 0) {
+        try {
+          const siswaRes = await authFetch(`/api/siswa?_t=${Date.now()}`);
+          const siswaData = await siswaRes.json();
+          if (siswaData.kelas_options && Array.isArray(siswaData.kelas_options)) {
+            classes = siswaData.kelas_options;
+          }
+        } catch {
+          // ignore fallback
+        }
+      }
+      setKelasList(classes);
     } catch (err) {
       console.error(err);
     } finally {
@@ -84,12 +100,17 @@ export default function UjianPage() {
 
   const handleOpenCreate = () => {
     resetForm();
+    setIsCustomKelas(false);
     setShowModal(true);
   };
 
   const handleOpenEdit = async (ujian) => {
     resetForm();
     setEditingUjian(ujian);
+
+    const currentKelas = ujian.kelas_target || 'Semua Kelas';
+    const isStandardOption = currentKelas === 'Semua Kelas' || kelasList.includes(currentKelas);
+    setIsCustomKelas(!isStandardOption);
     
     // Format dates for datetime-local input
     const formatForInput = (iso) => {
@@ -103,7 +124,7 @@ export default function UjianPage() {
     setForm({
       judul: ujian.judul || '',
       mata_pelajaran: ujian.mata_pelajaran || '',
-      kelas_target: ujian.kelas_target || '',
+      kelas_target: currentKelas,
       deskripsi: ujian.deskripsi || '',
       durasi_menit: ujian.durasi_menit || 60,
       jadwal_mulai: formatForInput(ujian.jadwal_mulai),
@@ -546,14 +567,66 @@ export default function UjianPage() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Kelas Target *</label>
-                  <input
-                    className="form-input"
-                    value={form.kelas_target}
-                    onChange={(e) => setForm({ ...form, kelas_target: e.target.value })}
-                    placeholder="cth: XII-IPA-1 (atau Semua Kelas)"
-                    required
-                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label className="form-label" style={{ margin: 0 }}>Kelas Target *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isCustomKelas) {
+                          setIsCustomKelas(false);
+                          setForm(f => ({ ...f, kelas_target: 'Semua Kelas' }));
+                        } else {
+                          setIsCustomKelas(true);
+                          setForm(f => ({ ...f, kelas_target: '' }));
+                        }
+                      }}
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: 11, padding: '2px 8px', color: '#0a66c2', height: 'auto', lineHeight: 'normal' }}
+                    >
+                      {isCustomKelas ? '← Pilih dari Daftar Kelas' : '+ Ketik Manual'}
+                    </button>
+                  </div>
+
+                  {!isCustomKelas ? (
+                    <select
+                      className="form-select"
+                      value={form.kelas_target}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__custom__') {
+                          setIsCustomKelas(true);
+                          setForm({ ...form, kelas_target: '' });
+                        } else {
+                          setForm({ ...form, kelas_target: val });
+                        }
+                      }}
+                      required
+                    >
+                      <option value="Semua Kelas">Semua Kelas</option>
+                      {kelasList.length > 0 ? (
+                        kelasList.map((k) => (
+                          <option key={k} value={k}>
+                            Kelas {k}
+                          </option>
+                        ))
+                      ) : null}
+                      <option value="__custom__">+ Ketik Nama Kelas Baru...</option>
+                    </select>
+                  ) : (
+                    <input
+                      className="form-input"
+                      value={form.kelas_target}
+                      onChange={(e) => setForm({ ...form, kelas_target: e.target.value })}
+                      placeholder="cth: 5, 6, atau XII-IPA-1"
+                      required
+                      autoFocus
+                    />
+                  )}
+                  <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                    {isCustomKelas
+                      ? 'Ketik manual kelas khusus, atau klik "Pilih dari Daftar Kelas" untuk kembali.'
+                      : 'Pilihan kelas terintegrasi dari data akun siswa yang telah Anda daftarkan.'}
+                  </span>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Durasi Waktu Pengerjaan (Menit) *</label>
@@ -824,7 +897,7 @@ export default function UjianPage() {
                       Belum ada butir soal di Bank Soal. <a href="/guru/bank-soal">Tambah soal terlebih dahulu</a>
                     </div>
                   ) : (
-                    soalList.map(soal => (
+                    soalList.map((soal, idx) => (
                       <label
                         key={soal.id}
                         style={{
@@ -847,6 +920,7 @@ export default function UjianPage() {
                         />
                         <div style={{ flex: 1, fontSize: 12 }}>
                           <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
+                            <span className="badge badge-gray" style={{ fontSize: 10, fontWeight: 700 }}>#{idx + 1}</span>
                             <span className="badge badge-gray" style={{ fontSize: 10 }}>{soal.tipe?.toUpperCase()}</span>
                             <span className="badge badge-primary" style={{ fontSize: 10 }}>{soal.mata_pelajaran}</span>
                             <span style={{ color: '#64748b' }}>Bobot: {soal.bobot}</span>

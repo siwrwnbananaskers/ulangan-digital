@@ -48,7 +48,7 @@ export async function GET(request) {
       if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
       }
-      sql += ' ORDER BY s.created_at DESC';
+      sql += ' ORDER BY s.created_at ASC, s.rowid ASC';
     } else {
       // Teachers and superadmin in personal bank-soal: STRICTLY ONLY see own questions!
       sql = 'SELECT * FROM soal WHERE guru_id = ?';
@@ -63,7 +63,7 @@ export async function GET(request) {
         params.push(tipe);
       }
 
-      sql += ' ORDER BY created_at DESC';
+      sql += ' ORDER BY created_at ASC, rowid ASC';
     }
 
     const soalList = await db.getAll(sql, params);

@@ -56,7 +56,20 @@ export async function GET(request) {
       );
       // Clean ghost items that lack title/subject
       const validUjian = (ujianListRaw || []).filter(u => u && u.id && (u.judul || u.mata_pelajaran || u.kode_ujian));
-      return apiResponse({ ujian: validUjian });
+
+      // Fetch distinct student classes registered by this teacher
+      let kelasOptions = [];
+      try {
+        const kelasRows = await db.getAll(
+          `SELECT DISTINCT kelas FROM users WHERE role = 'siswa' AND (guru_id = ? OR guru_id IS NULL) AND kelas IS NOT NULL AND kelas != '' ORDER BY kelas ASC`,
+          [user.id]
+        );
+        kelasOptions = (kelasRows || []).map(r => r.kelas).filter(Boolean);
+      } catch (err) {
+        console.warn('Failed to fetch kelas options for ujian:', err.message);
+      }
+
+      return apiResponse({ ujian: validUjian, kelas_options: kelasOptions });
     }
 
     // For siswa, show active exams created by their own teacher and for student's class
@@ -107,7 +120,10 @@ export async function GET(request) {
       // 2. Class match
       if (studentKelas) {
         if (!u.kelas_target || u.kelas_target === 'Semua Kelas' || u.kelas_target === '*') return true;
-        return u.kelas_target.trim().toUpperCase() === normalizedKelas;
+        const cleanTarget = u.kelas_target.trim().toUpperCase();
+        const stripTarget = cleanTarget.replace(/^KELAS\s*/i, '');
+        const stripStudent = normalizedKelas.replace(/^KELAS\s*/i, '');
+        return cleanTarget === normalizedKelas || stripTarget === stripStudent;
       }
       return true;
     });

@@ -41,7 +41,11 @@ export async function POST(request) {
 
     // Verify target class if specified
     if (studentKelas && ujian.kelas_target && ujian.kelas_target !== 'Semua Kelas' && ujian.kelas_target !== '*') {
-      if (ujian.kelas_target.trim().toUpperCase() !== studentKelas.trim().toUpperCase()) {
+      const cleanTarget = ujian.kelas_target.trim().toUpperCase();
+      const cleanStudent = studentKelas.trim().toUpperCase();
+      const stripTarget = cleanTarget.replace(/^KELAS\s*/i, '');
+      const stripStudent = cleanStudent.replace(/^KELAS\s*/i, '');
+      if (cleanTarget !== cleanStudent && stripTarget !== stripStudent) {
         return apiError(`Ujian ini dikhususkan untuk kelas ${ujian.kelas_target}, sedangkan kelas Anda adalah ${studentKelas}.`, 403);
       }
     }
