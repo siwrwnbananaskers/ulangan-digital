@@ -80,6 +80,96 @@ export async function POST(request) {
   try {
     const user = await requireRole(request, 'guru');
     const body = await request.json();
+    const db = getDB();
+
+    // Check if bulk insert
+    if (Array.isArray(body.soal)) {
+      if (body.soal.length === 0) {
+        return apiError('Daftar soal kosong', 400);
+      }
+
+      let createdCount = 0;
+      let skippedCount = 0;
+      const errorDetails = [];
+
+      for (let i = 0; i < body.soal.length; i++) {
+        const item = body.soal[i];
+        const rowNum = i + 1;
+
+        const mapel = sanitizeInput(item.mata_pelajaran || body.default_mapel || '').trim();
+        let tipe = (item.tipe || 'pg').toLowerCase().trim();
+        if (tipe === 'pilihan ganda' || tipe === 'mcq') tipe = 'pg';
+        if (tipe === 'isian singkat' || tipe === 'short answer') tipe = 'isian';
+        if (tipe === 'benar/salah' || tipe === 'benar salah' || tipe === 'b/s' || tipe === 'bs' || tipe === 'true/false') tipe = 'benar_salah';
+        if (tipe === 'uraian' || tipe === 'esai' || tipe === 'essay') tipe = 'uraian';
+
+        const pertanyaan = sanitizeInput(item.pertanyaan || '').trim();
+        const bobot = Math.max(1, parseInt(item.bobot) || 1);
+
+        if (!mapel || !pertanyaan) {
+          skippedCount++;
+          errorDetails.push(`Baris #${rowNum}: Mata pelajaran dan pertanyaan wajib diisi`);
+          continue;
+        }
+
+        if (!['pg', 'isian', 'benar_salah', 'uraian'].includes(tipe)) {
+          skippedCount++;
+          errorDetails.push(`Baris #${rowNum}: Tipe soal "${item.tipe}" tidak valid`);
+          continue;
+        }
+
+        let pilA = item.pilihan_a ? sanitizeInput(String(item.pilihan_a).trim()) : null;
+        let pilB = item.pilihan_b ? sanitizeInput(String(item.pilihan_b).trim()) : null;
+        let pilC = item.pilihan_c ? sanitizeInput(String(item.pilihan_c).trim()) : null;
+        let pilD = item.pilihan_d ? sanitizeInput(String(item.pilihan_d).trim()) : null;
+        let pilE = item.pilihan_e ? sanitizeInput(String(item.pilihan_e).trim()) : null;
+
+        if (tipe === 'pg' && (!pilA || !pilB)) {
+          skippedCount++;
+          errorDetails.push(`Baris #${rowNum}: Soal PG minimal harus ada Pilihan A dan B`);
+          continue;
+        }
+
+        let kunci = item.kunci_jawaban ? String(item.kunci_jawaban).trim() : null;
+        if (tipe === 'pg') {
+          if (kunci) {
+            kunci = kunci.slice(0, 1).toLowerCase();
+            if (!['a', 'b', 'c', 'd', 'e'].includes(kunci)) {
+              kunci = null;
+            }
+          }
+        } else if (tipe === 'benar_salah') {
+          if (kunci) {
+            const kLower = kunci.toLowerCase();
+            if (['benar', 'b', 'true', 't', '1'].includes(kLower)) {
+              kunci = 'benar';
+            } else if (['salah', 's', 'false', 'f', '0'].includes(kLower)) {
+              kunci = 'salah';
+            } else {
+              kunci = null;
+            }
+          }
+        } else if (kunci) {
+          kunci = sanitizeInput(kunci);
+        }
+
+        const id = generateId('soal');
+        await db.run(
+          `INSERT INTO soal (id, guru_id, mata_pelajaran, tipe, pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, pilihan_e, kunci_jawaban, bobot)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, user.id, mapel, tipe, pertanyaan, pilA, pilB, pilC, pilD, pilE, kunci, bobot]
+        );
+        createdCount++;
+      }
+
+      return apiResponse({
+        success: true,
+        message: `Berhasil mengimpor ${createdCount} butir soal ke Bank Soal.${skippedCount > 0 ? ` (${skippedCount} soal dilewati karena data tidak lengkap)` : ''}`,
+        created_count: createdCount,
+        skipped_count: skippedCount,
+        errors: errorDetails.slice(0, 10),
+      }, 201);
+    }
 
     const errors = validateRequired(body, ['mata_pelajaran', 'tipe', 'pertanyaan']);
     if (errors.length > 0) {
@@ -97,7 +187,6 @@ export async function POST(request) {
       }
     }
 
-    const db = getDB();
     const id = generateId('soal');
 
     await db.run(
