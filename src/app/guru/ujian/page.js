@@ -21,6 +21,7 @@ export default function UjianPage() {
   const [copiedId, setCopiedId] = useState(null);
   const [kelasList, setKelasList] = useState([]);
   const [isCustomKelas, setIsCustomKelas] = useState(false);
+  const [isCustomMapel, setIsCustomMapel] = useState(false);
 
   const getInitialForm = () => {
     const now = new Date();
@@ -101,6 +102,14 @@ export default function UjianPage() {
   const handleOpenCreate = () => {
     resetForm();
     setIsCustomKelas(false);
+    setIsCustomMapel(false);
+    const availableMapels = [...new Set([
+      ...soalList.map(s => s.mata_pelajaran),
+      ...ujianList.map(u => u.mata_pelajaran)
+    ].filter(Boolean))].sort();
+    if (availableMapels.length > 0) {
+      setForm(f => ({ ...f, mata_pelajaran: availableMapels[0] }));
+    }
     setShowModal(true);
   };
 
@@ -111,6 +120,14 @@ export default function UjianPage() {
     const currentKelas = ujian.kelas_target || 'Semua Kelas';
     const isStandardOption = currentKelas === 'Semua Kelas' || kelasList.includes(currentKelas);
     setIsCustomKelas(!isStandardOption);
+
+    const availableMapels = [...new Set([
+      ...soalList.map(s => s.mata_pelajaran),
+      ...ujianList.map(u => u.mata_pelajaran)
+    ].filter(Boolean))].sort();
+    const currentMapel = ujian.mata_pelajaran || '';
+    const isStandardMapel = availableMapels.includes(currentMapel);
+    setIsCustomMapel(!isStandardMapel && currentMapel !== '');
     
     // Format dates for datetime-local input
     const formatForInput = (iso) => {
@@ -255,13 +272,31 @@ export default function UjianPage() {
     );
   };
 
-  const selectAllFilteredSoal = () => {
-    const currentMapel = (form.mata_pelajaran || '').trim().toLowerCase();
-    const matching = soalList
-      .filter(s => !currentMapel || (s.mata_pelajaran || '').trim().toLowerCase() === currentMapel)
-      .map(s => s.id)
-      .filter(Boolean);
-    setSelectedSoal(prev => [...new Set([...prev, ...matching])]);
+  // Distinct list of subjects previously added by teacher in bank soal or exams
+  const mapelOptions = [...new Set([
+    ...soalList.map(s => s.mata_pelajaran),
+    ...ujianList.map(u => u.mata_pelajaran)
+  ].filter(Boolean))].sort();
+
+  // Questions filtered strictly by chosen Mata Pelajaran so questions are clean and not mixed
+  const filteredSoalList = soalList.filter(s => {
+    if (!form.mata_pelajaran || !form.mata_pelajaran.trim()) return true;
+    return (s.mata_pelajaran || '').trim().toLowerCase() === form.mata_pelajaran.trim().toLowerCase();
+  });
+
+  const filteredIds = filteredSoalList.map(s => s.id);
+  const selectedInFilter = filteredIds.filter(id => selectedSoal.includes(id));
+  const isAllSelected = filteredIds.length > 0 && selectedInFilter.length === filteredIds.length;
+  const isIndeterminate = selectedInFilter.length > 0 && selectedInFilter.length < filteredIds.length;
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      // Uncheck all in current mapel filter
+      setSelectedSoal(prev => prev.filter(id => !filteredIds.includes(id)));
+    } else {
+      // Select all in current mapel filter
+      setSelectedSoal(prev => [...new Set([...prev, ...filteredIds])]);
+    }
   };
 
   const validUjianList = (ujianList || []).filter(u => u && u.id && ((u.judul && u.judul.trim()) || (u['u.judul'] && u['u.judul'].trim())));
@@ -550,14 +585,64 @@ export default function UjianPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Mata Pelajaran *</label>
-                  <input
-                    className="form-input"
-                    value={form.mata_pelajaran}
-                    onChange={(e) => setForm({ ...form, mata_pelajaran: e.target.value })}
-                    placeholder="cth: Matematika"
-                    required
-                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label className="form-label" style={{ margin: 0 }}>Mata Pelajaran *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isCustomMapel) {
+                          setIsCustomMapel(false);
+                          setForm(f => ({ ...f, mata_pelajaran: mapelOptions[0] || '' }));
+                        } else {
+                          setIsCustomMapel(true);
+                          setForm(f => ({ ...f, mata_pelajaran: '' }));
+                        }
+                      }}
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: 11, padding: '2px 8px', color: '#0a66c2', height: 'auto', lineHeight: 'normal' }}
+                    >
+                      {isCustomMapel ? '← Pilih dari Bank Soal' : '+ Ketik Manual'}
+                    </button>
+                  </div>
+
+                  {!isCustomMapel && mapelOptions.length > 0 ? (
+                    <select
+                      className="form-select"
+                      value={form.mata_pelajaran}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__custom__') {
+                          setIsCustomMapel(true);
+                          setForm({ ...form, mata_pelajaran: '' });
+                        } else {
+                          setForm({ ...form, mata_pelajaran: val });
+                        }
+                      }}
+                      required
+                    >
+                      <option value="">-- Pilih Mata Pelajaran --</option>
+                      {mapelOptions.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                      <option value="__custom__">+ Ketik Mapel Baru...</option>
+                    </select>
+                  ) : (
+                    <input
+                      className="form-input"
+                      value={form.mata_pelajaran}
+                      onChange={(e) => setForm({ ...form, mata_pelajaran: e.target.value })}
+                      placeholder="cth: Matematika, Koding, IPA..."
+                      required
+                      autoFocus={isCustomMapel}
+                    />
+                  )}
+                  <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                    {isCustomMapel
+                      ? 'Ketik manual nama mapel baru, atau klik "Pilih dari Bank Soal" untuk kembali.'
+                      : 'Pilihan mapel otomatis dari butir soal yang telah Anda buat di Bank Soal.'}
+                  </span>
                 </div>
               </div>
 
@@ -873,27 +958,61 @@ export default function UjianPage() {
 
               {/* Question Selection Area */}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
                   <label className="form-label" style={{ margin: 0, fontWeight: 700 }}>
-                    Pilih Butir Soal ({selectedSoal.length} terpilih)
+                    Pilih Butir Soal {form.mata_pelajaran ? `(${form.mata_pelajaran})` : ''} ({selectedInFilter.length} dari {filteredSoalList.length} terpilih)
                   </label>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={selectAllFilteredSoal}
-                    style={{ fontSize: 12, color: '#0a66c2' }}
-                  >
-                    Pilih Semua Soal Mapel Ini
-                  </button>
+                  {filteredSoalList.length > 0 && (
+                    <label
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: isAllSelected ? '#dc2626' : '#0a66c2',
+                        background: isAllSelected ? '#fef2f2' : '#f0f9ff',
+                        border: isAllSelected ? '1px solid #fecaca' : '1px solid #bae6fd',
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        userSelect: 'none',
+                        transition: 'all 150ms ease',
+                      }}
+                      title={isAllSelected ? "Klik untuk membatalkan semua pilihan (unceklis)" : "Klik untuk mencentang semua soal mapel ini"}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        ref={el => { if (el) el.indeterminate = isIndeterminate; }}
+                        onChange={handleToggleSelectAll}
+                        style={{ width: 15, height: 15, cursor: 'pointer', accentColor: '#0a66c2' }}
+                      />
+                      <span>{isAllSelected ? 'Batalkan Pilih Semua (Unceklis)' : `Pilih Semua Soal Mapel Ini (${filteredSoalList.length})`}</span>
+                    </label>
+                  )}
                 </div>
 
                 <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid #cbd5e1', borderRadius: 8, padding: 8, background: '#f8fafc' }}>
-                  {soalList.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 20, fontSize: 13, color: '#666666' }}>
-                      Belum ada butir soal di Bank Soal. <a href="/guru/bank-soal">Tambah soal terlebih dahulu</a>
+                  {filteredSoalList.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '24px 16px', fontSize: 13, color: '#64748b' }}>
+                      {form.mata_pelajaran ? (
+                        <>
+                          Belum ada butir soal untuk mata pelajaran <strong>"{form.mata_pelajaran}"</strong> di Bank Soal.
+                          <div style={{ marginTop: 8 }}>
+                            <a href="/guru/bank-soal" className="btn btn-primary btn-sm" style={{ display: 'inline-flex' }}>
+                              + Tambah Soal di Bank Soal
+                            </a>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          Pilih atau ketik <strong>Mata Pelajaran</strong> di atas terlebih dahulu untuk memfilter butir soal.
+                        </>
+                      )}
                     </div>
                   ) : (
-                    soalList.map((soal, idx) => (
+                    filteredSoalList.map((soal, idx) => (
                       <label
                         key={soal.id}
                         style={{
