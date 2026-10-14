@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import * as XLSX from 'xlsx-js-style';
 import { downloadSoalTemplateFile } from '@/lib/generateSoalTemplate';
+import UpgradeModal from '@/components/UpgradeModal';
 
 const TIPE_SOAL = [
   { value: 'pg', label: 'Pilihan Ganda' },
@@ -22,6 +23,8 @@ export default function BankSoal() {
   const [filterMapel, setFilterMapel] = useState('');
   const [filterTipe, setFilterTipe] = useState('');
   const [alert, setAlert] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState('');
 
   // Import Excel States
   const [showImportModal, setShowImportModal] = useState(false);
@@ -78,6 +81,28 @@ export default function BankSoal() {
       bobot: 1,
     });
     setEditingSoal(null);
+  };
+
+  const handleOpenCreate = () => {
+    if (user?.username === 'guru' && soalList.length >= 5) {
+      setUpgradeMsg('Batas Akun Demo Tercapai! Anda hanya dapat menyimpan maksimal 5 butir soal di Bank Soal pada versi demo.');
+      setShowUpgradeModal(true);
+      return;
+    }
+    resetForm();
+    setShowModal(true);
+  };
+
+  const handleOpenImport = () => {
+    if (user?.username === 'guru' && soalList.length >= 5) {
+      setUpgradeMsg('Batas Akun Demo Tercapai! Anda hanya dapat menyimpan maksimal 5 butir soal di Bank Soal pada versi demo.');
+      setShowUpgradeModal(true);
+      return;
+    }
+    setExcelParsedSoal([]);
+    setExcelFileName('');
+    setExcelError(null);
+    setShowImportModal(true);
   };
 
   const handleDownloadTemplate = () => {
@@ -271,6 +296,12 @@ export default function BankSoal() {
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.upgrade_required || data.error === 'LIMIT_DEMO_REACHED') {
+          setUpgradeMsg(data.message || 'Batas Akun Demo Tercapai! Anda hanya dapat menyimpan maksimal 5 butir soal di Bank Soal pada versi demo.');
+          setShowUpgradeModal(true);
+          setShowImportModal(false);
+          return;
+        }
         setAlert({ type: 'danger', message: data.error || 'Gagal mengimpor soal' });
       } else {
         setAlert({
@@ -304,6 +335,12 @@ export default function BankSoal() {
 
       if (!res.ok) {
         const data = await res.json();
+        if (data.upgrade_required || data.error === 'LIMIT_DEMO_REACHED') {
+          setUpgradeMsg(data.message || 'Batas Akun Demo Tercapai! Anda hanya dapat menyimpan maksimal 5 butir soal di Bank Soal pada versi demo.');
+          setShowUpgradeModal(true);
+          setShowModal(false);
+          return;
+        }
         setAlert({ type: 'danger', message: data.error });
         return;
       }
@@ -365,12 +402,7 @@ export default function BankSoal() {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => {
-                setExcelParsedSoal([]);
-                setExcelFileName('');
-                setExcelError(null);
-                setShowImportModal(true);
-              }}
+              onClick={handleOpenImport}
               style={{
                 borderRadius: 8,
                 padding: '8px 16px',
@@ -394,7 +426,7 @@ export default function BankSoal() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => { resetForm(); setShowModal(true); }}
+              onClick={handleOpenCreate}
               style={{ borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 600, background: '#0a66c2', display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -449,12 +481,7 @@ export default function BankSoal() {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => {
-                    setExcelParsedSoal([]);
-                    setExcelFileName('');
-                    setExcelError(null);
-                    setShowImportModal(true);
-                  }}
+                  onClick={handleOpenImport}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -464,7 +491,7 @@ export default function BankSoal() {
                   </svg>
                   Import dari Excel
                 </button>
-                <button type="button" className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
                   Tambah Soal Baru
                 </button>
               </div>
@@ -1125,6 +1152,14 @@ export default function BankSoal() {
           </div>
         </div>
       )}
+
+      {/* Upgrade WhatsApp Modal when Demo Limit Reached */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Batas Kuota Bank Soal"
+        message={upgradeMsg}
+      />
     </div>
   );
 }

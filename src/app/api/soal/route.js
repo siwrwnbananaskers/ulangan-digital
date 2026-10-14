@@ -82,6 +82,31 @@ export async function POST(request) {
     const body = await request.json();
     const db = getDB();
 
+    // Check demo limitation: demo user "guru" is limited to 5 questions in bank soal
+    const isDemoTeacher = user.role === 'guru' && (user.username === 'guru' || user.is_demo === 1);
+    if (isDemoTeacher) {
+      const existingCountRow = await db.getOne('SELECT COUNT(*) as total FROM soal WHERE guru_id = ?', [user.id]);
+      const currentCount = existingCountRow?.total || 0;
+
+      if (currentCount >= 5) {
+        return Response.json({
+          error: 'LIMIT_DEMO_REACHED',
+          message: 'Batas Akun Demo Tercapai! Anda hanya dapat menambahkan maksimal 5 butir soal untuk uji coba.',
+          upgrade_required: true,
+          wa_contact: '082175693537',
+        }, { status: 403 });
+      }
+
+      if (Array.isArray(body.soal) && currentCount + body.soal.length > 5) {
+        return Response.json({
+          error: 'LIMIT_DEMO_REACHED',
+          message: `Batas Akun Demo Tercapai! Bank Soal versi demo dibatasi maksimal 5 butir soal (saat ini tersimpan ${currentCount} soal, sisa kuota: ${5 - currentCount} butir).`,
+          upgrade_required: true,
+          wa_contact: '082175693537',
+        }, { status: 403 });
+      }
+    }
+
     // Check if bulk insert
     if (Array.isArray(body.soal)) {
       if (body.soal.length === 0) {

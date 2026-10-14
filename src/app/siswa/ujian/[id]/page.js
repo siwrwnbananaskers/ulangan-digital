@@ -566,9 +566,6 @@ export default function LembarUjianPage() {
                      currentSoal.tipe === 'isian' ? 'Isian Singkat' :
                      currentSoal.tipe === 'benar_salah' ? 'Benar / Salah' : 'Uraian'}
                   </span>
-                  <span className="exam-qtotal-text">
-                    dari {soalList.length}
-                  </span>
                 </div>
 
                 <button

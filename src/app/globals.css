@@ -1805,32 +1805,44 @@ img {
 
   /* Mobile Exam Layout */
   .exam-topbar-main {
-    padding: 8px 12px;
+    padding: 6px 12px;
+  }
+  .exam-title-row {
+    gap: 6px;
   }
   .exam-title-text {
-    max-width: 180px;
+    max-width: none;
     font-size: 14px;
+    line-height: 1.3;
+  }
+  .exam-mode-badge {
+    display: none;
   }
   .exam-subbar {
     padding: 4px 12px;
+    font-size: 11px;
   }
   .exam-body {
     flex-direction: column;
-    padding: 10px 10px 90px;
-    gap: 12px;
+    padding: 8px 10px 80px;
+    gap: 10px;
   }
   .exam-sidebar {
     display: none !important;
   }
   .question-card {
-    padding: 16px 14px;
+    padding: 14px 14px;
     border-radius: 12px;
     min-height: auto;
   }
+  .exam-card-head {
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
   .exam-question-text {
-    font-size: 15px;
-    padding: 12px 14px;
-    margin: 12px 0 16px;
+    font-size: 14.5px;
+    padding: 10px 12px;
+    margin: 8px 0 12px;
   }
   .exam-desktop-finish-btn {
     display: none !important;

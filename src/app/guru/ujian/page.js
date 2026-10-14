@@ -389,45 +389,41 @@ export default function UjianPage() {
               const jadwalSelesai = ujian.jadwal_selesai || ujian['u.jadwal_selesai'];
 
               return (
-                <div key={ujian.id} className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div key={ujian.id} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                      <div>
-                        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#191919', margin: '0 0 4px' }}>{judul}</h3>
-                        <p style={{ fontSize: 12, color: '#666666', margin: 0 }}>
-                          {mataPelajaran} — Kelas: <strong>{kelasTarget}</strong>
-                        </p>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, gap: 10 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>{judul}</h3>
                           <span className={`badge ${
                             status === 'aktif' ? 'badge-success' :
                             status === 'selesai' ? 'badge-gray' : 'badge-warning'
-                          }`} style={{ fontSize: 11, padding: '3px 8px' }}>
+                          }`} style={{ fontSize: 10, padding: '2px 7px', fontWeight: 700 }}>
                             {status === 'aktif' ? 'Aktif' : status === 'selesai' ? 'Selesai' : 'Draft'}
                           </span>
-                          <span className="badge" style={{ fontSize: 10, padding: '2px 8px', background: ujian.akses_ujian === 'otomatis' ? '#f0fdf4' : '#f8fafc', color: ujian.akses_ujian === 'otomatis' ? '#166534' : '#475569', border: '1px solid #cbd5e1' }}>
-                            {ujian.akses_ujian === 'otomatis' ? 'Akses Otomatis' : 'Wajib Kode'}
-                          </span>
                         </div>
-                        {ujian.mode_exambro === 0 ? (
-                          <span className="badge" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontSize: 10, padding: '2px 8px', fontWeight: 600 }}>
-                            Mode Fleksibel
-                          </span>
-                        ) : (
-                          <span className="badge" style={{ background: '#eff6ff', color: '#0369a1', border: '1px solid #bae6fd', fontSize: 10, padding: '2px 8px', fontWeight: 600 }}>
-                            Exambro Kiosk
+                        <p style={{ fontSize: 12, color: '#64748b', margin: '3px 0 0' }}>
+                          {mataPelajaran} • Kelas <strong>{kelasTarget}</strong>
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                        <span className="badge" style={{ fontSize: 10, padding: '2px 7px', background: ujian.mode_exambro === 0 ? '#ecfdf5' : '#eff6ff', color: ujian.mode_exambro === 0 ? '#047857' : '#0369a1', border: `1px solid ${ujian.mode_exambro === 0 ? '#a7f3d0' : '#bae6fd'}` }}>
+                          {ujian.mode_exambro === 0 ? 'Fleksibel' : 'Kiosk'}
+                        </span>
+                        {ujian.akses_ujian === 'otomatis' && (
+                          <span className="badge" style={{ fontSize: 10, padding: '2px 7px', background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' }}>
+                            Otomatis
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Metadata Specs */}
-                    <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #f1f5f9', marginBottom: 14, fontSize: 12 }}>
+                    <div style={{ background: '#f8fafc', padding: '9px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ color: '#666666', minWidth: 65 }}>Kode Ruang:</span>
-                          <code style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ color: '#64748b', fontSize: 11 }}>Kode:</span>
+                          <code style={{ background: '#e0f2fe', color: '#0369a1', padding: '1px 6px', borderRadius: 4, fontWeight: 700, fontSize: 12, letterSpacing: '0.04em' }}>
                             {kodeUjian}
                           </code>
                         </div>
@@ -435,23 +431,23 @@ export default function UjianPage() {
                           type="button"
                           className="btn btn-ghost btn-sm"
                           onClick={() => handleCopyCode(kodeUjian, ujian.id)}
-                          style={{ fontSize: 11, padding: '3px 8px', color: copiedId === ujian.id ? '#16a34a' : '#0a66c2', fontWeight: 600 }}
+                          style={{ fontSize: 11, padding: '1px 6px', color: copiedId === ujian.id ? '#16a34a' : '#0a66c2', fontWeight: 600, height: 'auto' }}
                           title="Salin Kode Ruang Ujian"
                         >
-                          {copiedId === ujian.id ? 'Tersalin' : 'Salin Kode'}
+                          {copiedId === ujian.id ? 'Tersalin' : 'Salin'}
                         </button>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', marginBottom: 4, flexWrap: 'wrap', gap: 6 }}>
-                        <span>Durasi: <strong>{durasiMenit} Menit</strong></span>
-                        <span>Soal: <strong>{jumlahSoal} Butir</strong></span>
-                        <span>KKM: <strong>{kkm}</strong></span>
-                        <span>Mode: <strong style={{ color: ujian.mode_exambro === 0 ? '#057642' : '#0369a1' }}>{ujian.mode_exambro === 0 ? 'Fleksibel' : 'Exambro'}</strong></span>
+                      <div style={{ display: 'flex', gap: 6, color: '#334155', fontSize: 11, flexWrap: 'wrap', marginBottom: 4, alignItems: 'center' }}>
+                        <span>{durasiMenit} Menit</span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span>{jumlahSoal} Soal</span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span>KKM {kkm}</span>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span>Peserta: <strong>{ujian.peserta_selesai || 0}</strong>/{ujian.total_peserta || 0} Selesai</span>
                       </div>
-                      <div style={{ color: '#666666', fontSize: 11 }}>
-                        Jadwal: {formatDate(jadwalMulai)} s/d {formatDate(jadwalSelesai)}
-                      </div>
-                      <div style={{ color: '#666666', fontSize: 11, marginTop: 4 }}>
-                        Peserta: <strong>{ujian.peserta_selesai || 0}</strong> selesai / <strong>{ujian.total_peserta || 0}</strong> terdaftar
+                      <div style={{ color: '#64748b', fontSize: 11 }}>
+                        Jadwal: {formatDate(jadwalMulai)} – {formatDate(jadwalSelesai)}
                       </div>
                     </div>
                   </div>
