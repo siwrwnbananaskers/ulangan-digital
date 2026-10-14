@@ -473,23 +473,36 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     const nowStr = formatWIB(new Date(), true);
     ctx.fillText(`Dicetak pada: ${nowStr}`, padding, currentY + 52);
 
-    // Right Footer: Teacher Signature Space (with teacher's real name)
+    // Right Footer: Teacher Signature Space (dynamic line length matching teacher name and centered)
     const teacherName = guruNama || sesi?.guru_nama || 'Guru Pengampu';
-    const signX = padding + innerWidth - 240;
+    const signBoxWidth = 240;
+    const signX = padding + innerWidth - signBoxWidth;
+    const signCenterX = signX + signBoxWidth / 2;
+
+    ctx.textAlign = 'center';
     ctx.fillStyle = '#334155';
     ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Mengetahui / Guru Pengampu,', signX, currentY + 16);
+    ctx.fillText('Mengetahui / Guru Pengampu,', signCenterX, currentY + 16);
 
+    // Measure teacher name width dynamically
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const nameWidth = ctx.measureText(teacherName).width;
+    const lineWidth = Math.max(nameWidth + 16, 80);
+    const lineStartX = signCenterX - lineWidth / 2;
+    const lineEndX = signCenterX + lineWidth / 2;
+
+    // Centered dynamic signature line
     ctx.strokeStyle = '#94a3b8';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(signX, currentY + 70);
-    ctx.lineTo(signX + 220, currentY + 70);
+    ctx.moveTo(lineStartX, currentY + 70);
+    ctx.lineTo(lineEndX, currentY + 70);
     ctx.stroke();
 
+    // Centered teacher name directly beneath the line
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(teacherName, signX + 4, currentY + 88);
+    ctx.fillText(teacherName, signCenterX, currentY + 88);
+    ctx.textAlign = 'left';
 
     // Return Data URL
     try {
