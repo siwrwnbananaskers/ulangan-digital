@@ -41,7 +41,7 @@ function fitText(ctx, text, maxWidth) {
   return res + '...';
 }
 
-export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
+export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guruNama = '' }) {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') {
       resolve(null);
@@ -312,21 +312,18 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
           const isSalah = item.is_benar === 0;
           const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
 
-          let chipBg = '#f1f5f9';
-          let chipBorder = '#cbd5e1';
+          let chipBg = '#f8fafc';
+          let chipBorder = '#e2e8f0';
           let chipColor = '#475569';
-          let symbol = '-';
 
           if (isBenar) {
-            chipBg = '#dcfce7';
+            chipBg = '#f0fdf4';
             chipBorder = '#86efac';
             chipColor = '#15803d';
-            symbol = '✔';
           } else if (isSalah) {
-            chipBg = '#fee2e2';
+            chipBg = '#fef2f2';
             chipBorder = '#fca5a5';
             chipColor = '#b91c1c';
-            symbol = '✖';
           }
 
           ctx.fillStyle = chipBg;
@@ -334,7 +331,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
           ctx.lineWidth = 1;
           drawRoundedRect(ctx, cx, cy, chipWidth, chipHeight, 8, true, true);
 
-          // Text inside chip: "#1: A ✔ 10pt"
+          // Text inside chip: "#1: A  10p"
           ctx.fillStyle = '#1e293b';
           ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const noText = `#${item.urutan || (idx + 1)}`;
@@ -342,8 +339,8 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
 
           ctx.fillStyle = chipColor;
           ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          const ansText = isKosong ? 'Kosong' : (item.jawaban_siswa || '-').toUpperCase().slice(0, 3);
-          ctx.fillText(`${ansText} ${symbol}`, cx + 36, cy + 21);
+          const ansText = isKosong ? 'Kosong' : (item.jawaban_siswa || '-').toUpperCase().slice(0, 4);
+          ctx.fillText(ansText, cx + 36, cy + 21);
 
           // Points on the right
           ctx.fillStyle = '#64748b';
@@ -422,12 +419,12 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
           ctx.fillText(`${item.nilai_soal ?? 0} / ${item.bobot || 10}`, padding + 540, currentY + 21);
 
           // Status Badge
-          let statText = '✔ Benar';
+          let statText = 'Benar';
           let statColor = '#15803d';
           let statBg = '#dcfce7';
 
           if (isSalah) {
-            statText = '✖ Salah';
+            statText = 'Salah';
             statColor = '#b91c1c';
             statBg = '#fee2e2';
           } else if (isKosong) {
@@ -476,22 +473,23 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
     const nowStr = formatWIB(new Date(), true);
     ctx.fillText(`Dicetak pada: ${nowStr}`, padding, currentY + 52);
 
-    // Right Footer: Teacher Signature Space
+    // Right Footer: Teacher Signature Space (with teacher's real name)
+    const teacherName = guruNama || sesi?.guru_nama || 'Guru Pengampu';
     const signX = padding + innerWidth - 240;
     ctx.fillStyle = '#334155';
-    ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Mengetahui / Guru Pengampu,', signX, currentY + 16);
 
-    ctx.strokeStyle = '#cbd5e1';
+    ctx.strokeStyle = '#94a3b8';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(signX, currentY + 70);
     ctx.lineTo(signX + 220, currentY + 70);
     ctx.stroke();
 
-    ctx.fillStyle = '#64748b';
-    ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('( Tanda Tangan & Nama Guru )', signX + 25, currentY + 88);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(teacherName, signX + 4, currentY + 88);
 
     // Return Data URL
     try {

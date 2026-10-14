@@ -20,10 +20,12 @@ export async function GET(request) {
         // Get specific student session and answers
         const sesi = await db.getOne(
           `SELECT su.*, u.nama, u.username, u.kelas, u.no_absen,
-                  uj.judul as ujian_judul, uj.mata_pelajaran, uj.kkm, uj.durasi_menit, uj.guru_id
+                  uj.judul as ujian_judul, uj.mata_pelajaran, uj.kkm, uj.durasi_menit, uj.guru_id,
+                  guru.nama as guru_nama
            FROM sesi_ujian su
            JOIN users u ON u.id = su.siswa_id
            JOIN ujian uj ON uj.id = su.ujian_id
+           LEFT JOIN users guru ON guru.id = uj.guru_id
            WHERE su.id = ?`,
           [sesiId]
         );
@@ -76,16 +78,22 @@ export async function GET(request) {
       if (ujianId) {
         // Get detailed results for specific exam
         const results = await db.getAll(
-          `SELECT su.*, u.nama, u.kelas, u.no_absen,
+          `SELECT su.*, u.nama, u.kelas, u.no_absen, u.username,
             (SELECT COUNT(*) FROM audit_log al WHERE al.sesi_id = su.id) as total_pelanggaran
            FROM sesi_ujian su
            JOIN users u ON u.id = su.siswa_id
            WHERE su.ujian_id = ?
-           ORDER BY u.nama ASC`,
+           ORDER BY CASE WHEN u.no_absen IS NOT NULL AND u.no_absen != '' THEN CAST(u.no_absen AS INTEGER) ELSE 9999 END ASC, u.nama ASC`,
           [ujianId]
         );
 
-        const ujian = await db.getOne('SELECT * FROM ujian WHERE id = ?', [ujianId]);
+        const ujian = await db.getOne(
+          `SELECT uj.*, u.nama as guru_nama
+           FROM ujian uj
+           LEFT JOIN users u ON u.id = uj.guru_id
+           WHERE uj.id = ?`,
+          [ujianId]
+        );
 
         // Statistics
         const selesai = results.filter(r => r.status === 'selesai');

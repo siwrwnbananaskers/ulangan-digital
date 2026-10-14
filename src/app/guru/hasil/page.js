@@ -5,6 +5,13 @@ import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import { formatTanggal } from '@/lib/utils';
 import { generateResultImage, downloadResultImage, copyImageToClipboard } from '@/lib/generateResultImage';
+import {
+  exportRekapToExcel,
+  generateRekapTableImage,
+  downloadRekapImage,
+  copyRekapImageToClipboard,
+  printRekapDocument,
+} from '@/lib/generateRekapNilai';
 
 export default function GuruHasilPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -38,6 +45,12 @@ export default function GuruHasilPage() {
     mode: 'ringkas',
     items: [],
     zipping: false,
+  });
+  const [rekapModal, setRekapModal] = useState({
+    open: false,
+    loading: false,
+    dataUrl: null,
+    copied: false,
   });
 
   useEffect(() => {
@@ -145,6 +158,7 @@ export default function GuruHasilPage() {
         sesi: sesiData,
         jawaban: jawabanData,
         mode: initialMode,
+        guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
       });
       setImageModal((prev) => ({
         ...prev,
@@ -166,6 +180,7 @@ export default function GuruHasilPage() {
         sesi: imageModal.sesi,
         jawaban: imageModal.jawaban,
         mode: newMode,
+        guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
       });
       setImageModal((prev) => ({ ...prev, mode: newMode, loading: false, dataUrl }));
     } catch (err) {
@@ -210,6 +225,70 @@ export default function GuruHasilPage() {
     } catch {
       handleDownloadCurrentImg();
     }
+  };
+
+  const handleOpenRekapModal = async () => {
+    if (!examDetail) return;
+    setRekapModal({
+      open: true,
+      loading: true,
+      dataUrl: null,
+      copied: false,
+    });
+
+    try {
+      const dataUrl = await generateRekapTableImage({
+        examDetail,
+        results,
+        guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+      });
+      setRekapModal((prev) => ({
+        ...prev,
+        loading: false,
+        dataUrl,
+      }));
+    } catch (err) {
+      console.error('Failed to generate rekap table image', err);
+      setRekapModal((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleExportExcelQuick = () => {
+    if (!examDetail) return;
+    exportRekapToExcel({
+      examDetail,
+      results,
+      guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+    });
+  };
+
+  const handleDownloadRekapImg = () => {
+    if (!rekapModal.dataUrl) return;
+    const safeJudul = (examDetail?.judul || 'Ujian').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeKelas = (examDetail?.kelas_target || 'Kelas').replace(/[^a-zA-Z0-9_-]/g, '_');
+    downloadRekapImage(rekapModal.dataUrl, `Leger_Rekap_Nilai_${safeJudul}_${safeKelas}.png`);
+  };
+
+  const handleCopyRekapImg = async () => {
+    if (!rekapModal.dataUrl) return;
+    try {
+      await copyRekapImageToClipboard(rekapModal.dataUrl);
+      setRekapModal((prev) => ({ ...prev, copied: true }));
+      setTimeout(() => {
+        setRekapModal((prev) => ({ ...prev, copied: false }));
+      }, 3000);
+    } catch {
+      handleDownloadRekapImg();
+    }
+  };
+
+  const handlePrintRekap = () => {
+    if (!examDetail) return;
+    printRekapDocument({
+      examDetail,
+      results,
+      guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+    });
   };
 
   const handleOpenBatchModal = () => {
@@ -298,6 +377,7 @@ export default function GuruHasilPage() {
           },
           jawaban: studentAnswers,
           mode: targetMode,
+          guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
         });
 
         generatedItems.push({
@@ -574,18 +654,78 @@ export default function GuruHasilPage() {
                   <button
                     type="button"
                     className="btn btn-primary btn-sm"
-                    onClick={handleOpenBatchModal}
+                    onClick={handleOpenRekapModal}
                     disabled={results.length === 0}
-                    style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                    title="Cetak gambar hasil seluruh siswa sekaligus"
+                    style={{
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      border: '1px solid #0f172a',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                    title="Buka rekapitulasi nilai seluruh siswa format leger raport (bisa ekspor ke Excel dan Gambar PNG)"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <polyline points="21 15 16 10 5 21"/>
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <line x1="3" y1="9" x2="21" y2="9" />
+                      <line x1="3" y1="15" x2="21" y2="15" />
+                      <line x1="9" y1="9" x2="9" y2="21" />
+                      <line x1="15" y1="9" x2="15" y2="21" />
                     </svg>
-                    Cetak Semua Gambar
+                    Rekap Nilai Siswa (Leger)
                   </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleExportExcelQuick}
+                    disabled={results.length === 0}
+                    style={{
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1px solid #cbd5e1',
+                    }}
+                    title="Unduh rekapitulasi nilai siswa dalam format file Excel (.xlsx)"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="8" y1="13" x2="16" y2="13" />
+                      <line x1="8" y1="17" x2="16" y2="17" />
+                    </svg>
+                    Unduh Excel (.xlsx)
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleOpenBatchModal}
+                    disabled={results.length === 0}
+                    style={{
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1px solid #cbd5e1',
+                    }}
+                    title="Cetak kartu hasil per siswa sekaligus (Format Gambar PNG / ZIP)"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    Cetak Semua Kartu Siswa
+                  </button>
+
                   <span className="badge badge-primary">{examDetail.mata_pelajaran}</span>
                   <span className="badge badge-gray">{examDetail.kelas_target}</span>
                 </div>
@@ -1163,7 +1303,12 @@ export default function GuruHasilPage() {
                 disabled={imageModal.loading}
                 style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                <span>📸 Kartu Ringkas (Ideal untuk WhatsApp)</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                <span>Kartu Ringkas WA</span>
               </button>
               <button
                 type="button"
@@ -1172,7 +1317,13 @@ export default function GuruHasilPage() {
                 disabled={imageModal.loading}
                 style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                <span>📄 Lembar Rekap Lengkap (Detail Soal)</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                <span>Lembar Rekap Lengkap</span>
               </button>
             </div>
 
@@ -1215,7 +1366,10 @@ export default function GuruHasilPage() {
             {/* Toast Alert when Copied */}
             {imageModal.copied && (
               <div className="alert alert-success" style={{ marginTop: 12, padding: '8px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>✔ <strong>Gambar Berhasil Disalin!</strong> Buka WhatsApp Web lalu tekan <strong>Ctrl + V</strong> (Paste) untuk mengirim langsung ke siswa.</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span><strong>Gambar Berhasil Disalin!</strong> Buka WhatsApp Web lalu tekan <strong>Ctrl + V</strong> (Paste) untuk mengirim langsung ke siswa.</span>
               </div>
             )}
 
@@ -1281,7 +1435,7 @@ export default function GuruHasilPage() {
               <div>
                 <h3 className="modal-title" style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>Cetak Semua Hasil Siswa (Format Gambar)</span>
-                  <span className="badge badge-primary" style={{ fontSize: 11 }}>Batch Export</span>
+                  <span className="badge badge-gray" style={{ fontSize: 11, fontWeight: 700 }}>Ekspor Massal</span>
                 </h3>
                 <p className="text-xs text-muted" style={{ marginTop: 2 }}>
                   Ujian: <strong>{examDetail?.judul}</strong> • {examDetail?.mata_pelajaran} • {results.length} Siswa Terdaftar
@@ -1321,18 +1475,29 @@ export default function GuruHasilPage() {
                       className={`btn btn-xs ${batchModal.mode === 'ringkas' ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => setBatchModal((prev) => ({ ...prev, mode: 'ringkas' }))}
                       disabled={batchModal.loading || batchModal.zipping}
-                      style={{ fontWeight: 600 }}
+                      style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     >
-                      📸 Kartu Ringkas WA
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      Kartu Ringkas WA
                     </button>
                     <button
                       type="button"
                       className={`btn btn-xs ${batchModal.mode === 'lengkap' ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => setBatchModal((prev) => ({ ...prev, mode: 'lengkap' }))}
                       disabled={batchModal.loading || batchModal.zipping}
-                      style={{ fontWeight: 600 }}
+                      style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     >
-                      📄 Rekap Lengkap
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                      </svg>
+                      Rekap Lengkap
                     </button>
                   </div>
                 </div>
@@ -1362,9 +1527,17 @@ export default function GuruHasilPage() {
                   className="btn btn-primary btn-sm"
                   onClick={() => handleStartBatchGeneration()}
                   disabled={batchModal.loading || batchModal.zipping}
-                  style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  style={{
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    border: '1px solid #0f172a',
+                  }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                     <polygon points="5 3 19 12 5 21 5 3"/>
                   </svg>
                   {batchModal.loading ? 'Memproses...' : batchModal.items.length > 0 ? 'Proses Ulang Gambar' : 'Mulai Buat Semua Gambar'}
@@ -1499,10 +1672,21 @@ export default function GuruHasilPage() {
                                 downloadResultImage(dataUrl, `Hasil_${safeName}.png`);
                               }
                             }}
-                            style={{ fontSize: 11, padding: '3px 6px', fontWeight: 600 }}
+                            style={{
+                              fontSize: 11,
+                              padding: '3px 8px',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
                             title="Salin gambar untuk ditempel di WhatsApp"
                           >
-                            📋 WA
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            Salin
                           </button>
                         </div>
                       </div>
@@ -1529,7 +1713,15 @@ export default function GuruHasilPage() {
                   className="btn btn-primary"
                   onClick={handleDownloadAllZip}
                   disabled={batchModal.loading || batchModal.items.length === 0 || batchModal.zipping}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontWeight: 700,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    border: '1px solid #0f172a',
+                  }}
                   title="Unduh seluruh gambar hasil siswa dalam 1 file arsip ZIP"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -1545,7 +1737,15 @@ export default function GuruHasilPage() {
                   className="btn btn-secondary"
                   onClick={handlePrintAllImages}
                   disabled={batchModal.loading || batchModal.items.length === 0}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontWeight: 600,
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                  }}
                   title="Cetak semua gambar siswa sekaligus ke printer atau simpan sebagai PDF"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1562,6 +1762,273 @@ export default function GuruHasilPage() {
                 className="btn btn-ghost"
                 onClick={() => setBatchModal((prev) => ({ ...prev, open: false }))}
                 disabled={batchModal.loading || batchModal.zipping}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Rekap Nilai Siswa (Leger Raport) */}
+      {rekapModal.open && (
+        <div
+          className="modal-overlay"
+          onClick={(e) => e.target === e.currentTarget && !rekapModal.loading && setRekapModal((prev) => ({ ...prev, open: false }))}
+        >
+          <div
+            className="modal modal-lg"
+            style={{
+              maxWidth: 980,
+              maxHeight: '94vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '24px 28px',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              className="modal-header"
+              style={{
+                paddingBottom: 14,
+                borderBottom: '1px solid var(--gray-200)',
+                marginBottom: 16,
+              }}
+            >
+              <div>
+                <h3
+                  className="modal-title"
+                  style={{
+                    fontSize: 19,
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: '#0f172a',
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <line x1="3" y1="9" x2="21" y2="9" />
+                    <line x1="3" y1="15" x2="21" y2="15" />
+                    <line x1="9" y1="9" x2="9" y2="21" />
+                    <line x1="15" y1="9" x2="15" y2="21" />
+                  </svg>
+                  <span>Rekapitulasi Nilai Siswa (Leger Raport)</span>
+                  <span
+                    className="badge badge-gray"
+                    style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', letterSpacing: '0.3px' }}
+                  >
+                    Resmi
+                  </span>
+                </h3>
+                <p className="text-xs text-muted" style={{ marginTop: 4 }}>
+                  Mata Pelajaran: <strong>{examDetail?.mata_pelajaran}</strong> • Ujian: <strong>{examDetail?.judul}</strong> • Standar KKM: <strong>{examDetail?.kkm || 75}</strong> • Guru Pengampu: <strong>{user?.nama || examDetail?.guru_nama || 'Guru Pengampu'}</strong>
+                </p>
+              </div>
+              <button
+                className="modal-close"
+                onClick={() => setRekapModal((prev) => ({ ...prev, open: false }))}
+                disabled={rekapModal.loading}
+                title="Tutup"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Quick Actions Toolbar */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 10,
+                marginBottom: 14,
+                padding: '10px 14px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 10,
+              }}
+            >
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={handleExportExcelQuick}
+                  style={{
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    border: '1px solid #0f172a',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                  title="Unduh seluruh rekap nilai siswa ke lembar kerja Excel (.xlsx)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="8" y1="13" x2="16" y2="13" />
+                    <line x1="8" y1="17" x2="16" y2="17" />
+                  </svg>
+                  Unduh Excel (.xlsx)
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleDownloadRekapImg}
+                  disabled={rekapModal.loading || !rekapModal.dataUrl}
+                  style={{
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                  }}
+                  title="Unduh dokumen rekap nilai dalam resolusi tinggi (.png)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Unduh Gambar (.png)
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleCopyRekapImg}
+                  disabled={rekapModal.loading || !rekapModal.dataUrl}
+                  style={{
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                  }}
+                  title="Salin gambar rekap nilai ke clipboard"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  {rekapModal.copied ? 'Tersalin!' : 'Salin Gambar'}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handlePrintRekap}
+                  style={{
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                  }}
+                  title="Cetak langsung ke printer atau simpan sebagai PDF"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Cetak (Print / PDF)
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
+                {results.length} Siswa Terdaftar
+              </div>
+            </div>
+
+            {/* Toast Alert */}
+            {rekapModal.copied && (
+              <div
+                className="alert alert-success"
+                style={{
+                  marginBottom: 12,
+                  padding: '8px 14px',
+                  fontSize: 12.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Gambar Leger Raport berhasil disalin ke clipboard! Siap ditempel (Paste).</span>
+              </div>
+            )}
+
+            {/* Preview Viewport */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                background: '#334155',
+                borderRadius: 10,
+                padding: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 360,
+                maxHeight: '60vh',
+              }}
+            >
+              {rekapModal.loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, color: '#ffffff' }}>
+                  <div className="spinner" style={{ borderColor: 'rgba(255,255,255,0.2)', borderTopColor: '#ffffff' }} />
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>Menyusun berkas leger rekap nilai siswa...</span>
+                </div>
+              ) : rekapModal.dataUrl ? (
+                <img
+                  src={rekapModal.dataUrl}
+                  alt="Leger Rekap Nilai Siswa"
+                  style={{
+                    width: '100%',
+                    maxWidth: 860,
+                    height: 'auto',
+                    borderRadius: 4,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    display: 'block',
+                    background: '#ffffff',
+                  }}
+                />
+              ) : (
+                <p style={{ color: '#94a3b8' }}>Gagal memuat rekap nilai.</p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: 14,
+                borderTop: '1px solid var(--gray-200)',
+                marginTop: 14,
+              }}
+            >
+              <div style={{ fontSize: 12, color: '#64748b' }}>
+                Guru Pengampu: <strong>{user?.nama || examDetail?.guru_nama || 'Guru Pengampu'}</strong>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setRekapModal((prev) => ({ ...prev, open: false }))}
               >
                 Tutup
               </button>
