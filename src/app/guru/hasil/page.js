@@ -28,6 +28,17 @@ export default function GuruHasilPage() {
     dataUrl: null,
     copied: false,
   });
+  const [batchModal, setBatchModal] = useState({
+    open: false,
+    loading: false,
+    progress: 0,
+    total: 0,
+    statusText: '',
+    filterStatus: 'all',
+    mode: 'ringkas',
+    items: [],
+    zipping: false,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -201,6 +212,194 @@ export default function GuruHasilPage() {
     }
   };
 
+  const handleOpenBatchModal = () => {
+    setBatchModal({
+      open: true,
+      loading: false,
+      progress: 0,
+      total: results.length,
+      statusText: '',
+      filterStatus: 'all',
+      mode: 'ringkas',
+      items: [],
+      zipping: false,
+    });
+  };
+
+  const handleStartBatchGeneration = async (modeParam = null, filterParam = null) => {
+    const targetMode = modeParam || batchModal.mode;
+    const targetFilter = filterParam || batchModal.filterStatus;
+
+    let targetResults = [...results];
+    if (targetFilter === 'selesai') {
+      targetResults = targetResults.filter((r) => r.status === 'selesai');
+    } else if (targetFilter === 'lulus') {
+      targetResults = targetResults.filter((r) => r.status === 'selesai' && Number(r.total_nilai) >= (examDetail?.kkm || 75));
+    } else if (targetFilter === 'tidak_lulus') {
+      targetResults = targetResults.filter((r) => r.status === 'selesai' && Number(r.total_nilai) < (examDetail?.kkm || 75));
+    }
+
+    if (targetResults.length === 0) {
+      alert('Tidak ada siswa yang sesuai dengan filter yang dipilih.');
+      return;
+    }
+
+    setBatchModal((prev) => ({
+      ...prev,
+      loading: true,
+      progress: 0,
+      total: targetResults.length,
+      statusText: 'Memuat data butir jawaban seluruh siswa...',
+      items: [],
+      mode: targetMode,
+      filterStatus: targetFilter,
+    }));
+
+    try {
+      const res = await authFetch(`/api/hasil?ujian_id=${selectedUjianId}&all_jawaban=1`);
+      const data = await res.json();
+      const allJawaban = data.allJawaban || [];
+
+      const answersBySesi = {};
+      allJawaban.forEach((item) => {
+        if (!answersBySesi[item.sesi_id]) {
+          answersBySesi[item.sesi_id] = [];
+        }
+        answersBySesi[item.sesi_id].push(item);
+      });
+
+      const generatedItems = [];
+
+      for (let i = 0; i < targetResults.length; i++) {
+        const student = targetResults[i];
+        const studentAnswers = answersBySesi[student.id] || [];
+
+        setBatchModal((prev) => ({
+          ...prev,
+          progress: i + 1,
+          statusText: `Membuat gambar untuk ${student.nama} (${i + 1}/${targetResults.length})...`,
+        }));
+
+        const dataUrl = await generateResultImage({
+          sesi: {
+            nama: student.nama,
+            kelas: student.kelas,
+            no_absen: student.no_absen,
+            ujian_judul: examDetail?.judul || 'Ujian',
+            mata_pelajaran: examDetail?.mata_pelajaran || '-',
+            kkm: examDetail?.kkm || 75,
+            total_nilai: student.total_nilai,
+            jumlah_benar: student.jumlah_benar,
+            jumlah_salah: student.jumlah_salah,
+            jumlah_kosong: student.jumlah_kosong,
+            jumlah_pelanggaran: student.total_pelanggaran,
+            status: student.status,
+            waktu_selesai: student.waktu_selesai,
+          },
+          jawaban: studentAnswers,
+          mode: targetMode,
+        });
+
+        generatedItems.push({
+          student,
+          dataUrl,
+        });
+
+        await new Promise((r) => setTimeout(r, 10));
+      }
+
+      setBatchModal((prev) => ({
+        ...prev,
+        loading: false,
+        statusText: `Selesai! Berhasil membuat ${generatedItems.length} gambar kartu hasil siswa.`,
+        items: generatedItems,
+      }));
+    } catch (err) {
+      console.error('Failed batch generation', err);
+      alert('Terjadi kesalahan saat memproses gambar massal.');
+      setBatchModal((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDownloadAllZip = async () => {
+    if (batchModal.items.length === 0) return;
+
+    setBatchModal((prev) => ({ ...prev, zipping: true }));
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      const folderName = `Hasil_${(examDetail?.judul || 'Ujian').replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+      const folder = zip.folder(folderName);
+
+      batchModal.items.forEach(({ student, dataUrl }, idx) => {
+        if (!dataUrl) return;
+        const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+        const absenStr = student.no_absen ? String(student.no_absen).padStart(2, '0') : String(idx + 1).padStart(2, '0');
+        const safeName = (student.nama || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const filename = `${absenStr}_${safeName}.png`;
+        folder.file(filename, base64Data, { base64: true });
+      });
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Hasil_Ujian_${(examDetail?.judul || 'Ujian').replace(/[^a-zA-Z0-9_-]/g, '_')}_Semua_Siswa.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to create ZIP', err);
+      alert('Gagal membuat file ZIP arsip gambar.');
+    } finally {
+      setBatchModal((prev) => ({ ...prev, zipping: false }));
+    }
+  };
+
+  const handlePrintAllImages = () => {
+    if (batchModal.items.length === 0) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Gagal membuka jendela cetak. Pastikan pop-up diizinkan di browser.');
+      return;
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Cetak Semua Hasil Siswa - ${examDetail?.judul || 'Ujian'}</title>
+          <style>
+            @page { size: auto; margin: 10mm; }
+            body { margin: 0; padding: 0; font-family: sans-serif; background: #fff; }
+            .page-break { page-break-after: always; break-after: page; display: flex; justify-content: center; align-items: center; min-height: 95vh; padding: 10px 0; }
+            .page-break:last-child { page-break-after: avoid; break-after: avoid; }
+            img { max-width: 100%; max-height: 95vh; object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; }
+          </style>
+        </head>
+        <body>
+          ${batchModal.items.map(({ dataUrl }) => `
+            <div class="page-break">
+              <img src="${dataUrl}" alt="Hasil Ujian" />
+            </div>
+          `).join('')}
+          <script>
+            window.onload = function() {
+              window.focus();
+              setTimeout(function() { window.print(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   const handleScoreInputChange = (soalId, val) => {
     setScoreInputs((prev) => ({ ...prev, [soalId]: val }));
   };
@@ -277,7 +476,22 @@ export default function GuruHasilPage() {
             <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Pantau nilai siswa, statistik kelulusan KKM, dan status pengerjaan</p>
           </div>
           {selectedUjianId && (
-            <div className="page-header-actions">
+            <div className="page-header-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOpenBatchModal}
+                disabled={results.length === 0}
+                style={{ borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                title="Cetak kartu hasil semua siswa dalam bentuk gambar (ZIP / Cetak Sekaligus)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Cetak Semua Gambar Siswa
+              </button>
               <a href={`/guru/audit?ujian_id=${selectedUjianId}`} className="btn btn-secondary" style={{ borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -349,14 +563,29 @@ export default function GuruHasilPage() {
 
             {/* Rekap Nilai Table */}
             <div className="card">
-              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                 <div>
                   <h2 className="card-title">Daftar Nilai Siswa</h2>
                   <p className="text-sm text-muted">
                     {examDetail.judul} • KKM: {examDetail.kkm} • {results.length} siswa terdaftar
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={handleOpenBatchModal}
+                    disabled={results.length === 0}
+                    style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    title="Cetak gambar hasil seluruh siswa sekaligus"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Cetak Semua Gambar
+                  </button>
                   <span className="badge badge-primary">{examDetail.mata_pelajaran}</span>
                   <span className="badge badge-gray">{examDetail.kelas_target}</span>
                 </div>
@@ -1037,6 +1266,302 @@ export default function GuruHasilPage() {
                 type="button"
                 className="btn btn-ghost"
                 onClick={() => setImageModal((prev) => ({ ...prev, open: false }))}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Cetak Semua Gambar Siswa (Batch Export) */}
+      {batchModal.open && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && !batchModal.loading && !batchModal.zipping && setBatchModal((prev) => ({ ...prev, open: false }))}>
+          <div className="modal modal-lg" style={{ maxWidth: 880, maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-header" style={{ paddingBottom: 12, borderBottom: '1px solid var(--gray-200)', marginBottom: 14 }}>
+              <div>
+                <h3 className="modal-title" style={{ fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>Cetak Semua Hasil Siswa (Format Gambar)</span>
+                  <span className="badge badge-primary" style={{ fontSize: 11 }}>Batch Export</span>
+                </h3>
+                <p className="text-xs text-muted" style={{ marginTop: 2 }}>
+                  Ujian: <strong>{examDetail?.judul}</strong> • {examDetail?.mata_pelajaran} • {results.length} Siswa Terdaftar
+                </p>
+              </div>
+              <button
+                className="modal-close"
+                onClick={() => setBatchModal((prev) => ({ ...prev, open: false }))}
+                disabled={batchModal.loading || batchModal.zipping}
+                title="Tutup"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Filter & Options Bar */}
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 12,
+              padding: '12px 16px',
+              marginBottom: 14,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                    FORMAT KARTU:
+                  </label>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${batchModal.mode === 'ringkas' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setBatchModal((prev) => ({ ...prev, mode: 'ringkas' }))}
+                      disabled={batchModal.loading || batchModal.zipping}
+                      style={{ fontWeight: 600 }}
+                    >
+                      📸 Kartu Ringkas WA
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${batchModal.mode === 'lengkap' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setBatchModal((prev) => ({ ...prev, mode: 'lengkap' }))}
+                      disabled={batchModal.loading || batchModal.zipping}
+                      style={{ fontWeight: 600 }}
+                    >
+                      📄 Rekap Lengkap
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                    FILTER SISWA:
+                  </label>
+                  <select
+                    className="form-select"
+                    style={{ fontSize: 12, height: 30, padding: '2px 8px', minWidth: 160 }}
+                    value={batchModal.filterStatus}
+                    onChange={(e) => setBatchModal((prev) => ({ ...prev, filterStatus: e.target.value }))}
+                    disabled={batchModal.loading || batchModal.zipping}
+                  >
+                    <option value="all">Semua Siswa ({results.length})</option>
+                    <option value="selesai">Hanya Selesai ({results.filter(r => r.status === 'selesai').length})</option>
+                    <option value="lulus">Lulus KKM ({results.filter(r => r.status === 'selesai' && Number(r.total_nilai) >= (examDetail?.kkm || 75)).length})</option>
+                    <option value="tidak_lulus">Remidial ({results.filter(r => r.status === 'selesai' && Number(r.total_nilai) < (examDetail?.kkm || 75)).length})</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => handleStartBatchGeneration()}
+                  disabled={batchModal.loading || batchModal.zipping}
+                  style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  {batchModal.loading ? 'Memproses...' : batchModal.items.length > 0 ? 'Proses Ulang Gambar' : 'Mulai Buat Semua Gambar'}
+                </button>
+              </div>
+            </div>
+
+            {/* Progress Bar (Visible when loading or after completion) */}
+            {(batchModal.loading || batchModal.statusText) && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <span>{batchModal.statusText}</span>
+                  {batchModal.total > 0 && (
+                    <span>{batchModal.progress} / {batchModal.total} ({Math.round((batchModal.progress / batchModal.total) * 100)}%)</span>
+                  )}
+                </div>
+                <div className="progress-bar" style={{ height: 8, background: '#e2e8f0', borderRadius: 4 }}>
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${batchModal.total > 0 ? Math.round((batchModal.progress / batchModal.total) * 100) : 0}%`,
+                      transition: 'width 0.2s ease',
+                      background: 'linear-gradient(90deg, #0a66c2, #10b981)',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Content Gallery / Preview Area */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              background: '#f1f5f9',
+              borderRadius: 12,
+              padding: 14,
+              maxHeight: '52vh',
+              minHeight: 220,
+            }}>
+              {batchModal.loading && batchModal.items.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, padding: 30 }}>
+                  <div className="spinner" />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                    Menghasilkan gambar beresolusi tinggi untuk setiap siswa...
+                  </span>
+                </div>
+              ) : batchModal.items.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 10px', color: '#94a3b8' }}>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 6px', color: '#1e293b' }}>
+                    Belum ada gambar yang dibuat
+                  </p>
+                  <p style={{ fontSize: 12, margin: 0 }}>
+                    Klik tombol <strong>"Mulai Buat Semua Gambar"</strong> di atas untuk memproses gambar kartu hasil seluruh siswa.
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gap: 12,
+                }}>
+                  {batchModal.items.map(({ student, dataUrl }, idx) => {
+                    const isLulus = Number(student.total_nilai) >= (examDetail?.kkm || 75);
+                    return (
+                      <div
+                        key={student.id || idx}
+                        style={{
+                          background: '#ffffff',
+                          borderRadius: 10,
+                          padding: 10,
+                          border: '1px solid #e2e8f0',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8,
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {student.no_absen ? `${student.no_absen}. ` : ''}{student.nama}
+                            </div>
+                            <span style={{ fontSize: 10, color: '#64748b' }}>
+                              Kelas {student.kelas || '-'}
+                            </span>
+                          </div>
+                          <span
+                            className={`badge ${isLulus ? 'badge-success' : 'badge-danger'}`}
+                            style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px' }}
+                          >
+                            {student.total_nilai ?? 0}
+                          </span>
+                        </div>
+
+                        <div style={{ background: '#0f172a', borderRadius: 6, overflow: 'hidden', height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img
+                            src={dataUrl}
+                            alt={student.nama}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-xs"
+                            onClick={() => {
+                              const safeName = (student.nama || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_');
+                              const safeUjian = (examDetail?.judul || 'Ujian').replace(/[^a-zA-Z0-9_-]/g, '_');
+                              downloadResultImage(dataUrl, `Hasil_${safeName}_${safeUjian}.png`);
+                            }}
+                            style={{ flex: 1, fontSize: 11, padding: '3px 6px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                            title="Unduh file gambar siswa ini"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Unduh
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-xs"
+                            onClick={async () => {
+                              try {
+                                await copyImageToClipboard(dataUrl);
+                                alert(`Gambar ${student.nama} berhasil disalin! Anda bisa langsung Paste (Ctrl+V) di WhatsApp.`);
+                              } catch {
+                                const safeName = (student.nama || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_');
+                                downloadResultImage(dataUrl, `Hasil_${safeName}.png`);
+                              }
+                            }}
+                            style={{ fontSize: 11, padding: '3px 6px', fontWeight: 600 }}
+                            title="Salin gambar untuk ditempel di WhatsApp"
+                          >
+                            📋 WA
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: 14,
+              borderTop: '1px solid var(--gray-200)',
+              marginTop: 14,
+              flexWrap: 'wrap',
+              gap: 8,
+            }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleDownloadAllZip}
+                  disabled={batchModal.loading || batchModal.items.length === 0 || batchModal.zipping}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                  title="Unduh seluruh gambar hasil siswa dalam 1 file arsip ZIP"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  {batchModal.zipping ? 'Membuat Arsip ZIP...' : `Unduh Semua Gambar (.ZIP) [${batchModal.items.length}]`}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handlePrintAllImages}
+                  disabled={batchModal.loading || batchModal.items.length === 0}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                  title="Cetak semua gambar siswa sekaligus ke printer atau simpan sebagai PDF"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                  </svg>
+                  Cetak Semua Lembar (Print/PDF)
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setBatchModal((prev) => ({ ...prev, open: false }))}
+                disabled={batchModal.loading || batchModal.zipping}
               >
                 Tutup
               </button>

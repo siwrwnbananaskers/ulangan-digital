@@ -102,7 +102,21 @@ export async function GET(request) {
           tidak_lulus: selesai.filter(r => r.total_nilai < (ujian?.kkm || 75)).length,
         };
 
-        return apiResponse({ results, ujian, stats });
+        let allJawaban = [];
+        if (searchParams.get('all_jawaban') === '1') {
+          allJawaban = await db.getAll(
+            `SELECT j.sesi_id, j.soal_id, j.jawaban_siswa, j.is_benar, j.nilai_soal,
+                    s.tipe, s.kunci_jawaban, s.bobot, us.urutan
+             FROM jawaban j
+             JOIN ujian_soal us ON us.soal_id = j.soal_id AND us.ujian_id = ?
+             JOIN soal s ON s.id = j.soal_id
+             WHERE j.sesi_id IN (SELECT id FROM sesi_ujian WHERE ujian_id = ?)
+             ORDER BY us.urutan ASC`,
+            [ujianId, ujianId]
+          );
+        }
+
+        return apiResponse({ results, ujian, stats, allJawaban });
       }
 
       // Overview of all exams
