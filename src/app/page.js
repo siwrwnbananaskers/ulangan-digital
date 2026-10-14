@@ -131,12 +131,6 @@ export default function LoginPage() {
             Demo: <strong>guru</strong> / <strong>guru123</strong> • <strong>siswa1</strong> / <strong>guru123</strong>
           </p>
         </div>
-
-        <div style={{ marginTop: 12, textAlign: 'center' }}>
-          <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
-            © 2026 Ulangan Digital
-          </p>
-        </div>
       </div>
     </div>
   );

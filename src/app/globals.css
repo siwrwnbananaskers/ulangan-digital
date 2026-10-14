@@ -704,9 +704,8 @@ img {
 
 /* === Login Page (Compact, 1 Viewport, Enterprise SaaS) === */
 .login-page {
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden;
+  flex: 1;
+  min-height: calc(100vh - 48px);
   display: flex;
   align-items: center;
   justify-content: center;

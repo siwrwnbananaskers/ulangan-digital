@@ -1,4 +1,5 @@
 import './globals.css';
+import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'Ulangan Digital - Platform Asesmen Digital Modern',
@@ -20,7 +21,10 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <div id="app-root">
-          {children}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minWidth: 0 }}>
+            {children}
+          </div>
+          <Footer />
         </div>
       </body>
     </html>
