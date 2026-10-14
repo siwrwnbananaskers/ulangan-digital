@@ -53,6 +53,42 @@ export function formatTanggal(dateStr) {
 }
 
 /**
+ * Format date to concise Indonesian WIB string (e.g., "14 Okt 2026, 09.19 WIB")
+ * Guarantees proper UTC to Asia/Jakarta (+7h) conversion regardless of local browser timezone.
+ */
+export function formatWIB(dateInput, includeWeekday = false) {
+  if (!dateInput) return '-';
+  let str = String(dateInput).trim();
+
+  if (dateInput instanceof Date) {
+    str = dateInput.toISOString();
+  }
+
+  // If SQLite datetime('now') format "YYYY-MM-DD HH:mm:ss" without timezone, it is stored in UTC
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z';
+  } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(str) && !str.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(str)) {
+    str = str + 'Z';
+  }
+
+  const date = new Date(str);
+  if (isNaN(date.getTime())) return String(dateInput);
+
+  const day = date.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric' });
+  const month = date.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', month: includeWeekday ? 'long' : 'short' });
+  const year = date.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', year: 'numeric' });
+  const hour = date.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false });
+  const minute = date.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', minute: '2-digit', hour12: false });
+
+  if (includeWeekday) {
+    const weekday = date.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long' });
+    return `${weekday}, ${day} ${month} ${year} pukul ${hour}.${minute} WIB`;
+  }
+
+  return `${day} ${month} ${year}, ${hour}.${minute} WIB`;
+}
+
+/**
  * Format duration in minutes to readable string
  */
 export function formatDurasi(menit) {

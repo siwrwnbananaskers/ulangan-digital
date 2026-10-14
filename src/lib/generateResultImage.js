@@ -4,6 +4,8 @@
  * perfect for sharing directly with students/parents via WhatsApp or for printing.
  */
 
+import { formatWIB } from './utils';
+
 function drawRoundedRect(ctx, x, y, width, height, radius, fill, stroke) {
   let r = radius;
   if (typeof r === 'number') {
@@ -60,7 +62,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
     // Calculate dynamic height based on mode
     let contentHeight = 0;
     const headerHeight = 90;
-    const studentInfoHeight = 110;
+    const studentInfoHeight = 118;
     const scoreHeroHeight = 150;
     const footerHeight = 125;
 
@@ -137,40 +139,48 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
 
     currentY += headerHeight + 16;
 
-    // 3. Student Identity Card
+    // 3. Student Identity Card (Spacious 3-row layout, completely prevents any overlap)
     ctx.fillStyle = '#f8fafc';
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1;
     drawRoundedRect(ctx, padding, currentY, innerWidth, studentInfoHeight, 12, true, true);
 
-    // Student Name
+    // Row 1: Student Name (Dedicated full-width row - up to 750px without any collision!)
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const namaSiswa = sesi?.nama || 'Nama Siswa';
-    ctx.fillText(fitText(ctx, namaSiswa.toUpperCase(), 480), padding + 18, currentY + 34);
+    ctx.fillText(fitText(ctx, namaSiswa.toUpperCase(), innerWidth - 36), padding + 18, currentY + 30);
 
-    // Left Column: Kelas & No Absen
+    // Subtle divider
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(padding + 18, currentY + 42);
+    ctx.lineTo(padding + innerWidth - 18, currentY + 42);
+    ctx.stroke();
+
+    // Row 2:
+    // Left: Kelas & Absen
     ctx.fillStyle = '#475569';
     ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`Kelas: ${sesi?.kelas || '-'}`, padding + 18, currentY + 62);
-    ctx.fillText(`Nomor Absen: ${sesi?.no_absen || '-'}`, padding + 18, currentY + 84);
+    ctx.fillText(`Kelas: ${sesi?.kelas || '-'} (Absen: ${sesi?.no_absen || '-'})`, padding + 18, currentY + 68);
 
-    // Right Column: Ujian & Mapel
+    // Right: Ujian
     ctx.fillStyle = '#1e293b';
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const judulUjian = fitText(ctx, `Ujian: ${sesi?.ujian_judul || '-'}`, 360);
-    ctx.fillText(judulUjian, padding + 340, currentY + 34);
+    ctx.fillText(judulUjian, padding + 360, currentY + 68);
 
+    // Row 3:
+    // Left: Mapel
     ctx.fillStyle = '#475569';
     ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const mapel = fitText(ctx, `Mata Pelajaran: ${sesi?.mata_pelajaran || '-'}`, 360);
-    ctx.fillText(mapel, padding + 340, currentY + 62);
+    const mapel = fitText(ctx, `Mata Pelajaran: ${sesi?.mata_pelajaran || '-'}`, 330);
+    ctx.fillText(mapel, padding + 18, currentY + 96);
 
-    // Date
-    const waktuTeks = sesi?.waktu_selesai
-      ? new Date(sesi.waktu_selesai).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB'
-      : '-';
-    ctx.fillText(`Waktu Pengumpulan: ${waktuTeks}`, padding + 340, currentY + 84);
+    // Right: Waktu Pengumpulan (Synchronized with WIB / Asia/Jakarta timezone!)
+    const waktuTeks = formatWIB(sesi?.waktu_selesai);
+    ctx.fillText(`Waktu Pengumpulan: ${waktuTeks}`, padding + 360, currentY + 96);
 
     currentY += studentInfoHeight + 16;
 
@@ -463,8 +473,8 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas' }) {
     ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Dokumen ini digenerate secara otomatis oleh sistem evaluasi digital.', padding, currentY + 34);
 
-    const nowStr = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
-    ctx.fillText(`Dicetak pada: ${nowStr} WIB`, padding, currentY + 52);
+    const nowStr = formatWIB(new Date(), true);
+    ctx.fillText(`Dicetak pada: ${nowStr}`, padding, currentY + 52);
 
     // Right Footer: Teacher Signature Space
     const signX = padding + innerWidth - 240;
