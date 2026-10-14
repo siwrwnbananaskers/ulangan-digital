@@ -593,19 +593,19 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
 
     currentY += 56;
 
-    // 3. Table Column Layout
+    // 3. Table Column Layout (balanced to exactly innerWidth = 1048px, with spacious KETERANGAN column)
     const cols = [
-      { key: 'no', label: 'NO', width: 44, align: 'center' },
-      { key: 'absen', label: 'ABS', width: 48, align: 'center' },
-      { key: 'nisn', label: 'NISN / ID', width: 125, align: 'left' },
-      { key: 'nama', label: 'NAMA LENGKAP SISWA', width: 335, align: 'left' },
-      { key: 'kelas', label: 'KELAS', width: 85, align: 'center' },
-      { key: 'benar', label: 'BENAR', width: 68, align: 'center' },
-      { key: 'salah', label: 'SALAH', width: 68, align: 'center' },
-      { key: 'kosong', label: 'KOSONG', width: 72, align: 'center' },
-      { key: 'nilai', label: 'NILAI', width: 85, align: 'center' },
-      { key: 'kkm', label: 'KKM', width: 50, align: 'center' },
-      { key: 'ket', label: 'KETERANGAN', width: 68, align: 'center' },
+      { key: 'no', label: 'NO', width: 42, align: 'center' },
+      { key: 'absen', label: 'ABS', width: 46, align: 'center' },
+      { key: 'nisn', label: 'NISN / ID', width: 120, align: 'left' },
+      { key: 'nama', label: 'NAMA LENGKAP SISWA', width: 320, align: 'left' },
+      { key: 'kelas', label: 'KELAS', width: 80, align: 'center' },
+      { key: 'benar', label: 'BENAR', width: 64, align: 'center' },
+      { key: 'salah', label: 'SALAH', width: 64, align: 'center' },
+      { key: 'kosong', label: 'KOSONG', width: 68, align: 'center' },
+      { key: 'nilai', label: 'NILAI', width: 76, align: 'center' },
+      { key: 'kkm', label: 'KKM', width: 48, align: 'center' },
+      { key: 'ket', label: 'KETERANGAN', width: 120, align: 'center' },
     ];
 
     // Table Header Background (Monochrome Deep Slate)
@@ -1031,7 +1031,7 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '' }) 
               <th style="width: 55px;">KOSONG</th>
               <th style="width: 65px;">NILAI</th>
               <th style="width: 45px;">KKM</th>
-              <th style="width: 85px;">KETERANGAN</th>
+              <th style="width: 110px;">KETERANGAN</th>
             </tr>
           </thead>
           <tbody>
