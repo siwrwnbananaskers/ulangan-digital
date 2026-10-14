@@ -810,8 +810,8 @@ export default function SiswaManagementPage() {
                   padding: '12px 18px',
                   fontSize: 13,
                   fontWeight: bulkTab === 'excel' ? 700 : 500,
-                  color: bulkTab === 'excel' ? '#0a66c2' : '#64748b',
-                  borderBottom: bulkTab === 'excel' ? '2.5px solid #0a66c2' : 'none',
+                  color: bulkTab === 'excel' ? '#0f172a' : '#64748b',
+                  borderBottom: bulkTab === 'excel' ? '2.5px solid #0f172a' : 'none',
                   background: 'none',
                   borderTop: 'none',
                   borderLeft: 'none',
@@ -819,11 +819,15 @@ export default function SiswaManagementPage() {
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 7,
                 }}
               >
-                <span>📊 Upload File Excel (.xlsx)</span>
-                <span style={{ fontSize: 10, background: '#dbeafe', color: '#1e40af', padding: '1px 6px', borderRadius: 9999 }}>Utama</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span>Upload File Excel (.xlsx)</span>
+                <span style={{ fontSize: 10, background: '#f1f5f9', color: '#475569', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>Utama</span>
               </button>
               <button
                 type="button"
@@ -832,8 +836,8 @@ export default function SiswaManagementPage() {
                   padding: '12px 18px',
                   fontSize: 13,
                   fontWeight: bulkTab === 'paste' ? 700 : 500,
-                  color: bulkTab === 'paste' ? '#0a66c2' : '#64748b',
-                  borderBottom: bulkTab === 'paste' ? '2.5px solid #0a66c2' : 'none',
+                  color: bulkTab === 'paste' ? '#0f172a' : '#64748b',
+                  borderBottom: bulkTab === 'paste' ? '2.5px solid #0f172a' : 'none',
                   background: 'none',
                   borderTop: 'none',
                   borderLeft: 'none',
@@ -841,25 +845,28 @@ export default function SiswaManagementPage() {
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 7,
                 }}
               >
-                <span>📋 Salin (Paste) Teks</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span>Salin (Paste) Teks</span>
               </button>
             </div>
 
             {bulkTab === 'excel' ? (
               <form onSubmit={handleBulkExcelSubmit} style={{ padding: 20 }}>
                 {/* Step 1: Download Template */}
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '14px 18px', marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>Langkah 1:</span>
-                        <span>Unduh Format Template Resmi</span>
+                      <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                        Langkah 1: Unduh Format Template Resmi
                       </h4>
-                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#15803d' }}>
-                        Format file <code>.xlsx</code> sudah memiliki kolom yang tepat: Username, Nama Siswa, Kelas, No Absen, Password.
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
+                        Format file .xlsx sudah memiliki kolom yang tepat: Username, Nama Siswa, Kelas, No Absen, Password.
                       </p>
                     </div>
                     <button
@@ -867,23 +874,22 @@ export default function SiswaManagementPage() {
                       onClick={handleDownloadTemplate}
                       className="btn btn-sm"
                       style={{
-                        background: '#15803d',
+                        background: '#0f172a',
                         color: '#ffffff',
                         border: 'none',
-                        borderRadius: 8,
+                        borderRadius: 6,
                         padding: '8px 16px',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         fontSize: 12,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                       }}
                     >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
                       </svg>
                       Unduh Template Excel (.xlsx)
                     </button>
@@ -892,7 +898,7 @@ export default function SiswaManagementPage() {
 
                 {/* Step 2: Fallback Class */}
                 <div className="form-group" style={{ marginBottom: 16 }}>
-                  <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
                     Langkah 2: Kelas Default (digunakan jika baris siswa tidak menyertakan kelas):
                   </label>
                   <input
@@ -900,18 +906,19 @@ export default function SiswaManagementPage() {
                     placeholder="cth: XII-IPA-1 atau 5-A"
                     value={bulkDefaultKelas}
                     onChange={(e) => setBulkDefaultKelas(e.target.value)}
+                    style={{ fontSize: 13, borderRadius: 6 }}
                   />
                 </div>
 
                 {/* Step 3: Upload Excel File */}
                 <div className="form-group" style={{ marginBottom: 16 }}>
-                  <label className="form-label" style={{ fontWeight: 600, fontSize: 13 }}>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>
                     Langkah 3: Unggah (Upload) File Excel Yang Telah Diisi:
                   </label>
                   <div
                     style={{
                       border: '2px dashed #cbd5e1',
-                      borderRadius: 10,
+                      borderRadius: 8,
                       padding: '24px 16px',
                       textAlign: 'center',
                       background: '#f8fafc',
@@ -934,14 +941,15 @@ export default function SiswaManagementPage() {
                         cursor: 'pointer',
                       }}
                     />
-                    <div style={{ width: 44, height: 44, borderRadius: 9999, background: '#dbeafe', color: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 8, background: '#0f172a', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <polyline points="9 15 12 12 15 15" />
                       </svg>
                     </div>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#1e293b' }}>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
                       {excelFileName ? `File Terpilih: ${excelFileName}` : 'Klik untuk Pilih File Excel (.xlsx, .xls, .csv)'}
                     </p>
                     <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b' }}>
@@ -958,41 +966,46 @@ export default function SiswaManagementPage() {
 
                 {/* Preview Table */}
                 {excelParsedStudents.length > 0 && (
-                  <div style={{ marginBottom: 16, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#15803d' }}>
-                        ✅ Terdeteksi {excelParsedStudents.length} Siswa Siap Diimpor:
-                      </span>
+                  <div style={{ marginBottom: 16, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                          Terdeteksi {excelParsedStudents.length} Siswa Siap Diimpor
+                        </span>
+                      </div>
                       <span style={{ fontSize: 11, color: '#64748b' }}>
                         Menampilkan preview 5 baris pertama
                       </span>
                     </div>
-                    <div style={{ overflowX: 'auto', maxHeight: 180 }}>
+                    <div style={{ overflowX: 'auto', maxHeight: 180, border: '1px solid #f1f5f9', borderRadius: 6 }}>
                       <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                          <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
-                            <th style={{ padding: '6px 8px' }}>No</th>
-                            <th style={{ padding: '6px 8px' }}>Username</th>
-                            <th style={{ padding: '6px 8px' }}>Nama Lengkap</th>
-                            <th style={{ padding: '6px 8px' }}>Kelas</th>
-                            <th style={{ padding: '6px 8px' }}>Absen</th>
+                          <tr style={{ background: '#0f172a', color: '#ffffff' }}>
+                            <th style={{ padding: '8px 10px', fontWeight: 600, width: 44, textAlign: 'center' }}>No</th>
+                            <th style={{ padding: '8px 10px', fontWeight: 600 }}>Username</th>
+                            <th style={{ padding: '8px 10px', fontWeight: 600 }}>Nama Lengkap</th>
+                            <th style={{ padding: '8px 10px', fontWeight: 600, textAlign: 'center' }}>Kelas</th>
+                            <th style={{ padding: '8px 10px', fontWeight: 600, textAlign: 'center' }}>Absen</th>
                           </tr>
                         </thead>
                         <tbody>
                           {excelParsedStudents.slice(0, 5).map((s, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                              <td style={{ padding: '6px 8px' }}>{idx + 1}</td>
-                              <td style={{ padding: '6px 8px', fontWeight: 600 }}>{s.username}</td>
-                              <td style={{ padding: '6px 8px' }}>{s.nama}</td>
-                              <td style={{ padding: '6px 8px' }}>{s.kelas || '-'}</td>
-                              <td style={{ padding: '6px 8px' }}>{s.no_absen || '-'}</td>
+                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                              <td style={{ padding: '8px 10px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{idx + 1}</td>
+                              <td style={{ padding: '8px 10px', fontWeight: 700, color: '#0f172a' }}>{s.username}</td>
+                              <td style={{ padding: '8px 10px', color: '#334155' }}>{s.nama}</td>
+                              <td style={{ padding: '8px 10px', textAlign: 'center', color: '#475569' }}>{s.kelas || '-'}</td>
+                              <td style={{ padding: '8px 10px', textAlign: 'center', color: '#475569' }}>{s.no_absen || '-'}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                     {excelParsedStudents.length > 5 && (
-                      <p style={{ margin: '6px 0 0', fontSize: 11, color: '#64748b', textAlign: 'center' }}>
+                      <p style={{ margin: '8px 0 0', fontSize: 11, color: '#64748b', textAlign: 'center' }}>
                         ... dan {excelParsedStudents.length - 5} siswa lainnya
                       </p>
                     )}
@@ -1005,19 +1018,28 @@ export default function SiswaManagementPage() {
                     className="btn btn-secondary"
                     onClick={() => setShowBulkModal(false)}
                     disabled={bulkProcessing}
+                    style={{ borderRadius: 6, fontSize: 13 }}
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    style={{ background: '#0a66c2', fontWeight: 700, padding: '8px 22px' }}
+                    style={{ background: '#0a66c2', fontWeight: 600, padding: '8px 22px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                     disabled={bulkProcessing || excelParsedStudents.length === 0}
                   >
                     {bulkProcessing ? (
-                      'Membuat Akun Siswa...'
+                      <>
+                        <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                        <span>Membuat Akun Siswa...</span>
+                      </>
                     ) : (
-                      `🚀 Buat Akun (${excelParsedStudents.length}) Siswa Sekarang`
+                      <>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Buat Akun ({excelParsedStudents.length}) Siswa Sekarang</span>
+                      </>
                     )}
                   </button>
                 </div>
@@ -1132,7 +1154,10 @@ export default function SiswaManagementPage() {
           <div className="card" style={{ maxWidth: 480, width: '100%', padding: 24, borderRadius: 12, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.25)', background: '#ffffff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 20 }}>✏️</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
                   Edit Data Peserta Ujian
                 </h3>

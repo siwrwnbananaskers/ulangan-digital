@@ -409,7 +409,7 @@ class D1Client {
         }
         return res;
       } catch (error) {
-        console.warn('⚠️ Cloudflare D1 query failed, using resilient fallback store:', error.message);
+        console.warn('[D1 Warning] Cloudflare D1 query failed, using resilient fallback store:', error.message);
         return this.executeFallback(sql, params);
       }
     }

@@ -250,14 +250,18 @@ export default function GuruAuditPage() {
 
                             if (isSuspended) {
                               return (
-                                <button
-                                  className="btn btn-warning btn-sm"
-                                  style={{ fontSize: 11, padding: '5px 12px', fontWeight: 600, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
-                                  onClick={() => handleUnfreeze(v.sesi_id, v.siswa_id)}
-                                  title="Buka kembali kunci ujian siswa"
-                                >
-                                  <span>🔓</span> Pulihkan Ujian
-                                </button>
+                                  <button
+                                    className="btn btn-warning btn-sm"
+                                    style={{ fontSize: 11, padding: '5px 12px', fontWeight: 600, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
+                                    onClick={() => handleUnfreeze(v.sesi_id, v.siswa_id)}
+                                    title="Buka kembali kunci ujian siswa"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                      <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                                    </svg>
+                                    <span>Pulihkan Ujian</span>
+                                  </button>
                               );
                             }
 

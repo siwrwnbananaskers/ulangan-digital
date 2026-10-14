@@ -297,12 +297,14 @@ export default function SiswaDashboard() {
                             ✓ Sudah Dikerjakan (Selesai)
                           </span>
                         ) : exam.sesi_status === 'berlangsung' ? (
-                          <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            ⏳ Sedang Berlangsung
+                          <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Sedang Berlangsung</span>
                           </span>
                         ) : (
-                          <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11 }}>
-                            🟢 Siap Dikerjakan
+                          <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700, padding: '3px 10px', borderRadius: 9999, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2563eb', display: 'inline-block' }}></span>
+                            <span>Siap Dikerjakan</span>
                           </span>
                         )}
 
@@ -311,12 +313,14 @@ export default function SiswaDashboard() {
                         </span>
 
                         {exam.akses_ujian === 'otomatis' ? (
-                          <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11 }}>
-                            ⚡ Akses Langsung
+                          <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <span>Akses Langsung</span>
                           </span>
                         ) : (
-                          <span style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11 }}>
-                            🔑 Wajib Kode
+                          <span style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontWeight: 600, padding: '3px 8px', borderRadius: 6, fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <span>Wajib Kode</span>
                           </span>
                         )}
                       </div>

@@ -433,7 +433,8 @@ export default function LembarUjianPage() {
                   Lembar ujian akan terbuka otomatis tanpa refresh begitu Guru Pengawas menekan tombol Pulihkan di dashboard.
                 </p>
                 <div style={{ marginTop: 10, padding: '6px 10px', background: '#fee2e2', borderRadius: 6, fontSize: 11, color: '#991b1b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>🔄</span> Mengecek status pemulihan secara real-time...
+                  <div className="spinner" style={{ width: 12, height: 12, borderWidth: 2, borderColor: 'rgba(153, 27, 27, 0.2)', borderTopColor: '#991b1b' }} />
+                  <span>Mengecek status pemulihan secara real-time...</span>
                 </div>
               </div>
             ) : (
@@ -704,9 +705,13 @@ export default function LembarUjianPage() {
                   type="button"
                   className="btn btn-ghost btn-sm exam-mobile-nav-toggle"
                   onClick={() => setShowMobileNavDrawer(true)}
-                  style={{ fontSize: 13, fontWeight: 700, color: '#2563eb', padding: '6px 10px' }}
+                  style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', padding: '6px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                 >
-                  📋 No. {currentIndex + 1} dari {soalList.length}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  <span>No. {currentIndex + 1} dari {soalList.length}</span>
                 </button>
 
                 {currentIndex < soalList.length - 1 ? (
