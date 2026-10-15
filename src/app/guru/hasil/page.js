@@ -398,7 +398,28 @@ export default function GuruHasilPage() {
 
       for (let i = 0; i < targetResults.length; i++) {
         const student = targetResults[i];
-        const studentAnswers = answersBySesi[student.id] || [];
+        let studentAnswers = answersBySesi[student.id] || [];
+
+        // Order answers according to each student's unique randomized question order
+        if (student.urutan_soal) {
+          try {
+            const idOrder = JSON.parse(student.urutan_soal);
+            if (Array.isArray(idOrder) && idOrder.length > 0) {
+              const jMap = new Map(studentAnswers.map((j) => [j.soal_id, j]));
+              const ordered = [];
+              for (const qId of idOrder) {
+                if (jMap.has(qId)) {
+                  ordered.push(jMap.get(qId));
+                  jMap.delete(qId);
+                }
+              }
+              for (const rem of jMap.values()) {
+                ordered.push(rem);
+              }
+              studentAnswers = ordered;
+            }
+          } catch (_) {}
+        }
 
         setBatchModal((prev) => ({
           ...prev,
@@ -976,12 +997,7 @@ export default function GuruHasilPage() {
                 const isObjB = b.tipe === 'pg' || b.tipe === 'benar_salah';
                 if (isObjA && !isObjB) return -1;
                 if (!isObjA && isObjB) return 1;
-
-                const uA = a.urutan !== undefined && a.urutan !== null ? Number(a.urutan) : 9999;
-                const uB = b.urutan !== undefined && b.urutan !== null ? Number(b.urutan) : 9999;
-                if (uA !== uB) return uA - uB;
-
-                return (a.soal_id || '').localeCompare(b.soal_id || '');
+                return 0; // Stable sort: preserves each student's randomized exam order
               });
 
               let countB = 0;

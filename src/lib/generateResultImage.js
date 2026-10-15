@@ -76,22 +76,17 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     const padding = 28;
     const innerWidth = width - padding * 2;
 
-    // Sort cleanly for result certificate:
-    // 1. Objective questions (Pilihan Ganda & Benar/Salah) first
-    // 2. Subjective questions (Isian & Uraian/Essay) second
-    // 3. Within each group, ordered sequentially
+    // Maintain student's unique randomized order as answered in exam:
+    // 1. Keep objective questions (Pilihan Ganda & Benar/Salah) grouped on top
+    // 2. Keep subjective questions (Isian & Uraian/Essay) grouped on the bottom
+    // 3. Do NOT sort by master urutan (uA - uB) so each student's unique randomized questions are preserved!
     const rawList = Array.isArray(jawaban) ? jawaban : [];
     const listJawaban = [...rawList].sort((a, b) => {
       const isObjA = a.tipe === 'pg' || a.tipe === 'benar_salah';
       const isObjB = b.tipe === 'pg' || b.tipe === 'benar_salah';
       if (isObjA && !isObjB) return -1;
       if (!isObjA && isObjB) return 1;
-
-      const uA = a.urutan !== undefined && a.urutan !== null ? Number(a.urutan) : 9999;
-      const uB = b.urutan !== undefined && b.urutan !== null ? Number(b.urutan) : 9999;
-      if (uA !== uB) return uA - uB;
-
-      return (a.soal_id || '').localeCompare(b.soal_id || '');
+      return 0; // Stable sort: preserves the exact randomized order the student answered
     });
     const hasJawaban = listJawaban.length > 0;
 
