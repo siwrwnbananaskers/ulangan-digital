@@ -18,6 +18,12 @@ export default function RootLayout({ children }) {
           rel="icon"
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><rect width='32' height='32' rx='6' fill='%23191919'/><path d='M10 8h8l5 5v11a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/><path d='M18 8v5h5' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/><line x1='12' y1='18' x2='20' y2='18' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='12' y1='22' x2='17' y2='22' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/></svg>"
         />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body>
         <div id="app-root">

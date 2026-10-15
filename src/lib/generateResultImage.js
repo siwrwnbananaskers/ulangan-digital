@@ -158,7 +158,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
       const initials = getStudentInitials(sesi?.nama);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = 'bold 22px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(initials, avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 1);
@@ -168,17 +168,17 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
     // App Title & Subtitle
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 20px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('LEMBAR HASIL UJIAN SISWA', padding + 86, currentY + 41);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '500 13px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Sistem Asesmen Ulangan Digital • Dokumen Hasil Resmi', padding + 86, currentY + 61);
 
     // Right Status Badge in Header
     const isSelesai = sesi?.status === 'selesai';
     const statusText = isSelesai ? 'SELESAI DIKUMPULKAN' : 'SEDANG MENGERJAKAN';
-    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const statusWidth = ctx.measureText(statusText).width + 24;
     const statusX = padding + innerWidth - statusWidth - 18;
     const statusY = currentY + 28;
@@ -199,7 +199,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
     // Row 1: Student Name (Dedicated full-width row - up to 750px without any collision!)
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 19px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const namaSiswa = sesi?.nama || 'Nama Siswa';
     ctx.fillText(fitText(ctx, namaSiswa.toUpperCase(), innerWidth - 36), padding + 18, currentY + 30);
 
@@ -214,19 +214,19 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     // Row 2:
     // Left: Kelas & Absen
     ctx.fillStyle = '#475569';
-    ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '500 13px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText(`Kelas: ${sesi?.kelas || '-'} (Absen: ${sesi?.no_absen || '-'})`, padding + 18, currentY + 68);
 
     // Right: Ujian
     ctx.fillStyle = '#1e293b';
-    ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '600 13px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const judulUjian = fitText(ctx, `Ujian: ${sesi?.ujian_judul || '-'}`, 360);
     ctx.fillText(judulUjian, padding + 360, currentY + 68);
 
     // Row 3:
     // Left: Mapel
     ctx.fillStyle = '#475569';
-    ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '500 13px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const mapel = fitText(ctx, `Mata Pelajaran: ${sesi?.mata_pelajaran || '-'}`, 330);
     ctx.fillText(mapel, padding + 18, currentY + 96);
 
@@ -254,16 +254,16 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     ctx.textAlign = 'center';
 
     ctx.fillStyle = '#64748b';
-    ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '700 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('NILAI AKHIR SISWA', heroCenterX, currentY + 30);
 
     ctx.fillStyle = isLulus ? '#16a34a' : '#dc2626';
-    ctx.font = '900 60px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '900 60px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText(String(totalNilai), heroCenterX, currentY + 95);
 
     // KKM Pill (Centered inside Hero Score Box)
     const pillText = isLulus ? `TUNTAS KKM (${kkm})` : `REMIDIAL (KKM: ${kkm})`;
-    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const pillWidth = ctx.measureText(pillText).width + 20;
     const pillX = padding + (heroScoreWidth - pillWidth) / 2;
     ctx.fillStyle = isLulus ? '#dcfce7' : '#fee2e2';
@@ -328,15 +328,15 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
       ctx.textAlign = 'center';
 
       ctx.fillStyle = '#64748b';
-      ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = '600 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(item.label, cardCenterX, by + 22);
 
       ctx.fillStyle = item.color;
-      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = 'bold 18px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(item.val, cardCenterX, by + 46);
 
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(item.sub, cardCenterX, by + 63);
     });
 
@@ -350,11 +350,11 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
       if (mode === 'ringkas') {
         // Section Header
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = 'bold 14px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillText('REKAPITULASI BUTIR SOAL', padding, currentY + 16);
 
         ctx.fillStyle = '#64748b';
-        ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillText('Rincian jawaban siswa dan skor per butir pertanyaan:', padding, currentY + 32);
 
         currentY += 42;
@@ -395,18 +395,18 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
           // Text inside chip: "#1: A  10p"
           ctx.fillStyle = '#1e293b';
-          ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const noText = `#${item.urutan || (idx + 1)}`;
           ctx.fillText(noText, cx + 8, cy + 21);
 
           ctx.fillStyle = chipColor;
-          ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const ansText = isKosong ? 'Kosong' : (item.jawaban_siswa || '-').toUpperCase().slice(0, 4);
           ctx.fillText(ansText, cx + 36, cy + 21);
 
           // Points on the right
           ctx.fillStyle = '#64748b';
-          ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = '600 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const ptText = `${item.nilai_soal ?? 0}p`;
           const ptWidth = ctx.measureText(ptText).width;
           ctx.fillText(ptText, cx + chipWidth - ptWidth - 8, cy + 21);
@@ -418,7 +418,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
       } else {
         // mode === 'lengkap' (Table Format)
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = 'bold 14px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillText('RINCIAN LENGKAP JAWABAN SISWA', padding, currentY + 16);
 
         currentY += 28;
@@ -429,7 +429,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
         drawRoundedRect(ctx, padding, currentY, innerWidth, rowH, { tl: 8, tr: 8, br: 0, bl: 0 }, true, false);
 
         ctx.fillStyle = '#334155';
-        ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillText('NO', padding + 12, currentY + 21);
         ctx.fillText('TIPE SOAL', padding + 48, currentY + 21);
         ctx.fillText('JAWABAN SISWA', padding + 180, currentY + 21);
@@ -454,30 +454,30 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
           // No
           ctx.fillStyle = '#1e293b';
-          ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           ctx.fillText(String(item.urutan || (idx + 1)), padding + 14, currentY + 21);
 
           // Tipe
           ctx.fillStyle = '#64748b';
-          ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const tipeName = item.tipe === 'pg' ? 'Pilihan Ganda' : item.tipe === 'isian' ? 'Isian' : item.tipe === 'benar_salah' ? 'B / S' : 'Uraian';
           ctx.fillText(tipeName, padding + 48, currentY + 21);
 
           // Jawaban Siswa
           ctx.fillStyle = '#0f172a';
-          ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = '600 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const jwb = isKosong ? '(Tidak Dijawab)' : fitText(ctx, item.jawaban_siswa || '-', 230);
           ctx.fillText(jwb, padding + 180, currentY + 21);
 
           // Kunci
           ctx.fillStyle = '#334155';
-          ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const kunci = fitText(ctx, item.kunci_jawaban || '-', 100);
           ctx.fillText(kunci, padding + 430, currentY + 21);
 
           // Skor
           ctx.fillStyle = '#1e293b';
-          ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = '600 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           ctx.fillText(`${item.nilai_soal ?? 0} / ${item.bobot || 10}`, padding + 540, currentY + 21);
 
           // Status Badge
@@ -503,7 +503,7 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
           drawRoundedRect(ctx, padding + 670, currentY + 6, 80, 22, 6, true, false);
 
           ctx.fillStyle = statColor;
-          ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = 'bold 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           ctx.fillText(statText, padding + 682, currentY + 20);
 
           currentY += rowH;
@@ -525,11 +525,11 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
     // Left Footer: Information & Timestamp
     ctx.fillStyle = '#475569';
-    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '600 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Aplikasi Asesmen Ulangan Digital', padding, currentY + 16);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Dokumen ini digenerate secara otomatis oleh sistem evaluasi digital.', padding, currentY + 34);
 
     const nowStr = formatWIB(new Date(), true);
@@ -543,11 +543,11 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#334155';
-    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '600 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Mengetahui / Guru Pengampu,', signCenterX, currentY + 16);
 
     // Measure teacher name width dynamically
-    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const nameWidth = ctx.measureText(teacherName).width;
     const lineWidth = Math.max(nameWidth + 16, 80);
     const lineStartX = signCenterX - lineWidth / 2;

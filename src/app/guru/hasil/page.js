@@ -513,7 +513,7 @@ export default function GuruHasilPage() {
           <title>Cetak Semua Hasil Siswa - ${examDetail?.judul || 'Ujian'}</title>
           <style>
             @page { size: auto; margin: 10mm; }
-            body { margin: 0; padding: 0; font-family: sans-serif; background: #fff; }
+            body { margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #fff; }
             .page-break { page-break-after: always; break-after: page; display: flex; justify-content: center; align-items: center; min-height: 95vh; padding: 10px 0; }
             .page-break:last-child { page-break-after: avoid; break-after: avoid; }
             img { max-width: 100%; max-height: 95vh; object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; }

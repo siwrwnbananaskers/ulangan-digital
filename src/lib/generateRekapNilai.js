@@ -909,11 +909,14 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '', on
       <head>
         <meta charset="utf-8" />
         <title>Rekap Nilai Siswa - ${examDetail?.judul || 'Ujian'}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <style>
           @page { size: landscape; margin: 12mm; }
           * { box-sizing: border-box; }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: #0f172a;
             background: #ffffff;
             margin: 0;
