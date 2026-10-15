@@ -24,6 +24,7 @@ export default function GuruHasilPage() {
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [modalJawaban, setModalJawaban] = useState(null);
+  const [filterKoreksi, setFilterKoreksi] = useState('all'); // 'all' | 'belum' | 'sudah'
   const { dialogState, confirm: showConfirm, alert: showAlert, handleConfirm, handleClose } = useConfirmDialog();
   const [loadingJawaban, setLoadingJawaban] = useState(false);
   const [gradingLoadingId, setGradingLoadingId] = useState(null);
@@ -73,6 +74,7 @@ export default function GuruHasilPage() {
 
   useEffect(() => {
     if (selectedUjianId) {
+      setFilterKoreksi('all');
       loadDetail(selectedUjianId);
     }
   }, [selectedUjianId]);
@@ -629,6 +631,25 @@ export default function GuruHasilPage() {
     }
   };
 
+  const totalSoalManual = Number(examDetail?.total_soal_manual) || Number(stats?.total_soal_manual) || 0;
+  const hasManual = totalSoalManual > 0;
+  const countPerluKoreksi = results.filter(
+    (r) => r.status === 'selesai' && (Number(r.manual_belum_dikoreksi) || 0) > 0
+  ).length;
+  const countSudahKoreksi = results.filter(
+    (r) => r.status === 'selesai' && (Number(r.manual_belum_dikoreksi) || 0) === 0
+  ).length;
+
+  const filteredResults = results.filter((res) => {
+    if (filterKoreksi === 'belum') {
+      return res.status === 'selesai' && (Number(res.manual_belum_dikoreksi) || 0) > 0;
+    }
+    if (filterKoreksi === 'sudah') {
+      return res.status === 'selesai' && (Number(res.manual_belum_dikoreksi) || 0) === 0;
+    }
+    return true;
+  });
+
   if (authLoading) {
     return <div className="loading-page"><div className="spinner" /><p>Memuat...</p></div>;
   }
@@ -819,9 +840,147 @@ export default function GuruHasilPage() {
                 </div>
               </div>
 
-              {results.length === 0 ? (
-                <div className="empty-state">
-                  <p>Belum ada siswa yang mengikuti ujian ini.</p>
+              {/* Manual Grading Alert Banner */}
+              {hasManual && (
+                <div
+                  style={{
+                    margin: '16px 20px 0 20px',
+                    padding: '14px 18px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: countPerluKoreksi > 0 ? '#fffbeb' : '#f0fdf4',
+                    border: `1px solid ${countPerluKoreksi > 0 ? '#fde68a' : '#bbf7d0'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: countPerluKoreksi > 0 ? '#fef3c7' : '#dcfce7',
+                        color: countPerluKoreksi > 0 ? '#b45309' : '#15803d',
+                        fontSize: 18,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {countPerluKoreksi > 0 ? '✏️' : '✓'}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: countPerluKoreksi > 0 ? '#92400e' : '#166534' }}>
+                        {countPerluKoreksi > 0
+                          ? `${countPerluKoreksi} Siswa Memerlukan Koreksi Essay / Uraian`
+                          : 'Semua Jawaban Essay Telah Selesai Dikoreksi!'}
+                      </div>
+                      <div style={{ fontSize: 12, color: countPerluKoreksi > 0 ? '#b45309' : '#15803d', marginTop: 2 }}>
+                        Ujian ini memiliki {totalSoalManual} butir soal Essay/Isian manual • {countSudahKoreksi} dari {results.filter(r => r.status === 'selesai').length} siswa selesai dinilai
+                      </div>
+                    </div>
+                  </div>
+                  {countPerluKoreksi > 0 && filterKoreksi !== 'belum' && (
+                    <button
+                      type="button"
+                      onClick={() => setFilterKoreksi('belum')}
+                      className="btn btn-sm"
+                      style={{
+                        background: '#d97706',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        border: 'none',
+                        padding: '6px 14px',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: '0 2px 4px rgba(217, 119, 6, 0.25)',
+                      }}
+                    >
+                      Tampilkan Siswa Yang Perlu Dikoreksi ({countPerluKoreksi})
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Filter Pills */}
+              {hasManual && results.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '16px 20px 0 20px' }}>
+                  <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--gray-600)', marginRight: 4 }}>
+                    Status Koreksi:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFilterKoreksi('all')}
+                    className={`btn btn-xs ${filterKoreksi === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ borderRadius: 20, padding: '4px 14px', fontWeight: 600 }}
+                  >
+                    Semua ({results.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterKoreksi('belum')}
+                    className="btn btn-xs"
+                    style={{
+                      borderRadius: 20,
+                      padding: '4px 14px',
+                      fontWeight: 700,
+                      background: filterKoreksi === 'belum' ? '#d97706' : '#fffbeb',
+                      color: filterKoreksi === 'belum' ? '#ffffff' : '#b45309',
+                      border: '1px solid #fde68a',
+                      boxShadow: filterKoreksi === 'belum' ? '0 2px 4px rgba(217, 119, 6, 0.25)' : 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: filterKoreksi === 'belum' ? '#ffffff' : '#d97706' }} />
+                    Belum Dikoreksi ({countPerluKoreksi})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterKoreksi('sudah')}
+                    className="btn btn-xs"
+                    style={{
+                      borderRadius: 20,
+                      padding: '4px 14px',
+                      fontWeight: 700,
+                      background: filterKoreksi === 'sudah' ? '#16a34a' : '#f0fdf4',
+                      color: filterKoreksi === 'sudah' ? '#ffffff' : '#15803d',
+                      border: '1px solid #86efac',
+                      boxShadow: filterKoreksi === 'sudah' ? '0 2px 4px rgba(22, 163, 74, 0.25)' : 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    ✓ Sudah Dikoreksi ({countSudahKoreksi})
+                  </button>
+                </div>
+              )}
+
+              {filteredResults.length === 0 ? (
+                <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
+                  <p style={{ fontWeight: 600, fontSize: 15 }}>
+                    {filterKoreksi === 'belum'
+                      ? '🎉 Luar biasa! Semua siswa telah selesai dikoreksi.'
+                      : filterKoreksi === 'sudah'
+                      ? 'Belum ada siswa yang selesai dikoreksi.'
+                      : 'Belum ada siswa yang mengikuti ujian ini.'}
+                  </p>
+                  {filterKoreksi !== 'all' && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setFilterKoreksi('all')}
+                      style={{ marginTop: 10, borderRadius: 20 }}
+                    >
+                      Tampilkan Semua Siswa
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="table-container">
@@ -840,8 +999,9 @@ export default function GuruHasilPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((res, idx) => {
+                      {filteredResults.map((res, idx) => {
                         const isLulus = res.total_nilai !== null && res.total_nilai >= (examDetail.kkm || 75);
+                        const isBelumKoreksi = hasManual && res.status === 'selesai' && (Number(res.manual_belum_dikoreksi) || 0) > 0;
                         return (
                           <tr key={res.id}>
                             <td>{idx + 1}</td>
@@ -850,15 +1010,60 @@ export default function GuruHasilPage() {
                             </td>
                             <td>{res.kelas || '-'} / {res.no_absen || '-'}</td>
                             <td>
-                              <span className={`badge ${
-                                res.status === 'selesai' ? 'badge-success' :
-                                res.status === 'ditangguhkan' ? 'badge-danger' :
-                                res.status === 'berlangsung' ? 'badge-info' : 'badge-gray'
-                              }`}>
-                                {res.status === 'selesai' ? 'Selesai' :
-                                 res.status === 'ditangguhkan' ? 'Ditangguhkan' :
-                                 res.status === 'berlangsung' ? 'Mengerjakan' : 'Belum Mulai'}
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                                <span className={`badge ${
+                                  res.status === 'selesai' ? 'badge-success' :
+                                  res.status === 'ditangguhkan' ? 'badge-danger' :
+                                  res.status === 'berlangsung' ? 'badge-info' : 'badge-gray'
+                                }`}>
+                                  {res.status === 'selesai' ? 'Selesai' :
+                                   res.status === 'ditangguhkan' ? 'Ditangguhkan' :
+                                   res.status === 'berlangsung' ? 'Mengerjakan' : 'Belum Mulai'}
+                                </span>
+
+                                {hasManual && res.status === 'selesai' && (
+                                  isBelumKoreksi ? (
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        background: '#fffbeb',
+                                        color: '#b45309',
+                                        border: '1px solid #fde68a',
+                                        fontSize: 10,
+                                        padding: '2px 8px',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        fontWeight: 700,
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title={`Ada ${res.manual_belum_dikoreksi} butir soal essay/isian yang belum dinilai`}
+                                    >
+                                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
+                                      Belum Dikoreksi ({res.manual_belum_dikoreksi})
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        background: '#f0fdf4',
+                                        color: '#15803d',
+                                        border: '1px solid #86efac',
+                                        fontSize: 10,
+                                        padding: '2px 8px',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        fontWeight: 700,
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title="Semua butir essay/isian siswa ini telah dinilai oleh guru"
+                                    >
+                                      ✓ Sudah Dikoreksi
+                                    </span>
+                                  )
+                                )}
+                              </div>
                             </td>
                             <td className="text-xs text-muted">
                               {res.waktu_mulai ? formatTanggal(res.waktu_mulai) : '-'}
@@ -903,17 +1108,41 @@ export default function GuruHasilPage() {
                               <div style={{ display: 'flex', gap: 'var(--space-xs)', alignItems: 'center' }}>
                                 <button
                                   type="button"
-                                  className="btn btn-primary btn-sm"
+                                  className={`btn btn-sm ${isBelumKoreksi ? 'btn-warning' : 'btn-primary'}`}
                                   onClick={() => handleViewAnswers(res)}
                                   disabled={loadingJawaban}
-                                  title="Buka dan periksa lembar jawaban siswa ini"
-                                  style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
+                                  title={isBelumKoreksi ? `Koreksi ${res.manual_belum_dikoreksi} butir essay siswa ini` : "Buka dan periksa lembar jawaban siswa ini"}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 5,
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 700,
+                                    ...(isBelumKoreksi ? {
+                                      background: 'linear-gradient(135deg, #d97706, #b45309)',
+                                      borderColor: '#b45309',
+                                      color: '#ffffff',
+                                      boxShadow: '0 2px 6px rgba(217, 119, 6, 0.35)',
+                                    } : {})
+                                  }}
                                 >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                  </svg>
-                                  Cek Jawaban
+                                  {isBelumKoreksi ? (
+                                    <>
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                      </svg>
+                                      Koreksi ({res.manual_belum_dikoreksi})
+                                    </>
+                                  ) : (
+                                    <>
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                      </svg>
+                                      {hasManual && res.status === 'selesai' ? '✓ Cek Jawaban' : 'Cek Jawaban'}
+                                    </>
+                                  )}
                                 </button>
                                 <button
                                   type="button"
@@ -972,11 +1201,30 @@ export default function GuruHasilPage() {
           >
             <div className="modal-header" style={{ paddingBottom: 10, borderBottom: '1px solid var(--gray-200)', marginBottom: 10, flexShrink: 0 }}>
               <div>
-                <h3 className="modal-title" style={{ fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                <h3 className="modal-title" style={{ fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', flexWrap: 'wrap' }}>
                   <span>Lembar Jawaban Siswa</span>
                   <span className={`badge ${modalJawaban.sesi?.status === 'selesai' ? 'badge-success' : 'badge-info'}`} style={{ fontSize: 'var(--font-size-xs)' }}>
                     {modalJawaban.sesi?.status === 'selesai' ? 'Selesai Dikumpulkan' : 'Sedang Mengerjakan'}
                   </span>
+                  {(() => {
+                    const rawList = modalJawaban.jawaban || [];
+                    const manualList = rawList.filter(j => j.tipe === 'uraian' || j.tipe === 'isian');
+                    if (manualList.length === 0) return null;
+                    const unrated = manualList.filter(j => j.nilai_soal === null || j.nilai_soal === undefined);
+                    if (unrated.length === 0) {
+                      return (
+                        <span className="badge" style={{ fontSize: 'var(--font-size-xs)', background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          ✓ Semua Essay Selesai Dikoreksi
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="badge" style={{ fontSize: 'var(--font-size-xs)', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
+                        {unrated.length} Soal Essay Belum Dinilai
+                      </span>
+                    );
+                  })()}
                 </h3>
                 <p className="text-xs text-muted" style={{ marginTop: 2 }}>
                   <strong>{modalJawaban.sesi?.nama}</strong> • Kelas {modalJawaban.sesi?.kelas || '-'} (Absen: {modalJawaban.sesi?.no_absen || '-'}) • Ujian: <strong>{modalJawaban.sesi?.ujian_judul}</strong> ({modalJawaban.sesi?.mata_pelajaran})
@@ -1170,14 +1418,19 @@ export default function GuruHasilPage() {
                                 Nilai Parsial: {item.nilai_soal} / {item.bobot} Poin
                               </span>
                             )}
-                            {(Number(item.nilai_soal) === 0 || item.nilai_soal === null) && !isKosong && (
-                              <span className="badge badge-danger">0 / {item.bobot} Poin</span>
+                            {(item.tipe === 'uraian' || item.tipe === 'isian') && (item.nilai_soal === null || item.nilai_soal === undefined) && !isKosong ? (
+                              <span className="badge" style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                ⏳ Belum Dinilai Guru
+                              </span>
+                            ) : (
+                              <>
+                                {(Number(item.nilai_soal) === 0 || item.nilai_soal === null) && !isKosong && (
+                                  <span className="badge badge-danger">0 / {item.bobot} Poin</span>
+                                )}
+                              </>
                             )}
                             {isKosong && (Number(item.nilai_soal) === 0 || item.nilai_soal === null) && (
                               <span className="badge badge-gray">Tidak Dijawab</span>
-                            )}
-                            {isUraian && item.is_benar === null && (
-                              <span className="badge badge-warning">Perlu Penilaian Guru</span>
                             )}
                           </div>
                         </div>

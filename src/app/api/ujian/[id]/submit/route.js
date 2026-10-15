@@ -96,10 +96,21 @@ export async function POST(request, { params }) {
         jumlahManual++;
         if (!jawaban || jawaban.trim() === '') {
           jumlahKosong++;
-          await db.run(
-            `UPDATE jawaban SET is_benar = 0, nilai_soal = 0 WHERE sesi_id = ? AND soal_id = ?`,
+          const existing = await db.getOne(
+            'SELECT id FROM jawaban WHERE sesi_id = ? AND soal_id = ?',
             [sesi_id, soal.id]
           );
+          if (existing) {
+            await db.run(
+              `UPDATE jawaban SET is_benar = 0, nilai_soal = 0 WHERE id = ?`,
+              [existing.id]
+            );
+          } else {
+            await db.run(
+              `INSERT INTO jawaban (id, sesi_id, soal_id, jawaban_siswa, is_benar, nilai_soal) VALUES (?, ?, ?, '', 0, 0)`,
+              [generateId('jwb'), sesi_id, soal.id]
+            );
+          }
         } else {
           // Do NOT mark as wrong! Leave for teacher review
           await db.run(

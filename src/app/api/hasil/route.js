@@ -99,7 +99,22 @@ export async function GET(request) {
         // Get detailed results for specific exam
         const results = await db.getAll(
           `SELECT su.*, u.nama, u.kelas, u.no_absen, u.username, u.foto_profil,
-            (SELECT COUNT(*) FROM audit_log al WHERE al.sesi_id = su.id) as total_pelanggaran
+            (SELECT COUNT(*) FROM audit_log al WHERE al.sesi_id = su.id) as total_pelanggaran,
+            (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = su.ujian_id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual,
+            (SELECT COUNT(*) FROM ujian_soal us 
+               JOIN soal s ON s.id = us.soal_id 
+               LEFT JOIN jawaban j ON j.soal_id = s.id AND j.sesi_id = su.id 
+             WHERE us.ujian_id = su.ujian_id 
+               AND s.tipe IN ('uraian', 'isian') 
+               AND j.nilai_soal IS NULL
+            ) as manual_belum_dikoreksi,
+            (SELECT COUNT(*) FROM ujian_soal us 
+               JOIN soal s ON s.id = us.soal_id 
+               JOIN jawaban j ON j.soal_id = s.id AND j.sesi_id = su.id 
+             WHERE us.ujian_id = su.ujian_id 
+               AND s.tipe IN ('uraian', 'isian') 
+               AND j.nilai_soal IS NOT NULL
+            ) as manual_sudah_dikoreksi
            FROM sesi_ujian su
            JOIN users u ON u.id = su.siswa_id
            WHERE su.ujian_id = ?
@@ -108,7 +123,8 @@ export async function GET(request) {
         );
 
         const ujian = await db.getOne(
-          `SELECT uj.*, u.nama as guru_nama
+          `SELECT uj.*, u.nama as guru_nama,
+            (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual
            FROM ujian uj
            LEFT JOIN users u ON u.id = uj.guru_id
            WHERE uj.id = ?`,
@@ -118,6 +134,10 @@ export async function GET(request) {
         // Statistics
         const selesai = results.filter(r => r.status === 'selesai');
         const nilaiArr = selesai.map(r => r.total_nilai).filter(n => n !== null);
+        const totalSoalManual = Number(ujian?.total_soal_manual) || (results.length > 0 ? (Number(results[0].total_soal_manual) || 0) : 0);
+        const perluKoreksi = selesai.filter(r => totalSoalManual > 0 && (Number(r.manual_belum_dikoreksi) || 0) > 0).length;
+        const sudahKoreksi = selesai.filter(r => totalSoalManual > 0 && (Number(r.manual_belum_dikoreksi) || 0) === 0).length;
+
         const stats = {
           total_peserta: results.length,
           total_selesai: selesai.length,
@@ -128,6 +148,9 @@ export async function GET(request) {
           nilai_terendah: nilaiArr.length > 0 ? Math.min(...nilaiArr) : 0,
           lulus_kkm: selesai.filter(r => r.total_nilai >= (ujian?.kkm || 75)).length,
           tidak_lulus: selesai.filter(r => r.total_nilai < (ujian?.kkm || 75)).length,
+          total_soal_manual: totalSoalManual,
+          perlu_koreksi: perluKoreksi,
+          sudah_koreksi: sudahKoreksi,
         };
 
         let allJawaban = [];

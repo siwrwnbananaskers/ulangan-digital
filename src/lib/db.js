@@ -630,7 +630,16 @@ class D1Client {
               }
             }
           }
-          return { results: found ? [found] : [], meta: {} };
+          if (found) {
+            const manualCount = fallbackStore.ujian_soal
+              .filter(us => us.ujian_id === found.id)
+              .filter(us => {
+                const s = fallbackStore.soal.find(so => so.id === us.soal_id);
+                return s && (s.tipe === 'uraian' || s.tipe === 'isian');
+              }).length;
+            return { results: [{ ...found, total_soal_manual: manualCount }], meta: {} };
+          }
+          return { results: [], meta: {} };
         }
         if (upper.includes('KODE_UJIAN =')) {
           const code = params[0]?.toUpperCase();
@@ -709,15 +718,39 @@ class D1Client {
         if (upper.includes('WHERE SU.UJIAN_ID =')) {
           const examId = params[0];
           const sessions = fallbackStore.sesi_ujian.filter(s => s.ujian_id === examId);
+          const examManualSoalIds = fallbackStore.ujian_soal
+            .filter(us => us.ujian_id === examId)
+            .map(us => us.soal_id)
+            .filter(sId => {
+              const soal = fallbackStore.soal.find(s => s.id === sId);
+              return soal && (soal.tipe === 'uraian' || soal.tipe === 'isian');
+            });
+          const totalSoalManual = examManualSoalIds.length;
+
           const results = sessions.map(su => {
             const u = fallbackStore.users.find(usr => usr.id === su.siswa_id) || {};
             const logCount = fallbackStore.audit_log.filter(l => l.sesi_id === su.id).length;
+            let manualBelum = 0;
+            let manualSudah = 0;
+            if (totalSoalManual > 0) {
+              for (const sId of examManualSoalIds) {
+                const j = fallbackStore.jawaban.find(ans => ans.sesi_id === su.id && ans.soal_id === sId);
+                if (j && j.nilai_soal !== null && j.nilai_soal !== undefined) {
+                  manualSudah++;
+                } else {
+                  manualBelum++;
+                }
+              }
+            }
             return {
               ...su,
               nama: u.nama || 'Siswa',
               kelas: u.kelas || '-',
               no_absen: u.no_absen || '-',
               total_pelanggaran: logCount,
+              total_soal_manual: totalSoalManual,
+              manual_belum_dikoreksi: manualBelum,
+              manual_sudah_dikoreksi: manualSudah,
             };
           });
           return { results, meta: {} };
