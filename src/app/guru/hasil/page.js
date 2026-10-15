@@ -859,20 +859,29 @@ export default function GuruHasilPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div
                       style={{
-                        width: 38,
-                        height: 38,
+                        width: 40,
+                        height: 40,
                         borderRadius: '50%',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: countPerluKoreksi > 0 ? '#fef3c7' : '#dcfce7',
-                        color: countPerluKoreksi > 0 ? '#b45309' : '#15803d',
-                        fontSize: 18,
-                        fontWeight: 700,
+                        background: '#ffffff',
+                        border: '1.5px solid #0f172a',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.06)',
+                        color: '#0f172a',
                         flexShrink: 0,
                       }}
                     >
-                      {countPerluKoreksi > 0 ? '✏️' : '✓'}
+                      {countPerluKoreksi > 0 ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
                     </div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14, color: countPerluKoreksi > 0 ? '#92400e' : '#166534' }}>
@@ -987,15 +996,15 @@ export default function GuruHasilPage() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>No</th>
+                        <th style={{ textAlign: 'center', width: 50 }}>No</th>
                         <th>Nama Siswa</th>
-                        <th>Kelas / Absen</th>
-                        <th>Status</th>
-                        <th>Waktu Mulai</th>
-                        <th>Benar / Salah</th>
-                        <th>Nilai Akhir</th>
-                        <th>Pelanggaran</th>
-                        <th>Aksi</th>
+                        <th style={{ textAlign: 'center' }}>Kelas / Absen</th>
+                        <th style={{ textAlign: 'center' }}>Status</th>
+                        <th style={{ textAlign: 'center' }}>Waktu Mulai</th>
+                        <th style={{ textAlign: 'center' }}>Benar / Salah</th>
+                        <th style={{ textAlign: 'center' }}>Nilai Akhir</th>
+                        <th style={{ textAlign: 'center' }}>Pelanggaran</th>
+                        <th style={{ textAlign: 'center' }}>Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1004,13 +1013,13 @@ export default function GuruHasilPage() {
                         const isBelumKoreksi = hasManual && res.status === 'selesai' && (Number(res.manual_belum_dikoreksi) || 0) > 0;
                         return (
                           <tr key={res.id}>
-                            <td>{idx + 1}</td>
+                            <td style={{ textAlign: 'center' }}>{idx + 1}</td>
                             <td>
                               <strong>{res.nama}</strong>
                             </td>
-                            <td>{res.kelas || '-'} / {res.no_absen || '-'}</td>
-                            <td>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                            <td style={{ textAlign: 'center' }}>{res.kelas || '-'} / {res.no_absen || '-'}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
                                 <span className={`badge ${
                                   res.status === 'selesai' ? 'badge-success' :
                                   res.status === 'ditangguhkan' ? 'badge-danger' :
@@ -1065,10 +1074,10 @@ export default function GuruHasilPage() {
                                 )}
                               </div>
                             </td>
-                            <td className="text-xs text-muted">
+                            <td className="text-xs text-muted" style={{ textAlign: 'center' }}>
                               {res.waktu_mulai ? formatTanggal(res.waktu_mulai) : '-'}
                             </td>
-                            <td>
+                            <td style={{ textAlign: 'center' }}>
                               {res.status === 'selesai' ? (
                                 <span className="text-xs">
                                   <strong className="text-success">{res.jumlah_benar || 0} Benar</strong> •{' '}
@@ -1077,9 +1086,9 @@ export default function GuruHasilPage() {
                                 </span>
                               ) : '-'}
                             </td>
-                            <td>
+                            <td style={{ textAlign: 'center' }}>
                               {res.total_nilai !== null ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-xs)' }}>
                                   <span style={{
                                     fontSize: 'var(--font-size-lg)',
                                     fontWeight: 800,
@@ -1095,7 +1104,7 @@ export default function GuruHasilPage() {
                                 <span className="text-muted text-xs">-</span>
                               )}
                             </td>
-                            <td>
+                            <td style={{ textAlign: 'center' }}>
                               {res.total_pelanggaran > 0 ? (
                                 <span className="badge badge-danger">
                                   {res.total_pelanggaran}x Pelanggaran
@@ -1104,8 +1113,8 @@ export default function GuruHasilPage() {
                                 <span className="badge badge-success">0 Tertib</span>
                               )}
                             </td>
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              <div style={{ display: 'flex', gap: 'var(--space-xs)', alignItems: 'center' }}>
+                            <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: 'var(--space-xs)', alignItems: 'center', justifyContent: 'center' }}>
                                 <button
                                   type="button"
                                   className={`btn btn-sm ${isBelumKoreksi ? 'btn-warning' : 'btn-primary'}`}
