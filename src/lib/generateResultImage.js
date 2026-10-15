@@ -76,7 +76,23 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     const padding = 28;
     const innerWidth = width - padding * 2;
 
-    const listJawaban = Array.isArray(jawaban) ? jawaban : [];
+    // Sort cleanly for result certificate:
+    // 1. Objective questions (Pilihan Ganda & Benar/Salah) first
+    // 2. Subjective questions (Isian & Uraian/Essay) second
+    // 3. Within each group, ordered sequentially
+    const rawList = Array.isArray(jawaban) ? jawaban : [];
+    const listJawaban = [...rawList].sort((a, b) => {
+      const isObjA = a.tipe === 'pg' || a.tipe === 'benar_salah';
+      const isObjB = b.tipe === 'pg' || b.tipe === 'benar_salah';
+      if (isObjA && !isObjB) return -1;
+      if (!isObjA && isObjB) return 1;
+
+      const uA = a.urutan !== undefined && a.urutan !== null ? Number(a.urutan) : 9999;
+      const uB = b.urutan !== undefined && b.urutan !== null ? Number(b.urutan) : 9999;
+      if (uA !== uB) return uA - uB;
+
+      return (a.soal_id || '').localeCompare(b.soal_id || '');
+    });
     const hasJawaban = listJawaban.length > 0;
 
     // Calculate dynamic height based on mode
@@ -272,6 +288,40 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     ctx.fillStyle = isLulus ? '#15803d' : '#b91c1c';
     ctx.fillText(pillText, heroCenterX, currentY + 128);
 
+    // Calculate exact statistics (Benar Penuh, Nilai Sebagian / Parsial, Salah, Kosong)
+    let countBenar = 0;
+    let countSebagian = 0;
+    let countSalah = 0;
+    let countKosong = 0;
+
+    listJawaban.forEach((item) => {
+      const bobot = Number(item.bobot) || (item.tipe === 'uraian' ? 8 : 4);
+      const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
+      const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
+
+      if (isKosong && (score === null || score === 0)) {
+        countKosong++;
+      } else if (score !== null) {
+        if (score >= bobot) {
+          countBenar++;
+        } else if (score > 0) {
+          countSebagian++;
+        } else {
+          countSalah++;
+        }
+      } else if (item.is_benar === 1) {
+        countBenar++;
+      } else {
+        countSalah++;
+      }
+    });
+
+    if (listJawaban.length === 0) {
+      countBenar = sesi?.jumlah_benar ?? 0;
+      countSalah = sesi?.jumlah_salah ?? 0;
+      countKosong = sesi?.jumlah_kosong ?? 0;
+    }
+
     // Right Side: 4 Stat Cards (2x2 Grid) - White cards with centered text
     const statsX = padding + heroScoreWidth + 14;
     const statsWidth = innerWidth - heroScoreWidth - 14;
@@ -281,23 +331,37 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     const statBoxes = [
       {
         label: 'Jawaban Benar',
-        val: `${sesi?.jumlah_benar ?? 0} Butir`,
+        val: `${countBenar} Butir`,
         sub: 'Poin Penuh',
         color: '#16a34a',
         bg: '#ffffff',
         border: '#e2e8f0',
       },
-      {
+      countSebagian > 0 ? {
+        label: 'Nilai Sebagian',
+        val: `${countSebagian} Butir`,
+        sub: 'Uraian Parsial',
+        color: '#d97706',
+        bg: '#fffbeb',
+        border: '#fde68a',
+      } : {
         label: 'Jawaban Salah',
-        val: `${sesi?.jumlah_salah ?? 0} Butir`,
-        sub: 'Skor Nol / Kurang',
-        color: '#dc2626',
+        val: `${countSalah} Butir`,
+        sub: 'Skor Nol',
+        color: countSalah > 0 ? '#dc2626' : '#64748b',
         bg: '#ffffff',
         border: '#e2e8f0',
       },
-      {
+      countSebagian > 0 ? {
+        label: 'Jawaban Salah',
+        val: `${countSalah} Butir`,
+        sub: 'Skor Nol',
+        color: countSalah > 0 ? '#dc2626' : '#64748b',
+        bg: '#ffffff',
+        border: '#e2e8f0',
+      } : {
         label: 'Tidak Dijawab',
-        val: `${sesi?.jumlah_kosong ?? 0} Butir`,
+        val: `${countKosong} Butir`,
         sub: 'Butir Kosong',
         color: '#64748b',
         bg: '#ffffff',
@@ -370,19 +434,37 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
           const cx = padding + col * (chipWidth + chipGap);
           const cy = currentY + row * (chipHeight + chipGap);
 
-          const isBenar = item.is_benar === 1;
-          const isSalah = item.is_benar === 0;
+          const bobot = Number(item.bobot) || (item.tipe === 'uraian' ? 8 : 4);
+          const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
           const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
 
           let chipBg = '#f8fafc';
           let chipBorder = '#e2e8f0';
           let chipColor = '#475569';
 
-          if (isBenar) {
+          if (isKosong && (score === null || score === 0)) {
+            chipBg = '#f8fafc';
+            chipBorder = '#cbd5e1';
+            chipColor = '#64748b';
+          } else if (score !== null) {
+            if (score >= bobot) {
+              chipBg = '#f0fdf4';
+              chipBorder = '#86efac';
+              chipColor = '#15803d';
+            } else if (score > 0) {
+              chipBg = '#fffbeb';
+              chipBorder = '#fde68a';
+              chipColor = '#b45309';
+            } else {
+              chipBg = '#fef2f2';
+              chipBorder = '#fca5a5';
+              chipColor = '#b91c1c';
+            }
+          } else if (item.is_benar === 1) {
             chipBg = '#f0fdf4';
             chipBorder = '#86efac';
             chipColor = '#15803d';
-          } else if (isSalah) {
+          } else if (item.is_benar === 0) {
             chipBg = '#fef2f2';
             chipBorder = '#fca5a5';
             chipColor = '#b91c1c';
@@ -394,9 +476,10 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
           drawRoundedRect(ctx, cx, cy, chipWidth, chipHeight, 8, true, true);
 
           // Text inside chip: "#1: A  10p"
+          ctx.textAlign = 'left';
           ctx.fillStyle = '#1e293b';
           ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          const noText = `#${item.urutan || (idx + 1)}`;
+          const noText = `#${idx + 1}`;
           ctx.fillText(noText, cx + 8, cy + 21);
 
           ctx.fillStyle = chipColor;
@@ -405,11 +488,12 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
           ctx.fillText(ansText, cx + 36, cy + 21);
 
           // Points on the right
+          ctx.textAlign = 'right';
           ctx.fillStyle = '#64748b';
           ctx.font = '600 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const ptText = `${item.nilai_soal ?? 0}p`;
-          const ptWidth = ctx.measureText(ptText).width;
-          ctx.fillText(ptText, cx + chipWidth - ptWidth - 8, cy + 21);
+          ctx.fillText(ptText, cx + chipWidth - 8, cy + 21);
+          ctx.textAlign = 'left';
         });
 
         const rows = Math.ceil(listJawaban.length / cols);
@@ -428,14 +512,36 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
         ctx.fillStyle = '#f1f5f9';
         drawRoundedRect(ctx, padding, currentY, innerWidth, rowH, { tl: 8, tr: 8, br: 0, bl: 0 }, true, false);
 
+        // Column Coordinates & Widths:
+        // Total innerWidth = 794px
+        // Col 1 (NO): 46px -> Center: padding + 23
+        // Col 2 (TIPE SOAL): 100px -> Start: padding + 46, Left text: padding + 54
+        // Col 3 (JAWABAN SISWA): 248px -> Start: padding + 146, Center: padding + 270
+        // Col 4 (KUNCI): 160px -> Start: padding + 394, Center: padding + 474
+        // Col 5 (NILAI / BOBOT): 110px -> Start: padding + 554, Center: padding + 609
+        // Col 6 (STATUS): 130px -> Start: padding + 664, Center: padding + 729
+
+        const colNoCenter = padding + 23;
+        const colTipeLeft = padding + 54;
+        const colJwbCenter = padding + 270;
+        const colKunciCenter = padding + 474;
+        const colSkorCenter = padding + 609;
+        const colStatusCenter = padding + 729;
+
         ctx.fillStyle = '#334155';
         ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.fillText('NO', padding + 12, currentY + 21);
-        ctx.fillText('TIPE SOAL', padding + 48, currentY + 21);
-        ctx.fillText('JAWABAN SISWA', padding + 180, currentY + 21);
-        ctx.fillText('KUNCI', padding + 430, currentY + 21);
-        ctx.fillText('NILAI / BOBOT', padding + 540, currentY + 21);
-        ctx.fillText('STATUS', padding + 670, currentY + 21);
+
+        ctx.textAlign = 'center';
+        ctx.fillText('NO', colNoCenter, currentY + 21);
+
+        ctx.textAlign = 'left';
+        ctx.fillText('TIPE SOAL', colTipeLeft, currentY + 21);
+
+        ctx.textAlign = 'center';
+        ctx.fillText('JAWABAN SISWA', colJwbCenter, currentY + 21);
+        ctx.fillText('KUNCI', colKunciCenter, currentY + 21);
+        ctx.fillText('NILAI / BOBOT', colSkorCenter, currentY + 21);
+        ctx.fillText('STATUS', colStatusCenter, currentY + 21);
 
         currentY += rowH;
 
@@ -448,67 +554,95 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
           ctx.lineWidth = 0.5;
           ctx.strokeRect(padding, currentY, innerWidth, rowH);
 
-          const isBenar = item.is_benar === 1;
-          const isSalah = item.is_benar === 0;
+          const bobot = Number(item.bobot) || (item.tipe === 'uraian' ? 8 : 4);
+          const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
           const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
 
-          // No
+          // 1. NO (Center)
+          ctx.textAlign = 'center';
           ctx.fillStyle = '#1e293b';
           ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillText(String(item.urutan || (idx + 1)), padding + 14, currentY + 21);
+          ctx.fillText(String(idx + 1), colNoCenter, currentY + 21);
 
-          // Tipe
+          // 2. TIPE SOAL (Left)
+          ctx.textAlign = 'left';
           ctx.fillStyle = '#64748b';
           ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const tipeName = item.tipe === 'pg' ? 'Pilihan Ganda' : item.tipe === 'isian' ? 'Isian' : item.tipe === 'benar_salah' ? 'B / S' : 'Uraian';
-          ctx.fillText(tipeName, padding + 48, currentY + 21);
+          ctx.fillText(tipeName, colTipeLeft, currentY + 21);
 
-          // Jawaban Siswa
+          // 3. JAWABAN SISWA (Center)
+          ctx.textAlign = 'center';
           ctx.fillStyle = '#0f172a';
           ctx.font = '600 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           const jwb = isKosong ? '(Tidak Dijawab)' : fitText(ctx, item.jawaban_siswa || '-', 230);
-          ctx.fillText(jwb, padding + 180, currentY + 21);
+          ctx.fillText(jwb, colJwbCenter, currentY + 21);
 
-          // Kunci
+          // 4. KUNCI (Center)
           ctx.fillStyle = '#334155';
           ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          const kunci = fitText(ctx, item.kunci_jawaban || '-', 100);
-          ctx.fillText(kunci, padding + 430, currentY + 21);
+          const kunci = fitText(ctx, item.kunci_jawaban || '-', 140);
+          ctx.fillText(kunci, colKunciCenter, currentY + 21);
 
-          // Skor
+          // 5. NILAI / BOBOT (Center)
           ctx.fillStyle = '#1e293b';
           ctx.font = '600 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillText(`${item.nilai_soal ?? 0} / ${item.bobot || 10}`, padding + 540, currentY + 21);
+          const skorText = `${item.nilai_soal ?? 0} / ${bobot}`;
+          ctx.fillText(skorText, colSkorCenter, currentY + 21);
 
-          // Status Badge
+          // 6. STATUS (Center Badge)
           let statText = 'Benar';
           let statColor = '#15803d';
           let statBg = '#dcfce7';
 
-          if (isSalah) {
-            statText = 'Salah';
-            statColor = '#b91c1c';
-            statBg = '#fee2e2';
-          } else if (isKosong) {
+          if (isKosong && (score === null || score === 0)) {
             statText = 'Kosong';
             statColor = '#64748b';
             statBg = '#f1f5f9';
+          } else if (score !== null) {
+            if (score >= bobot) {
+              statText = 'Benar';
+              statColor = '#15803d';
+              statBg = '#dcfce7';
+            } else if (score > 0) {
+              statText = 'Sebagian';
+              statColor = '#b45309';
+              statBg = '#fef3c7';
+            } else {
+              statText = 'Salah';
+              statColor = '#b91c1c';
+              statBg = '#fee2e2';
+            }
+          } else if (item.is_benar === 1) {
+            statText = 'Benar';
+            statColor = '#15803d';
+            statBg = '#dcfce7';
+          } else if (item.is_benar === 0) {
+            statText = 'Salah';
+            statColor = '#b91c1c';
+            statBg = '#fee2e2';
           } else if (item.tipe === 'uraian' && item.is_benar === null) {
             statText = 'Review';
             statColor = '#b45309';
             statBg = '#fef3c7';
           }
 
+          const badgeW = 80;
+          const badgeH = 22;
+          const badgeX = colStatusCenter - badgeW / 2;
+          const badgeY = currentY + (rowH - badgeH) / 2;
+
           ctx.fillStyle = statBg;
-          drawRoundedRect(ctx, padding + 670, currentY + 6, 80, 22, 6, true, false);
+          drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 6, true, false);
 
           ctx.fillStyle = statColor;
           ctx.font = 'bold 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillText(statText, padding + 682, currentY + 20);
+          ctx.fillText(statText, colStatusCenter, currentY + 21);
 
           currentY += rowH;
         });
 
+        ctx.textAlign = 'left';
         currentY += 16;
       }
     }

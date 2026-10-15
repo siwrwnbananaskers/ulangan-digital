@@ -969,100 +969,157 @@ export default function GuruHasilPage() {
             </div>
 
             {/* Score Summary Bar */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: 'var(--space-sm)',
-              background: 'var(--gray-50)',
-              padding: 'var(--space-md)',
-              borderRadius: 'var(--radius-lg)',
-              marginBottom: 'var(--space-lg)',
-              border: '1px solid var(--gray-200)',
-              textAlign: 'center'
-            }}>
-              <div>
-                <div className="text-xs text-muted">Nilai Akhir</div>
-                <div style={{
-                  fontSize: 'var(--font-size-2xl)',
-                  fontWeight: 800,
-                  color: (modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'var(--success)' : 'var(--danger)'
-                }}>
-                  {modalJawaban.sesi?.total_nilai ?? '-'}
-                </div>
-                <span className={`badge ${(modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 10 }}>
-                  KKM: {modalJawaban.sesi?.kkm || 75}
-                </span>
-              </div>
-              <div>
-                <div className="text-xs text-muted">Jawaban Benar</div>
-                <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--success)' }}>
-                  {modalJawaban.sesi?.jumlah_benar ?? 0}
-                </div>
-                <span className="text-xs text-muted">Butir Soal</span>
-              </div>
-              <div>
-                <div className="text-xs text-muted">Jawaban Salah</div>
-                <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--danger)' }}>
-                  {modalJawaban.sesi?.jumlah_salah ?? 0}
-                </div>
-                <span className="text-xs text-muted">Butir Soal</span>
-              </div>
-              <div>
-                <div className="text-xs text-muted">Tidak Dijawab</div>
-                <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--gray-500)' }}>
-                  {modalJawaban.sesi?.jumlah_kosong ?? 0}
-                </div>
-                <span className="text-xs text-muted">Butir Kosong</span>
-              </div>
-              <div>
-                <div className="text-xs text-muted">Pelanggaran</div>
-                <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: (modalJawaban.sesi?.jumlah_pelanggaran || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                  {modalJawaban.sesi?.jumlah_pelanggaran ?? 0}x
-                </div>
-                <span className="text-xs text-muted">Terdeteksi</span>
-              </div>
-            </div>
+            {(() => {
+              const rawJwbs = modalJawaban.jawaban || [];
+              const sortedModalJawaban = [...rawJwbs].sort((a, b) => {
+                const isObjA = a.tipe === 'pg' || a.tipe === 'benar_salah';
+                const isObjB = b.tipe === 'pg' || b.tipe === 'benar_salah';
+                if (isObjA && !isObjB) return -1;
+                if (!isObjA && isObjB) return 1;
 
-            {/* Questions List */}
-            <div style={{ flex: 1, overflowY: 'auto', paddingRight: 'var(--space-xs)' }}>
-              {!modalJawaban.jawaban || modalJawaban.jawaban.length === 0 ? (
-                <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
-                  <p>Tidak ada butir soal dalam lembar ujian ini.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                  {modalJawaban.jawaban.map((item, idx) => {
-                    const isBenar = item.is_benar === 1;
-                    const isSalah = item.is_benar === 0;
-                    const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
-                    const isUraian = item.tipe === 'uraian';
+                const uA = a.urutan !== undefined && a.urutan !== null ? Number(a.urutan) : 9999;
+                const uB = b.urutan !== undefined && b.urutan !== null ? Number(b.urutan) : 9999;
+                if (uA !== uB) return uA - uB;
 
-                    return (
-                      <div
-                        key={item.soal_id}
-                        style={{
-                          border: `1px solid ${isBenar ? '#86efac' : isSalah ? '#fca5a5' : 'var(--gray-200)'}`,
-                          borderLeft: `5px solid ${isBenar ? 'var(--success)' : isSalah ? 'var(--danger)' : 'var(--gray-400)'}`,
-                          borderRadius: 'var(--radius-lg)',
-                          padding: 'var(--space-md)',
-                          background: isBenar ? '#f0fdf4' : isSalah ? '#fef2f2' : '#ffffff',
-                        }}
-                      >
-                        {/* Question Header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)', flexWrap: 'wrap', gap: 6 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                            <span style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: 'var(--gray-900)' }}>
-                              Soal #{item.urutan || (idx + 1)}
-                            </span>
-                            <span className="badge badge-gray" style={{ fontSize: 10 }}>
-                              {item.tipe === 'pg' ? 'Pilihan Ganda' :
-                               item.tipe === 'isian' ? 'Isian Singkat' :
-                               item.tipe === 'benar_salah' ? 'Benar / Salah' : 'Uraian'}
-                            </span>
-                            <span className="text-xs text-muted">
-                              (Bobot: {item.bobot || 10} poin)
-                            </span>
-                          </div>
+                return (a.soal_id || '').localeCompare(b.soal_id || '');
+              });
+
+              let countB = 0;
+              let countSeb = 0;
+              let countS = 0;
+              let countK = 0;
+
+              sortedModalJawaban.forEach((item) => {
+                const bobot = Number(item.bobot) || (item.tipe === 'uraian' ? 8 : 4);
+                const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
+                const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
+
+                if (isKosong && (score === null || score === 0)) {
+                  countK++;
+                } else if (score !== null) {
+                  if (score >= bobot) {
+                    countB++;
+                  } else if (score > 0) {
+                    countSeb++;
+                  } else {
+                    countS++;
+                  }
+                } else if (item.is_benar === 1) {
+                  countB++;
+                } else {
+                  countS++;
+                }
+              });
+
+              return (
+                <>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                    gap: 'var(--space-sm)',
+                    background: 'var(--gray-50)',
+                    padding: 'var(--space-md)',
+                    borderRadius: 'var(--radius-lg)',
+                    marginBottom: 'var(--space-lg)',
+                    border: '1px solid var(--gray-200)',
+                    textAlign: 'center'
+                  }}>
+                    <div>
+                      <div className="text-xs text-muted">Nilai Akhir</div>
+                      <div style={{
+                        fontSize: 'var(--font-size-2xl)',
+                        fontWeight: 800,
+                        color: (modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'var(--success)' : 'var(--danger)'
+                      }}>
+                        {modalJawaban.sesi?.total_nilai ?? '-'}
+                      </div>
+                      <span className={`badge ${(modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 10 }}>
+                        KKM: {modalJawaban.sesi?.kkm || 75}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted">Jawaban Benar</div>
+                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--success)' }}>
+                        {countB}
+                      </div>
+                      <span className="text-xs text-muted">Poin Penuh</span>
+                    </div>
+                    {countSeb > 0 && (
+                      <div>
+                        <div className="text-xs text-muted">Nilai Sebagian</div>
+                        <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: '#d97706' }}>
+                          {countSeb}
+                        </div>
+                        <span className="text-xs text-muted" style={{ color: '#b45309' }}>Uraian Parsial</span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-xs text-muted">Jawaban Salah</div>
+                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--danger)' }}>
+                        {countS}
+                      </div>
+                      <span className="text-xs text-muted">Skor Nol</span>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted">Tidak Dijawab</div>
+                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--gray-500)' }}>
+                        {countK}
+                      </div>
+                      <span className="text-xs text-muted">Butir Kosong</span>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted">Pelanggaran</div>
+                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: (modalJawaban.sesi?.jumlah_pelanggaran || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                        {modalJawaban.sesi?.jumlah_pelanggaran ?? 0}x
+                      </div>
+                      <span className="text-xs text-muted">Terdeteksi</span>
+                    </div>
+                  </div>
+
+                  {/* Questions List */}
+                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: 'var(--space-xs)' }}>
+                    {!sortedModalJawaban || sortedModalJawaban.length === 0 ? (
+                      <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
+                        <p>Tidak ada butir soal dalam lembar ujian ini.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                        {sortedModalJawaban.map((item, idx) => {
+                          const bobot = Number(item.bobot) || (item.tipe === 'uraian' ? 8 : 4);
+                          const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
+                          const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
+                          const isUraian = item.tipe === 'uraian';
+
+                          const isBenarPenuh = score !== null ? score >= bobot : item.is_benar === 1;
+                          const isSebagian = score !== null && score > 0 && score < bobot;
+                          const isSalah = score !== null ? score === 0 && !isKosong : item.is_benar === 0;
+
+                          return (
+                            <div
+                              key={item.soal_id}
+                              style={{
+                                border: `1px solid ${isBenarPenuh ? '#86efac' : isSebagian ? '#fde68a' : isSalah ? '#fca5a5' : 'var(--gray-200)'}`,
+                                borderLeft: `5px solid ${isBenarPenuh ? 'var(--success)' : isSebagian ? '#d97706' : isSalah ? 'var(--danger)' : 'var(--gray-400)'}`,
+                                borderRadius: 'var(--radius-lg)',
+                                padding: 'var(--space-md)',
+                                background: isBenarPenuh ? '#f0fdf4' : isSebagian ? '#fffbeb' : isSalah ? '#fef2f2' : '#ffffff',
+                              }}
+                            >
+                              {/* Question Header */}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)', flexWrap: 'wrap', gap: 6 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                                  <span style={{ fontWeight: 800, fontSize: 'var(--font-size-md)', color: 'var(--gray-900)' }}>
+                                    Soal #{idx + 1}
+                                  </span>
+                                  <span className="badge badge-gray" style={{ fontSize: 10 }}>
+                                    {item.tipe === 'pg' ? 'Pilihan Ganda' :
+                                     item.tipe === 'isian' ? 'Isian Singkat' :
+                                     item.tipe === 'benar_salah' ? 'Benar / Salah' : 'Uraian'}
+                                  </span>
+                                  <span className="text-xs text-muted">
+                                    (Bobot: {bobot} poin)
+                                  </span>
+                                </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
                             {Number(item.nilai_soal) >= Number(item.bobot) && (
@@ -1298,6 +1355,9 @@ export default function GuruHasilPage() {
                 </div>
               )}
             </div>
+          </>
+        );
+      })()}
 
             {/* Modal Footer */}
             <div className="modal-footer-responsive">
