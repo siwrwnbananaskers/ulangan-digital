@@ -1107,6 +1107,7 @@ export default function GuruHasilPage() {
                           const isUraian = item.tipe === 'uraian';
 
                           const isBenarPenuh = score !== null ? score >= bobot : item.is_benar === 1;
+                          const isBenar = isBenarPenuh;
                           const isSebagian = score !== null && score > 0 && score < bobot;
                           const isSalah = score !== null ? score === 0 && !isKosong : item.is_benar === 0;
 

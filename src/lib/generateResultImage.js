@@ -97,12 +97,23 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     const scoreHeroHeight = 150;
     const footerHeight = 125;
 
+    const listObj = listJawaban.filter((j) => j.tipe === 'pg' || j.tipe === 'benar_salah');
+    const listSubj = listJawaban.filter((j) => j.tipe !== 'pg' && j.tipe !== 'benar_salah');
+
     let questionSectionHeight = 0;
     if (mode === 'ringkas') {
       if (hasJawaban) {
-        const cols = 5;
-        const rows = Math.ceil(listJawaban.length / cols);
-        questionSectionHeight = 42 + rows * 42 + 10;
+        let secH = 40; // Main section title
+        if (listObj.length > 0) {
+          const pgRows = Math.ceil(listObj.length / 5);
+          const hasBoth = listSubj.length > 0;
+          secH += (hasBoth ? 24 : 0) + pgRows * 42 + 10;
+        }
+        if (listSubj.length > 0) {
+          const hasBoth = listObj.length > 0;
+          secH += (hasBoth ? 28 : 0) + listSubj.length * 44 + 6;
+        }
+        questionSectionHeight = secH;
       }
     } else {
       // mode === 'lengkap'
@@ -418,82 +429,218 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
 
         currentY += 42;
 
-        const cols = 5;
-        const chipGap = 8;
-        const chipWidth = (innerWidth - chipGap * (cols - 1)) / cols;
-        const chipHeight = 34;
+        // 1. Pilihan Ganda (Grid Chips)
+        if (listObj.length > 0) {
+          if (listSubj.length > 0) {
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText('A. Pilihan Ganda', padding, currentY + 14);
 
-        listJawaban.forEach((item, idx) => {
-          const col = idx % cols;
-          const row = Math.floor(idx / cols);
-          const cx = padding + col * (chipWidth + chipGap);
-          const cy = currentY + row * (chipHeight + chipGap);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(`(${listObj.length} Butir)`, padding + ctx.measureText('A. Pilihan Ganda ').width + 4, currentY + 14);
 
-          const bobot = Number(item.bobot) || (item.tipe === 'uraian' ? 8 : 4);
-          const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
-          const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
+            currentY += 24;
+          }
 
-          let chipBg = '#f8fafc';
-          let chipBorder = '#e2e8f0';
-          let chipColor = '#475569';
+          const cols = 5;
+          const chipGap = 8;
+          const chipWidth = (innerWidth - chipGap * (cols - 1)) / cols;
+          const chipHeight = 34;
 
-          if (isKosong && (score === null || score === 0)) {
-            chipBg = '#f8fafc';
-            chipBorder = '#cbd5e1';
-            chipColor = '#64748b';
-          } else if (score !== null) {
-            if (score >= bobot) {
+          listObj.forEach((item, oIdx) => {
+            const col = oIdx % cols;
+            const row = Math.floor(oIdx / cols);
+            const cx = padding + col * (chipWidth + chipGap);
+            const cy = currentY + row * (chipHeight + chipGap);
+
+            const bobot = Number(item.bobot) || 4;
+            const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
+            const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
+
+            let chipBg = '#f8fafc';
+            let chipBorder = '#e2e8f0';
+            let chipColor = '#475569';
+
+            if (isKosong && (score === null || score === 0)) {
+              chipBg = '#f8fafc';
+              chipBorder = '#cbd5e1';
+              chipColor = '#64748b';
+            } else if (score !== null) {
+              if (score >= bobot) {
+                chipBg = '#f0fdf4';
+                chipBorder = '#86efac';
+                chipColor = '#15803d';
+              } else if (score > 0) {
+                chipBg = '#fffbeb';
+                chipBorder = '#fde68a';
+                chipColor = '#b45309';
+              } else {
+                chipBg = '#fef2f2';
+                chipBorder = '#fca5a5';
+                chipColor = '#b91c1c';
+              }
+            } else if (item.is_benar === 1) {
               chipBg = '#f0fdf4';
               chipBorder = '#86efac';
               chipColor = '#15803d';
-            } else if (score > 0) {
-              chipBg = '#fffbeb';
-              chipBorder = '#fde68a';
-              chipColor = '#b45309';
             } else {
               chipBg = '#fef2f2';
               chipBorder = '#fca5a5';
               chipColor = '#b91c1c';
             }
-          } else if (item.is_benar === 1) {
-            chipBg = '#f0fdf4';
-            chipBorder = '#86efac';
-            chipColor = '#15803d';
-          } else if (item.is_benar === 0) {
-            chipBg = '#fef2f2';
-            chipBorder = '#fca5a5';
-            chipColor = '#b91c1c';
+
+            ctx.fillStyle = chipBg;
+            ctx.strokeStyle = chipBorder;
+            ctx.lineWidth = 1;
+            drawRoundedRect(ctx, cx, cy, chipWidth, chipHeight, 8, true, true);
+
+            // Question number
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(`#${oIdx + 1}`, cx + 8, cy + 21);
+
+            // Answer text
+            ctx.fillStyle = chipColor;
+            ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            const ansText = isKosong ? 'Kosong' : (item.jawaban_siswa || '-').toUpperCase().slice(0, 2);
+            ctx.fillText(ansText, cx + 36, cy + 21);
+
+            // Points on right
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#64748b';
+            ctx.font = '600 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(`${item.nilai_soal ?? 0}p`, cx + chipWidth - 8, cy + 21);
+            ctx.textAlign = 'left';
+          });
+
+          const pgRows = Math.ceil(listObj.length / cols);
+          currentY += pgRows * (chipHeight + chipGap) + 10;
+        }
+
+        // 2. Soal Uraian / Essay (Readable Horizontal Row Cards)
+        if (listSubj.length > 0) {
+          if (listObj.length > 0) {
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText('B. Soal Uraian / Essay', padding, currentY + 16);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(`(${listSubj.length} Butir)`, padding + ctx.measureText('B. Soal Uraian / Essay ').width + 4, currentY + 16);
+
+            currentY += 28;
           }
 
-          ctx.fillStyle = chipBg;
-          ctx.strokeStyle = chipBorder;
-          ctx.lineWidth = 1;
-          drawRoundedRect(ctx, cx, cy, chipWidth, chipHeight, 8, true, true);
+          const cardH = 38;
+          const cardGap = 6;
 
-          // Text inside chip: "#1: A  10p"
-          ctx.textAlign = 'left';
-          ctx.fillStyle = '#1e293b';
-          ctx.font = 'bold 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          const noText = `#${idx + 1}`;
-          ctx.fillText(noText, cx + 8, cy + 21);
+          listSubj.forEach((item, sIdx) => {
+            const cy = currentY + sIdx * (cardH + cardGap);
+            const qNum = listObj.length + sIdx + 1;
+            const bobot = Number(item.bobot) || 8;
+            const score = item.nilai_soal !== null && item.nilai_soal !== undefined ? Number(item.nilai_soal) : null;
+            const isKosong = !item.jawaban_siswa || item.jawaban_siswa.trim() === '';
 
-          ctx.fillStyle = chipColor;
-          ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          const ansText = isKosong ? 'Kosong' : (item.jawaban_siswa || '-').toUpperCase().slice(0, 4);
-          ctx.fillText(ansText, cx + 36, cy + 21);
+            let cardBg = '#f8fafc';
+            let cardBorder = '#e2e8f0';
+            let badgeBg = '#f1f5f9';
+            let badgeColor = '#64748b';
+            let statLabel = 'Kosong';
 
-          // Points on the right
-          ctx.textAlign = 'right';
-          ctx.fillStyle = '#64748b';
-          ctx.font = '600 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          const ptText = `${item.nilai_soal ?? 0}p`;
-          ctx.fillText(ptText, cx + chipWidth - 8, cy + 21);
-          ctx.textAlign = 'left';
-        });
+            if (isKosong && (score === null || score === 0)) {
+              cardBg = '#f8fafc';
+              cardBorder = '#cbd5e1';
+              badgeBg = '#f1f5f9';
+              badgeColor = '#64748b';
+              statLabel = 'Kosong';
+            } else if (score !== null) {
+              if (score >= bobot) {
+                cardBg = '#f0fdf4';
+                cardBorder = '#bbf7d0';
+                badgeBg = '#dcfce7';
+                badgeColor = '#15803d';
+                statLabel = 'Benar';
+              } else if (score > 0) {
+                cardBg = '#fffbeb';
+                cardBorder = '#fde68a';
+                badgeBg = '#fef3c7';
+                badgeColor = '#b45309';
+                statLabel = 'Sebagian';
+              } else {
+                cardBg = '#fef2f2';
+                cardBorder = '#fecaca';
+                badgeBg = '#fee2e2';
+                badgeColor = '#b91c1c';
+                statLabel = 'Skor Nol';
+              }
+            } else if (item.is_benar === 1) {
+              cardBg = '#f0fdf4';
+              cardBorder = '#bbf7d0';
+              badgeBg = '#dcfce7';
+              badgeColor = '#15803d';
+              statLabel = 'Benar';
+            } else if (item.is_benar === 0) {
+              cardBg = '#fef2f2';
+              cardBorder = '#fecaca';
+              badgeBg = '#fee2e2';
+              badgeColor = '#b91c1c';
+              statLabel = 'Salah';
+            }
 
-        const rows = Math.ceil(listJawaban.length / cols);
-        currentY += rows * (chipHeight + chipGap) + 12;
+            // Draw Card Container
+            ctx.fillStyle = cardBg;
+            ctx.strokeStyle = cardBorder;
+            ctx.lineWidth = 1;
+            drawRoundedRect(ctx, padding, cy, innerWidth, cardH, 8, true, true);
 
+            // Left: Number Badge "#16 Uraian"
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`#${qNum}`, padding + 12, cy + 24);
+
+            const numW = ctx.measureText(`#${qNum}`).width;
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 10.5px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText('Uraian', padding + 12 + numW + 6, cy + 23);
+
+            // Center: Answer snippet
+            const ansStartX = padding + 100;
+            const maxAnsW = innerWidth - 100 - 155; // ~539px space for answer text
+
+            if (isKosong) {
+              ctx.fillStyle = '#94a3b8';
+              ctx.font = 'italic 11px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              ctx.fillText('(Tidak dijawab / kosong)', ansStartX, cy + 24);
+            } else {
+              ctx.fillStyle = '#1e293b';
+              ctx.font = '500 11.5px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              const cleanAns = item.jawaban_siswa.replace(/\s+/g, ' ').trim();
+              const snippet = fitText(ctx, `"${cleanAns}"`, maxAnsW);
+              ctx.fillText(snippet, ansStartX, cy + 24);
+            }
+
+            // Right: Score & Status Pill
+            const badgeW = 140;
+            const badgeH = 24;
+            const badgeX = padding + innerWidth - badgeW - 10;
+            const badgeY = cy + (cardH - badgeH) / 2;
+
+            ctx.fillStyle = badgeBg;
+            drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 6, true, false);
+
+            ctx.fillStyle = badgeColor;
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 10px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            const scoreLabel = `${score ?? 0}/${bobot}p • ${statLabel}`;
+            ctx.fillText(scoreLabel, badgeX + badgeW / 2, badgeY + 16);
+            ctx.textAlign = 'left';
+          });
+
+          currentY += listSubj.length * (cardH + cardGap) + 12;
+        }
       } else {
         // mode === 'lengkap' (Table Format)
         ctx.fillStyle = '#0f172a';
