@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import * as XLSX from 'xlsx-js-style';
 import { downloadSoalTemplateFile } from '@/lib/generateSoalTemplate';
 import UpgradeModal from '@/components/UpgradeModal';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 const TIPE_SOAL = [
   { value: 'pg', label: 'Pilihan Ganda' },
@@ -16,6 +17,7 @@ const TIPE_SOAL = [
 
 export default function BankSoal() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
+  const { dialogState, confirm: showConfirm, handleConfirm, handleClose } = useConfirmDialog();
   const [soalList, setSoalList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -372,7 +374,14 @@ export default function BankSoal() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Hapus soal ini?')) return;
+    const ok = await showConfirm({
+      title: 'Hapus Butir Soal',
+      message: 'Apakah Anda yakin ingin menghapus butir soal ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Ya, Hapus Soal',
+      type: 'danger',
+    });
+    if (!ok) return;
+
     try {
       await authFetch(`/api/soal?id=${id}`, { method: 'DELETE' });
       setAlert({ type: 'success', message: 'Soal berhasil dihapus' });
@@ -1159,6 +1168,13 @@ export default function BankSoal() {
         onClose={() => setShowUpgradeModal(false)}
         title="Batas Kuota Bank Soal"
         message={upgradeMsg}
+      />
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmModal
+        {...dialogState}
+        onConfirm={handleConfirm}
+        onClose={handleClose}
       />
     </div>
   );

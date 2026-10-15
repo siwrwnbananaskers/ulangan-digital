@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import { formatTanggal } from '@/lib/utils';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 export default function GuruAuditPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -13,6 +14,7 @@ export default function GuruAuditPage() {
   const [loading, setLoading] = useState(true);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [filterType, setFilterType] = useState('semua');
+  const { dialogState, confirm: showConfirm, alert: showAlert, handleConfirm, handleClose } = useConfirmDialog();
 
   useEffect(() => {
     if (!user) return;
@@ -66,7 +68,13 @@ export default function GuruAuditPage() {
   };
 
   const handleUnfreeze = async (sesiId, siswaId) => {
-    if (!confirm('Pulihkan status ujian siswa ini agar dapat melanjutkan kembali tanpa reload browser?')) return;
+    const ok = await showConfirm({
+      title: 'Pulihkan Status Ujian Siswa',
+      message: 'Pulihkan status ujian siswa ini agar dapat melanjutkan kembali tanpa reload browser?',
+      confirmText: 'Ya, Pulihkan',
+      type: 'warning',
+    });
+    if (!ok) return;
     try {
       const res = await authFetch('/api/hasil', {
         method: 'PATCH',
@@ -81,12 +89,25 @@ export default function GuruAuditPage() {
         // Optimistically update all violation records of this session to restored
         setViolations(prev => prev.map(v => (v.sesi_id === sesiId || (siswaId && v.siswa_id === siswaId)) ? { ...v, sesi_status: 'berlangsung', jumlah_pelanggaran: 0 } : v));
         loadViolations(selectedUjianId);
+        await showAlert({
+          title: 'Berhasil Dipulihkan',
+          message: 'Status sesi ujian siswa berhasil dipulihkan.',
+          type: 'success',
+        });
       } else {
         const d = await res.json();
-        alert(d.error || 'Gagal memulihkan');
+        await showAlert({
+          title: 'Gagal Memulihkan',
+          message: d.error || 'Gagal memulihkan status sesi ujian.',
+          type: 'danger',
+        });
       }
     } catch {
-      alert('Terjadi kesalahan koneksi');
+      await showAlert({
+        title: 'Kesalahan Jaringan',
+        message: 'Terjadi kesalahan koneksi saat memulihkan sesi.',
+        type: 'danger',
+      });
     }
   };
 
@@ -313,6 +334,9 @@ export default function GuruAuditPage() {
           </div>
         )}
       </main>
+
+      {/* Modal Konfirmasi Modern */}
+      <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
     </div>
   );
 }

@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import UpgradeModal from '@/components/UpgradeModal';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 export default function UjianPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
+  const { dialogState, confirm: showConfirm, handleConfirm, handleClose } = useConfirmDialog();
   const [ujianList, setUjianList] = useState([]);
   const [soalList, setSoalList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -248,7 +250,14 @@ export default function UjianPage() {
   };
 
   const handleDelete = async (id, judul) => {
-    if (!confirm(`Hapus lembar ujian "${judul}"? Seluruh riwayat sesi dan catatan ujian akan dibersihkan permanen.`)) return;
+    const ok = await showConfirm({
+      title: 'Hapus Lembar Ujian',
+      message: `Hapus lembar ujian "${judul}"? Seluruh riwayat sesi dan catatan ujian akan dibersihkan permanen.`,
+      confirmText: 'Ya, Hapus Ujian',
+      type: 'danger',
+    });
+    if (!ok) return;
+
     try {
       const res = await authFetch(`/api/ujian?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -1092,6 +1101,13 @@ export default function UjianPage() {
         onClose={() => setShowUpgradeModal(false)}
         title="Batas Kuota Ujian Demo"
         message={upgradeMsg}
+      />
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmModal
+        {...dialogState}
+        onConfirm={handleConfirm}
+        onClose={handleClose}
       />
     </div>
   );

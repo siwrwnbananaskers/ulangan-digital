@@ -12,6 +12,7 @@ import {
   copyRekapImageToClipboard,
   printRekapDocument,
 } from '@/lib/generateRekapNilai';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 export default function GuruHasilPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -23,6 +24,7 @@ export default function GuruHasilPage() {
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [modalJawaban, setModalJawaban] = useState(null);
+  const { dialogState, confirm: showConfirm, alert: showAlert, handleConfirm, handleClose } = useConfirmDialog();
   const [loadingJawaban, setLoadingJawaban] = useState(false);
   const [gradingLoadingId, setGradingLoadingId] = useState(null);
   const [scoreInputs, setScoreInputs] = useState({});
@@ -107,21 +109,39 @@ export default function GuruHasilPage() {
   };
 
   const handleUnfreeze = async (sesiId) => {
-    if (!confirm('Apakah Anda yakin ingin memulihkan sesi ujian siswa ini agar dapat melanjutkan ujian?')) return;
+    const ok = await showConfirm({
+      title: 'Pulihkan Sesi Ujian Siswa',
+      message: 'Apakah Anda yakin ingin memulihkan sesi ujian siswa ini agar dapat melanjutkan ujian?',
+      confirmText: 'Ya, Pulihkan',
+      type: 'warning',
+    });
+    if (!ok) return;
     try {
       const res = await authFetch('/api/hasil', {
         method: 'PATCH',
         body: JSON.stringify({ sesi_id: sesiId, action: 'unfreeze' }),
       });
       if (res.ok) {
-        alert('Sesi siswa berhasil dipulihkan!');
+        await showAlert({
+          title: 'Berhasil Dipulihkan',
+          message: 'Sesi siswa berhasil dipulihkan!',
+          type: 'success',
+        });
         loadDetail(selectedUjianId);
       } else {
         const d = await res.json();
-        alert(d.error || 'Gagal memulihkan sesi');
+        await showAlert({
+          title: 'Gagal Memulihkan',
+          message: d.error || 'Gagal memulihkan sesi',
+          type: 'danger',
+        });
       }
     } catch (err) {
-      alert('Terjadi kesalahan koneksi');
+      await showAlert({
+        title: 'Kesalahan Jaringan',
+        message: 'Terjadi kesalahan koneksi saat memulihkan sesi',
+        type: 'danger',
+      });
     }
   };
 
@@ -133,10 +153,18 @@ export default function GuruHasilPage() {
       if (res.ok) {
         setModalJawaban(data);
       } else {
-        alert(data.error || 'Gagal memuat rincian jawaban siswa');
+        await showAlert({
+          title: 'Gagal Memuat Jawaban',
+          message: data.error || 'Gagal memuat rincian jawaban siswa',
+          type: 'danger',
+        });
       }
     } catch {
-      alert('Terjadi kesalahan koneksi saat memuat jawaban');
+      await showAlert({
+        title: 'Kesalahan Jaringan',
+        message: 'Terjadi kesalahan koneksi saat memuat jawaban',
+        type: 'danger',
+      });
     } finally {
       setLoadingJawaban(false);
     }
@@ -197,11 +225,19 @@ export default function GuruHasilPage() {
       if (res.ok && data.sesi) {
         await handleOpenImageModal(data.sesi, data.jawaban || [], 'ringkas');
       } else {
-        alert(data.error || 'Gagal memuat rincian sesi ujian');
+        await showAlert({
+          title: 'Gagal Memuat Sesi',
+          message: data.error || 'Gagal memuat rincian sesi ujian',
+          type: 'danger',
+        });
       }
     } catch (err) {
       console.error('Failed to load answers for image', err);
-      alert('Terjadi kesalahan saat memuat data');
+      await showAlert({
+        title: 'Kesalahan Sistem',
+        message: 'Terjadi kesalahan saat memuat data',
+        type: 'danger',
+      });
     } finally {
       setLoadingJawaban(false);
     }
@@ -288,6 +324,13 @@ export default function GuruHasilPage() {
       examDetail,
       results,
       guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+      onError: (msg) => {
+        showAlert({
+          title: 'Pop-up Diblokir',
+          message: msg,
+          type: 'warning',
+        });
+      },
     });
   };
 
@@ -319,7 +362,11 @@ export default function GuruHasilPage() {
     }
 
     if (targetResults.length === 0) {
-      alert('Tidak ada siswa yang sesuai dengan filter yang dipilih.');
+      showAlert({
+        title: 'Data Siswa Kosong',
+        message: 'Tidak ada siswa yang sesuai dengan filter yang dipilih.',
+        type: 'info',
+      });
       return;
     }
 
@@ -396,7 +443,11 @@ export default function GuruHasilPage() {
       }));
     } catch (err) {
       console.error('Failed batch generation', err);
-      alert('Terjadi kesalahan saat memproses gambar massal.');
+      showAlert({
+        title: 'Gagal Memproses Gambar',
+        message: 'Terjadi kesalahan saat memproses gambar massal.',
+        type: 'danger',
+      });
       setBatchModal((prev) => ({ ...prev, loading: false }));
     }
   };
@@ -432,7 +483,11 @@ export default function GuruHasilPage() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Failed to create ZIP', err);
-      alert('Gagal membuat file ZIP arsip gambar.');
+      showAlert({
+        title: 'Gagal Membuat ZIP',
+        message: 'Gagal membuat file ZIP arsip gambar.',
+        type: 'danger',
+      });
     } finally {
       setBatchModal((prev) => ({ ...prev, zipping: false }));
     }
@@ -443,7 +498,11 @@ export default function GuruHasilPage() {
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      alert('Gagal membuka jendela cetak. Pastikan pop-up diizinkan di browser.');
+      showAlert({
+        title: 'Pop-up Diblokir',
+        message: 'Gagal membuka jendela cetak. Pastikan izin pop-up browser telah diaktifkan.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -532,10 +591,18 @@ export default function GuruHasilPage() {
         });
         loadDetail(selectedUjianId);
       } else {
-        alert(data.error || 'Gagal memperbarui nilai');
+        await showAlert({
+          title: 'Gagal Mengoreksi',
+          message: data.error || 'Gagal memperbarui nilai',
+          type: 'danger',
+        });
       }
     } catch {
-      alert('Terjadi kesalahan koneksi saat mengoreksi soal');
+      await showAlert({
+        title: 'Kesalahan Jaringan',
+        message: 'Terjadi kesalahan koneksi saat mengoreksi soal',
+        type: 'danger',
+      });
     } finally {
       setGradingLoadingId(null);
     }
@@ -1657,7 +1724,11 @@ export default function GuruHasilPage() {
                             onClick={async () => {
                               try {
                                 await copyImageToClipboard(dataUrl);
-                                alert(`Gambar ${student.nama} berhasil disalin! Anda bisa langsung Paste (Ctrl+V) di WhatsApp.`);
+                                await showAlert({
+                                  title: 'Berhasil Disalin',
+                                  message: `Gambar ${student.nama} berhasil disalin! Anda bisa langsung Paste (Ctrl+V) di WhatsApp.`,
+                                  type: 'success',
+                                });
                               } catch {
                                 const safeName = (student.nama || 'Siswa').replace(/[^a-zA-Z0-9_-]/g, '_');
                                 downloadResultImage(dataUrl, `Hasil_${safeName}.png`);
@@ -2027,6 +2098,9 @@ export default function GuruHasilPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi Modern */}
+      <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
     </div>
   );
 }

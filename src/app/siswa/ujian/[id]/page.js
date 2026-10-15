@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useExamMode } from '@/hooks/useExamMode';
 import { parseWaktuWIB } from '@/lib/utils';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 export default function LembarUjianPage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function LembarUjianPage() {
   const [sesi, setSesi] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const { dialogState, alert: showAlert, handleConfirm, handleClose } = useConfirmDialog();
 
   // Active question index (0-based)
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -331,11 +333,19 @@ export default function LembarUjianPage() {
         } catch {}
         router.push(`/siswa/selesai?ujian_id=${examId}&sesi_id=${currentSesiId}`);
       } else {
-        alert(data.error || 'Gagal mengumpulkan ujian');
+        await showAlert({
+          title: 'Gagal Mengumpulkan Ujian',
+          message: data.error || 'Gagal mengumpulkan lembar jawaban ujian.',
+          type: 'danger',
+        });
         setIsSubmitting(false);
       }
     } catch {
-      alert('Terjadi kesalahan koneksi saat mengumpulkan ujian. Coba lagi.');
+      await showAlert({
+        title: 'Kesalahan Jaringan',
+        message: 'Terjadi kesalahan koneksi saat mengumpulkan ujian. Silakan coba lagi.',
+        type: 'danger',
+      });
       setIsSubmitting(false);
     }
   };
@@ -1008,6 +1018,9 @@ export default function LembarUjianPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi & Notifikasi Modern */}
+      <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 export default function SuperAdminDashboard() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('superadmin');
@@ -14,6 +15,7 @@ export default function SuperAdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
+  const { dialogState, confirm: showConfirm, handleConfirm, handleClose } = useConfirmDialog();
 
   // New Teacher Modal
   const [showAddGuruModal, setShowAddGuruModal] = useState(false);
@@ -79,7 +81,13 @@ export default function SuperAdminDashboard() {
   };
 
   const handleDeleteGuru = async (id, nama) => {
-    if (!confirm(`Hapus akun guru resmi "${nama}"? Data ujian milik guru ini tetap diarsipkan.`)) return;
+    const ok = await showConfirm({
+      title: 'Hapus Akun Guru',
+      message: `Hapus akun guru resmi "${nama}"? Data ujian milik guru ini tetap diarsipkan.`,
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
+    });
+    if (!ok) return;
     try {
       const res = await authFetch(`/api/superadmin/guru?id=${id}`, { method: 'DELETE' });
       const resData = await res.json();
@@ -386,6 +394,9 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi Modern */}
+      <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
     </div>
   );
 }

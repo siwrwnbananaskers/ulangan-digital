@@ -870,8 +870,8 @@ export async function copyRekapImageToClipboard(dataUrl) {
 /**
  * Open a clean, beautifully formatted native print window (Print / PDF)
  */
-export function printRekapDocument({ examDetail, results = [], guruNama = '' }) {
-  if (typeof window === 'undefined') return;
+export function printRekapDocument({ examDetail, results = [], guruNama = '', onError }) {
+  if (typeof window === 'undefined') return false;
 
   const kkm = Number(examDetail?.kkm) || 75;
   const teacherName = guruNama || examDetail?.guru_nama || 'Guru Pengampu';
@@ -895,8 +895,12 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '' }) 
 
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
-    alert('Gagal membuka jendela cetak. Pastikan pop-up diizinkan.');
-    return;
+    if (onError) {
+      onError('Gagal membuka jendela cetak. Pastikan izin pop-up browser telah diaktifkan.');
+    } else {
+      console.warn('Gagal membuka jendela cetak. Pastikan pop-up diizinkan.');
+    }
+    return false;
   }
 
   const html = `

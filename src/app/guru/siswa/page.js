@@ -5,9 +5,11 @@ import * as XLSX from 'xlsx';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import UpgradeModal from '@/components/UpgradeModal';
+import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
 export default function SiswaManagementPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
+  const { dialogState, confirm: showConfirm, handleConfirm, handleClose } = useConfirmDialog();
   const [siswaList, setSiswaList] = useState([]);
   const [kelasList, setKelasList] = useState([]);
   const [filterKelas, setFilterKelas] = useState('');
@@ -257,7 +259,14 @@ export default function SiswaManagementPage() {
   };
 
   const handleDelete = async (id, nama) => {
-    if (!confirm(`Hapus data siswa "${nama}"? Semua data sesi ujian dan nilai siswa ini juga akan terhapus.`)) return;
+    const ok = await showConfirm({
+      title: 'Hapus Data Siswa',
+      message: `Hapus data siswa "${nama}"? Semua data sesi ujian dan nilai siswa ini juga akan terhapus.`,
+      confirmText: 'Ya, Hapus Siswa',
+      type: 'danger',
+    });
+    if (!ok) return;
+
     try {
       const res = await authFetch(`/api/siswa?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -328,10 +337,16 @@ export default function SiswaManagementPage() {
     if (selectedIds.length === 0) return;
     const isAll = selectedIds.length === siswaList.length;
     const confirmMsg = isAll
-      ? `PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA (${selectedIds.length}) siswa? Seluruh riwayat ujian dan nilai siswa ini akan dihapus secara permanen.`
-      : `Hapus ${selectedIds.length} siswa yang ditandai? Seluruh riwayat ujian siswa yang dipilih akan dihapus.`;
+      ? `Apakah Anda yakin ingin menghapus SEMUA (${selectedIds.length}) siswa? Seluruh riwayat ujian dan nilai siswa ini akan dihapus secara permanen.`
+      : `Hapus ${selectedIds.length} data siswa yang ditandai? Seluruh riwayat ujian siswa yang dipilih akan dihapus.`;
 
-    if (!confirm(confirmMsg)) return;
+    const ok = await showConfirm({
+      title: isAll ? 'Hapus Semua Siswa Terpilih' : 'Hapus Siswa Terpilih',
+      message: confirmMsg,
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
+    });
+    if (!ok) return;
 
     setDeletingBulk(true);
     try {
@@ -357,7 +372,13 @@ export default function SiswaManagementPage() {
 
   const handleDeleteAllStudents = async () => {
     if (siswaList.length === 0) return;
-    if (!confirm(`PERINGATAN KERAS: Apakah Anda yakin ingin MENGHAPUS SEMUA (${siswaList.length}) siswa sekaligus? Seluruh data nilai dan sesi ujian siswa Anda akan dihapus permanen.`)) return;
+    const ok = await showConfirm({
+      title: 'Hapus Semua Data Siswa',
+      message: `PERINGATAN KERAS: Apakah Anda yakin ingin MENGHAPUS SEMUA (${siswaList.length}) siswa sekaligus? Seluruh data nilai dan sesi ujian siswa Anda akan dihapus permanen.`,
+      confirmText: 'Ya, Hapus Semua Siswa',
+      type: 'danger',
+    });
+    if (!ok) return;
 
     setDeletingBulk(true);
     try {
@@ -1267,6 +1288,13 @@ export default function SiswaManagementPage() {
         onClose={() => setShowUpgradeModal(false)}
         title="Batas Kuota Siswa Demo"
         message={upgradeMsg}
+      />
+
+      {/* Modern Confirmation Dialog */}
+      <ConfirmModal
+        {...dialogState}
+        onConfirm={handleConfirm}
+        onClose={handleClose}
       />
     </div>
   );
