@@ -957,8 +957,20 @@ export default function GuruHasilPage() {
       {/* Modal Cek Jawaban Siswa */}
       {modalJawaban && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setModalJawaban(null)}>
-          <div className="modal modal-lg" style={{ maxWidth: 860, maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
-            <div className="modal-header" style={{ paddingBottom: 'var(--space-md)', borderBottom: '1px solid var(--gray-200)', marginBottom: 'var(--space-md)' }}>
+          <div
+            className="modal modal-lg"
+            style={{
+              maxWidth: 960,
+              width: '95vw',
+              height: '92vh',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '16px 20px',
+              borderRadius: 'var(--radius-xl)',
+            }}
+          >
+            <div className="modal-header" style={{ paddingBottom: 10, borderBottom: '1px solid var(--gray-200)', marginBottom: 10, flexShrink: 0 }}>
               <div>
                 <h3 className="modal-title" style={{ fontSize: 'var(--font-size-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
                   <span>Lembar Jawaban Siswa</span>
@@ -1029,71 +1041,82 @@ export default function GuruHasilPage() {
 
               return (
                 <>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-                    gap: 'var(--space-sm)',
-                    background: 'var(--gray-50)',
-                    padding: 'var(--space-md)',
-                    borderRadius: 'var(--radius-lg)',
-                    marginBottom: 'var(--space-lg)',
-                    border: '1px solid var(--gray-200)',
-                    textAlign: 'center'
-                  }}>
-                    <div>
-                      <div className="text-xs text-muted">Nilai Akhir</div>
-                      <div style={{
-                        fontSize: 'var(--font-size-2xl)',
-                        fontWeight: 800,
-                        color: (modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'var(--success)' : 'var(--danger)'
-                      }}>
-                        {modalJawaban.sesi?.total_nilai ?? '-'}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 10,
+                      background: '#f8fafc',
+                      padding: '8px 16px',
+                      borderRadius: 'var(--radius-lg)',
+                      marginBottom: 12,
+                      border: '1px solid #e2e8f0',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* Nilai Akhir */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingRight: 16, borderRight: '1px solid #e2e8f0' }}>
+                      <div>
+                        <div className="text-xs text-muted" style={{ fontSize: 10, fontWeight: 600 }}>Nilai Akhir</div>
+                        <div style={{
+                          fontSize: 22,
+                          fontWeight: 900,
+                          lineHeight: 1.1,
+                          color: (modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'var(--success)' : 'var(--danger)'
+                        }}>
+                          {modalJawaban.sesi?.total_nilai ?? '-'}
+                        </div>
                       </div>
-                      <span className={`badge ${(modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 10 }}>
+                      <span className={`badge ${(modalJawaban.sesi?.total_nilai || 0) >= (modalJawaban.sesi?.kkm || 75) ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 10, padding: '2px 6px' }}>
                         KKM: {modalJawaban.sesi?.kkm || 75}
                       </span>
                     </div>
-                    <div>
-                      <div className="text-xs text-muted">Jawaban Benar</div>
-                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--success)' }}>
-                        {countB}
-                      </div>
-                      <span className="text-xs text-muted">Poin Penuh</span>
-                    </div>
-                    {countSeb > 0 && (
-                      <div>
-                        <div className="text-xs text-muted">Nilai Sebagian</div>
-                        <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: '#d97706' }}>
-                          {countSeb}
+
+                    {/* Stats Group in single row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, justifyContent: 'space-around', minWidth: 280, flexWrap: 'wrap' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div className="text-xs text-muted" style={{ fontSize: 10 }}>Jawaban Benar</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--success)', lineHeight: 1.2 }}>
+                          {countB} <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--gray-500)' }}>Poin Penuh</span>
                         </div>
-                        <span className="text-xs text-muted" style={{ color: '#b45309' }}>Uraian Parsial</span>
                       </div>
-                    )}
-                    <div>
-                      <div className="text-xs text-muted">Jawaban Salah</div>
-                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--danger)' }}>
-                        {countS}
+
+                      {countSeb > 0 && (
+                        <div style={{ textAlign: 'center' }}>
+                          <div className="text-xs text-muted" style={{ fontSize: 10, color: '#b45309' }}>Nilai Sebagian</div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#d97706', lineHeight: 1.2 }}>
+                            {countSeb} <span style={{ fontSize: 10, fontWeight: 500, color: '#b45309' }}>Parsial</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ textAlign: 'center' }}>
+                        <div className="text-xs text-muted" style={{ fontSize: 10 }}>Jawaban Salah</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--danger)', lineHeight: 1.2 }}>
+                          {countS} <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--gray-500)' }}>Skor Nol</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-muted">Skor Nol</span>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted">Tidak Dijawab</div>
-                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--gray-500)' }}>
-                        {countK}
+
+                      <div style={{ textAlign: 'center' }}>
+                        <div className="text-xs text-muted" style={{ fontSize: 10 }}>Tidak Dijawab</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--gray-500)', lineHeight: 1.2 }}>
+                          {countK} <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--gray-400)' }}>Kosong</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-muted">Butir Kosong</span>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted">Pelanggaran</div>
-                      <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: (modalJawaban.sesi?.jumlah_pelanggaran || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                        {modalJawaban.sesi?.jumlah_pelanggaran ?? 0}x
+
+                      <div style={{ textAlign: 'center', paddingLeft: 12, borderLeft: '1px solid #e2e8f0' }}>
+                        <div className="text-xs text-muted" style={{ fontSize: 10 }}>Pelanggaran</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: (modalJawaban.sesi?.jumlah_pelanggaran || 0) > 0 ? 'var(--danger)' : 'var(--success)', lineHeight: 1.2 }}>
+                          {modalJawaban.sesi?.jumlah_pelanggaran ?? 0}x
+                        </div>
                       </div>
-                      <span className="text-xs text-muted">Terdeteksi</span>
                     </div>
                   </div>
 
                   {/* Questions List */}
-                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: 'var(--space-xs)' }}>
+                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 'var(--space-xs)' }}>
                     {!sortedModalJawaban || sortedModalJawaban.length === 0 ? (
                       <div className="empty-state" style={{ padding: 'var(--space-xl)' }}>
                         <p>Tidak ada butir soal dalam lembar ujian ini.</p>
@@ -1377,7 +1400,7 @@ export default function GuruHasilPage() {
       })()}
 
             {/* Modal Footer */}
-            <div className="modal-footer-responsive">
+            <div className="modal-footer-responsive" style={{ paddingTop: 10, marginTop: 10, flexShrink: 0, borderTop: '1px solid var(--gray-200)' }}>
               <div className="modal-footer-responsive-group">
                 <button
                   type="button"
