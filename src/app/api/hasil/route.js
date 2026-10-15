@@ -101,6 +101,7 @@ export async function GET(request) {
           `SELECT su.*, u.nama, u.kelas, u.no_absen, u.username, u.foto_profil,
             (SELECT COUNT(*) FROM audit_log al WHERE al.sesi_id = su.id) as total_pelanggaran,
             (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = su.ujian_id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual,
+            (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = su.ujian_id AND s.tipe NOT IN ('uraian', 'isian')) as total_soal_pg,
             (SELECT COUNT(*) FROM ujian_soal us 
                JOIN soal s ON s.id = us.soal_id 
                LEFT JOIN jawaban j ON j.soal_id = s.id AND j.sesi_id = su.id 
@@ -114,7 +115,43 @@ export async function GET(request) {
              WHERE us.ujian_id = su.ujian_id 
                AND s.tipe IN ('uraian', 'isian') 
                AND j.nilai_soal IS NOT NULL
-            ) as manual_sudah_dikoreksi
+            ) as manual_sudah_dikoreksi,
+            (SELECT COUNT(*) FROM jawaban j 
+               JOIN soal s ON s.id = j.soal_id 
+             WHERE j.sesi_id = su.id 
+               AND s.tipe NOT IN ('uraian', 'isian') 
+               AND j.is_benar = 1
+            ) as pg_benar,
+            (SELECT COUNT(*) FROM jawaban j 
+               JOIN soal s ON s.id = j.soal_id 
+             WHERE j.sesi_id = su.id 
+               AND s.tipe NOT IN ('uraian', 'isian') 
+               AND j.is_benar = 0 
+               AND j.jawaban_siswa IS NOT NULL 
+               AND TRIM(j.jawaban_siswa) != ''
+            ) as pg_salah,
+            (SELECT COUNT(*) FROM ujian_soal us
+               JOIN soal s ON s.id = us.soal_id
+               LEFT JOIN jawaban j ON j.soal_id = s.id AND j.sesi_id = su.id
+             WHERE us.ujian_id = su.ujian_id
+               AND s.tipe NOT IN ('uraian', 'isian')
+               AND (j.jawaban_siswa IS NULL OR TRIM(j.jawaban_siswa) = '')
+            ) as pg_kosong,
+            (SELECT ROUND(COALESCE(SUM(j.nilai_soal), 0), 1) FROM jawaban j 
+               JOIN soal s ON s.id = j.soal_id 
+             WHERE j.sesi_id = su.id 
+               AND s.tipe IN ('uraian', 'isian')
+            ) as total_skor_essay,
+            (SELECT COALESCE(SUM(s.bobot), 0) FROM soal s 
+               JOIN ujian_soal us ON us.soal_id = s.id 
+             WHERE us.ujian_id = su.ujian_id 
+               AND s.tipe IN ('uraian', 'isian')
+            ) as total_bobot_essay,
+            (SELECT COALESCE(SUM(s.bobot), 0) FROM soal s 
+               JOIN ujian_soal us ON us.soal_id = s.id 
+             WHERE us.ujian_id = su.ujian_id 
+               AND s.tipe NOT IN ('uraian', 'isian')
+            ) as total_bobot_pg
            FROM sesi_ujian su
            JOIN users u ON u.id = su.siswa_id
            WHERE su.ujian_id = ?
@@ -124,7 +161,10 @@ export async function GET(request) {
 
         const ujian = await db.getOne(
           `SELECT uj.*, u.nama as guru_nama,
-            (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual
+            (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual,
+            (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe NOT IN ('uraian', 'isian')) as total_soal_pg,
+            (SELECT COALESCE(SUM(s.bobot), 0) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_bobot_essay,
+            (SELECT COALESCE(SUM(s.bobot), 0) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe NOT IN ('uraian', 'isian')) as total_bobot_pg
            FROM ujian uj
            LEFT JOIN users u ON u.id = uj.guru_id
            WHERE uj.id = ?`,
@@ -135,6 +175,9 @@ export async function GET(request) {
         const selesai = results.filter(r => r.status === 'selesai');
         const nilaiArr = selesai.map(r => r.total_nilai).filter(n => n !== null);
         const totalSoalManual = Number(ujian?.total_soal_manual) || (results.length > 0 ? (Number(results[0].total_soal_manual) || 0) : 0);
+        const totalSoalPg = Number(ujian?.total_soal_pg) || (results.length > 0 ? (Number(results[0].total_soal_pg) || 0) : 0);
+        const totalBobotEssay = Number(ujian?.total_bobot_essay) || (results.length > 0 ? (Number(results[0].total_bobot_essay) || 0) : 0);
+        const totalBobotPg = Number(ujian?.total_bobot_pg) || (results.length > 0 ? (Number(results[0].total_bobot_pg) || 0) : 0);
         const perluKoreksi = selesai.filter(r => totalSoalManual > 0 && (Number(r.manual_belum_dikoreksi) || 0) > 0).length;
         const sudahKoreksi = selesai.filter(r => totalSoalManual > 0 && (Number(r.manual_belum_dikoreksi) || 0) === 0).length;
 
@@ -149,6 +192,9 @@ export async function GET(request) {
           lulus_kkm: selesai.filter(r => r.total_nilai >= (ujian?.kkm || 75)).length,
           tidak_lulus: selesai.filter(r => r.total_nilai < (ujian?.kkm || 75)).length,
           total_soal_manual: totalSoalManual,
+          total_soal_pg: totalSoalPg,
+          total_bobot_essay: totalBobotEssay,
+          total_bobot_pg: totalBobotPg,
           perlu_koreksi: perluKoreksi,
           sudah_koreksi: sudahKoreksi,
         };
@@ -278,8 +324,9 @@ export async function PATCH(request) {
 
       // Recalculate session totals
       const allAnswers = await db.getAll(
-        `SELECT j.is_benar, j.nilai_soal, j.jawaban_siswa 
+        `SELECT j.is_benar, j.nilai_soal, j.jawaban_siswa, s.tipe, s.bobot 
          FROM jawaban j 
+         JOIN soal s ON s.id = j.soal_id
          WHERE j.sesi_id = ?`,
         [sesi_id]
       );
@@ -296,15 +343,27 @@ export async function PATCH(request) {
       let salah = 0;
       let kosong = 0;
       for (const a of allAnswers) {
-        if (!a.jawaban_siswa || a.jawaban_siswa.trim() === '') {
-          if ((a.nilai_soal || 0) > 0) benar++;
-          else kosong++;
-        } else if (a.is_benar === 1 || (a.nilai_soal || 0) > 0) {
-          benar++;
+        const isEssay = a.tipe === 'uraian' || a.tipe === 'isian';
+        const ansScore = Number(a.nilai_soal) || 0;
+        sumNilai += ansScore;
+
+        if (isEssay) {
+          if (!a.jawaban_siswa || a.jawaban_siswa.trim() === '') {
+            kosong++;
+          } else if (ansScore >= (a.bobot || 1)) {
+            benar++;
+          } else {
+            salah++;
+          }
         } else {
-          salah++;
+          if (!a.jawaban_siswa || a.jawaban_siswa.trim() === '') {
+            kosong++;
+          } else if (a.is_benar === 1) {
+            benar++;
+          } else {
+            salah++;
+          }
         }
-        sumNilai += Number(a.nilai_soal) || 0;
       }
       const finalScore = totalBobot > 0 ? Math.round((sumNilai / totalBobot) * 100 * 100) / 100 : 0;
       await db.run(

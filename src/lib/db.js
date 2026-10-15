@@ -718,30 +718,49 @@ class D1Client {
         if (upper.includes('WHERE SU.UJIAN_ID =')) {
           const examId = params[0];
           const sessions = fallbackStore.sesi_ujian.filter(s => s.ujian_id === examId);
-          const examManualSoalIds = fallbackStore.ujian_soal
+          const allExamSoal = fallbackStore.ujian_soal
             .filter(us => us.ujian_id === examId)
-            .map(us => us.soal_id)
-            .filter(sId => {
-              const soal = fallbackStore.soal.find(s => s.id === sId);
-              return soal && (soal.tipe === 'uraian' || soal.tipe === 'isian');
-            });
-          const totalSoalManual = examManualSoalIds.length;
+            .map(us => fallbackStore.soal.find(s => s.id === us.soal_id))
+            .filter(Boolean);
+          const examManualSoal = allExamSoal.filter(s => s.tipe === 'uraian' || s.tipe === 'isian');
+          const examPgSoal = allExamSoal.filter(s => s.tipe !== 'uraian' && s.tipe !== 'isian');
+          const totalSoalManual = examManualSoal.length;
+          const totalSoalPg = examPgSoal.length;
+          const totalBobotEssay = examManualSoal.reduce((a, b) => a + (Number(b.bobot) || 0), 0);
+          const totalBobotPg = examPgSoal.reduce((a, b) => a + (Number(b.bobot) || 0), 0);
 
           const results = sessions.map(su => {
             const u = fallbackStore.users.find(usr => usr.id === su.siswa_id) || {};
             const logCount = fallbackStore.audit_log.filter(l => l.sesi_id === su.id).length;
             let manualBelum = 0;
             let manualSudah = 0;
+            let totalSkorEssay = 0;
             if (totalSoalManual > 0) {
-              for (const sId of examManualSoalIds) {
-                const j = fallbackStore.jawaban.find(ans => ans.sesi_id === su.id && ans.soal_id === sId);
+              for (const s of examManualSoal) {
+                const j = fallbackStore.jawaban.find(ans => ans.sesi_id === su.id && ans.soal_id === s.id);
                 if (j && j.nilai_soal !== null && j.nilai_soal !== undefined) {
                   manualSudah++;
+                  totalSkorEssay += Number(j.nilai_soal) || 0;
                 } else {
                   manualBelum++;
                 }
               }
             }
+
+            let pgBenar = 0;
+            let pgSalah = 0;
+            let pgKosong = 0;
+            for (const s of examPgSoal) {
+              const j = fallbackStore.jawaban.find(ans => ans.sesi_id === su.id && ans.soal_id === s.id);
+              if (!j || !j.jawaban_siswa || j.jawaban_siswa.trim() === '') {
+                pgKosong++;
+              } else if (j.is_benar === 1) {
+                pgBenar++;
+              } else {
+                pgSalah++;
+              }
+            }
+
             return {
               ...su,
               nama: u.nama || 'Siswa',
@@ -749,8 +768,15 @@ class D1Client {
               no_absen: u.no_absen || '-',
               total_pelanggaran: logCount,
               total_soal_manual: totalSoalManual,
+              total_soal_pg: totalSoalPg,
               manual_belum_dikoreksi: manualBelum,
               manual_sudah_dikoreksi: manualSudah,
+              pg_benar: pgBenar,
+              pg_salah: pgSalah,
+              pg_kosong: pgKosong,
+              total_skor_essay: Math.round(totalSkorEssay * 10) / 10,
+              total_bobot_essay: totalBobotEssay,
+              total_bobot_pg: totalBobotPg,
             };
           });
           return { results, meta: {} };

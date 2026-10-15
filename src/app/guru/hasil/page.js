@@ -278,6 +278,7 @@ export default function GuruHasilPage() {
       const dataUrl = await generateRekapTableImage({
         examDetail,
         results,
+        stats,
         guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
       });
       setRekapModal((prev) => ({
@@ -296,6 +297,7 @@ export default function GuruHasilPage() {
     exportRekapToExcel({
       examDetail,
       results,
+      stats,
       guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
     });
   };
@@ -325,6 +327,7 @@ export default function GuruHasilPage() {
     printRekapDocument({
       examDetail,
       results,
+      stats,
       guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
       onError: (msg) => {
         showAlert({
@@ -1001,7 +1004,7 @@ export default function GuruHasilPage() {
                         <th style={{ textAlign: 'center' }}>Kelas / Absen</th>
                         <th style={{ textAlign: 'center' }}>Status</th>
                         <th style={{ textAlign: 'center' }}>Waktu Mulai</th>
-                        <th style={{ textAlign: 'center' }}>Benar / Salah</th>
+                        <th style={{ textAlign: 'center' }}>{hasManual ? 'Komposisi Nilai' : 'Benar / Salah'}</th>
                         <th style={{ textAlign: 'center' }}>Nilai Akhir</th>
                         <th style={{ textAlign: 'center' }}>Pelanggaran</th>
                         <th style={{ textAlign: 'center' }}>Aksi</th>
@@ -1079,11 +1082,34 @@ export default function GuruHasilPage() {
                             </td>
                             <td style={{ textAlign: 'center' }}>
                               {res.status === 'selesai' ? (
-                                <span className="text-xs">
-                                  <strong className="text-success">{res.jumlah_benar || 0} Benar</strong> •{' '}
-                                  <span className="text-danger">{res.jumlah_salah || 0} Salah</span> •{' '}
-                                  <span className="text-muted">{res.jumlah_kosong || 0} Kosong</span>
-                                </span>
+                                hasManual ? (
+                                  <div style={{ display: 'inline-flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                                    <span className="text-xs" style={{ whiteSpace: 'nowrap' }}>
+                                      <strong className="text-success">{res.pg_benar ?? res.jumlah_benar ?? 0} Benar PG</strong>
+                                      {(res.pg_salah ?? res.jumlah_salah) > 0 ? (
+                                        <> • <span className="text-danger">{res.pg_salah ?? res.jumlah_salah} Salah</span></>
+                                      ) : null}
+                                    </span>
+                                    <span style={{
+                                      fontSize: 10,
+                                      color: '#b45309',
+                                      fontWeight: 700,
+                                      background: '#fffbeb',
+                                      padding: '2px 8px',
+                                      borderRadius: 4,
+                                      border: '1px solid #fde68a',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      Skor Essay: {res.total_skor_essay ?? 0} Poin
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs">
+                                    <strong className="text-success">{res.jumlah_benar || 0} Benar</strong> •{' '}
+                                    <span className="text-danger">{res.jumlah_salah || 0} Salah</span> •{' '}
+                                    <span className="text-muted">{res.jumlah_kosong || 0} Kosong</span>
+                                  </span>
+                                )
                               ) : '-'}
                             </td>
                             <td style={{ textAlign: 'center' }}>

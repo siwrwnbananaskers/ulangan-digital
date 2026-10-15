@@ -29,12 +29,20 @@ function getFormalIndonesianDate(d = new Date()) {
 /**
  * Export student grade ledger to Excel (.xlsx) with professional accountant formatting
  */
-export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) {
+export function exportRekapToExcel({ examDetail, results = [], stats = null, guruNama = '' }) {
   if (typeof window === 'undefined') return;
 
   const kkm = Number(examDetail?.kkm) || 75;
   const teacherName = guruNama || examDetail?.guru_nama || 'Guru Pengampu';
   const currentDate = getFormalIndonesianDate();
+
+  const totalManual = Number(examDetail?.total_soal_manual) || 
+                      Number(stats?.total_soal_manual) || 
+                      (results.length > 0 ? (Number(results[0].total_soal_manual) || 0) : 0);
+  const totalSoalPg = Number(examDetail?.total_soal_pg) || 
+                      Number(stats?.total_soal_pg) || 
+                      (results.length > 0 ? (Number(results[0].total_soal_pg) || 0) : 0);
+  const hasManual = totalManual > 0;
 
   // Sort results naturally by absen if available, then by name
   const sorted = [...results].sort((a, b) => {
@@ -82,7 +90,19 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
   rows.push([]);
 
   // Row 7 (Excel Row 8): Table Headers
-  const headerCols = [
+  const headerCols = hasManual ? [
+    'NO',
+    'NO. ABSEN',
+    'NISN / ID SISWA',
+    'NAMA LENGKAP SISWA',
+    'KELAS',
+    'BENAR PG',
+    'SALAH PG',
+    'SKOR ESSAY',
+    'NILAI AKHIR',
+    'KKM',
+    'STATUS KELULUSAN',
+  ] : [
     'NO',
     'NO. ABSEN',
     'NISN / ID SISWA',
@@ -110,15 +130,21 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
       ? 'TUNTAS'
       : 'REMIDIAL';
 
+    const benarVal = hasManual ? (item.pg_benar ?? item.jumlah_benar ?? 0) : (item.jumlah_benar ?? 0);
+    const salahVal = hasManual ? (item.pg_salah ?? item.jumlah_salah ?? 0) : (item.jumlah_salah ?? 0);
+    const col3Val = hasManual
+      ? (isSelesai && item.total_skor_essay !== null && item.total_skor_essay !== undefined ? Number(item.total_skor_essay) : (isSelesai ? 0 : '-'))
+      : (item.jumlah_kosong ?? 0);
+
     rows.push([
       idx + 1,
       item.no_absen ? Number(item.no_absen) : '-',
       item.username || '-',
       item.nama || 'Siswa',
       item.kelas || '-',
-      item.jumlah_benar ?? 0,
-      item.jumlah_salah ?? 0,
-      item.jumlah_kosong ?? 0,
+      benarVal,
+      salahVal,
+      col3Val,
       nilai,
       kkm,
       statusKet,
@@ -134,10 +160,15 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
   rows.push(['', '', 'Total Siswa Terdaftar', '', `${sorted.length} Siswa`, '', '', '', 'Mengetahui / Guru Pengampu,', '', '']);
   rows.push(['', '', 'Total Siswa Selesai Mengikuti', '', `${selesai.length} Siswa`, '', '', '', '', '', '']);
   rows.push(['', '', 'Rata-Rata Nilai Kelas', '', Number(rataRata), '', '', '', '', '', '']);
-  rows.push(['', '', 'Nilai Tertinggi Kelas', '', nilaiTertinggi, '', '', '', '', '', '']);
+  rows.push(['', '', hasManual ? 'Komposisi Soal Asesmen' : 'Nilai Tertinggi Kelas', '', hasManual ? `${totalSoalPg} PG + ${totalManual} Essay` : nilaiTertinggi, '', '', '', '', '', '']);
   rows.push(['', '', 'Nilai Terendah Kelas', '', nilaiTerendah, '', '', '', `( ${teacherName} )`, '', '']);
   rows.push(['', '', `Ketuntasan KKM (≥ ${kkm})`, '', `${lulusKkm} Siswa (${persenLulus}%)`, '', '', '', '', '', '']);
   rows.push(['', '', `Siswa Remedial (< ${kkm})`, '', `${remedial} Siswa`, '', '', '', '', '', '']);
+
+  if (hasManual) {
+    rows.push([]);
+    rows.push(['', '', '* Catatan Transparansi Penilaian:', '', `Ujian terdiri dari ${totalSoalPg} Pilihan Ganda (sistem) & ${totalManual} Essay/Uraian (rubrik kelengkapan jawaban oleh guru).`, '', '', '', '', '', '']);
+  }
 
   // Create sheet
   const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -312,7 +343,13 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
         fontBold = true;
         fontColor = 'DC2626';
       } else if (c === 7) {
-        fontColor = '64748B';
+        if (hasManual) {
+          fontBold = true;
+          fontColor = 'B45309';
+          cellBg = 'FFFBEB';
+        } else {
+          fontColor = '64748B';
+        }
       } else if (c === 8) {
         fontBold = true;
         fontSize = 11;
@@ -372,7 +409,7 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
     const valCell = ensureCell(r, 4);
     let valBg = 'FFFFFF';
     let valColor = '0F172A';
-    if (sr === 4) valColor = '16A34A';
+    if (sr === 4) valColor = hasManual ? '0F172A' : '16A34A';
     if (sr === 5) valColor = 'DC2626';
     if (sr === 6) { valBg = 'DCFCE7'; valColor = '15803D'; }
     if (sr === 7) { valBg = 'FEE2E2'; valColor = 'B91C1C'; }
@@ -412,7 +449,19 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
   }
 
   // Column Widths
-  ws['!cols'] = [
+  ws['!cols'] = hasManual ? [
+    { wch: 7 },  // No
+    { wch: 13 }, // Absen
+    { wch: 18 }, // NISN
+    { wch: 38 }, // Nama
+    { wch: 12 }, // Kelas
+    { wch: 14 }, // Benar PG
+    { wch: 14 }, // Salah PG
+    { wch: 16 }, // Skor Essay
+    { wch: 15 }, // Nilai
+    { wch: 10 }, // KKM
+    { wch: 22 }, // Keterangan
+  ] : [
     { wch: 7 },  // No
     { wch: 13 }, // Absen
     { wch: 18 }, // NISN
@@ -456,7 +505,7 @@ export function exportRekapToExcel({ examDetail, results = [], guruNama = '' }) 
 /**
  * Generate a high-resolution, print-ready document image (.png) of the grade ledger
  */
-export function generateRekapTableImage({ examDetail, results = [], guruNama = '' }) {
+export function generateRekapTableImage({ examDetail, results = [], stats = null, guruNama = '' }) {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') {
       resolve(null);
@@ -470,6 +519,14 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
     const kkm = Number(examDetail?.kkm) || 75;
     const teacherName = guruNama || examDetail?.guru_nama || 'Guru Pengampu';
     const currentDate = getFormalIndonesianDate();
+
+    const totalManual = Number(examDetail?.total_soal_manual) || 
+                        Number(stats?.total_soal_manual) || 
+                        (results.length > 0 ? (Number(results[0].total_soal_manual) || 0) : 0);
+    const totalSoalPg = Number(examDetail?.total_soal_pg) || 
+                        Number(stats?.total_soal_pg) || 
+                        (results.length > 0 ? (Number(results[0].total_soal_pg) || 0) : 0);
+    const hasManual = totalManual > 0;
 
     // Sort results naturally by absen
     const sorted = [...results].sort((a, b) => {
@@ -490,16 +547,17 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
 
     const width = 1120;
     const padding = 36;
-    const innerWidth = width - padding * 2;
+    const innerWidth = width - padding * 2; // 1048px
 
     const rowH = 30;
     const headerHeight = 135;
     const tableHeaderH = 34;
     const tableRowsH = Math.max(sorted.length, 1) * rowH;
+    const rubricNoteH = hasManual ? 26 : 0;
     const statsBoxH = 82;
     const footerH = 145;
 
-    const totalHeight = padding + headerHeight + tableHeaderH + tableRowsH + 20 + statsBoxH + 24 + footerH + padding;
+    const totalHeight = padding + headerHeight + tableHeaderH + tableRowsH + (hasManual ? rubricNoteH + 10 : 0) + 18 + statsBoxH + 24 + footerH + padding;
 
     canvas.width = width * scale;
     canvas.height = totalHeight * scale;
@@ -594,7 +652,19 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
     currentY += 56;
 
     // 3. Table Column Layout (balanced to exactly innerWidth = 1048px, with spacious KETERANGAN column)
-    const cols = [
+    const cols = hasManual ? [
+      { key: 'no', label: 'NO', width: 38, align: 'center' },
+      { key: 'absen', label: 'ABS', width: 44, align: 'center' },
+      { key: 'nisn', label: 'NISN / ID', width: 110, align: 'left' },
+      { key: 'nama', label: 'NAMA LENGKAP SISWA', width: 270, align: 'left' },
+      { key: 'kelas', label: 'KELAS', width: 60, align: 'center' },
+      { key: 'benar_pg', label: 'BENAR PG', width: 76, align: 'center' },
+      { key: 'salah_pg', label: 'SALAH PG', width: 72, align: 'center' },
+      { key: 'skor_essay', label: 'SKOR ESSAY', width: 88, align: 'center' },
+      { key: 'nilai', label: 'NILAI', width: 75, align: 'center' },
+      { key: 'kkm', label: 'KKM', width: 48, align: 'center' },
+      { key: 'ket', label: 'KETERANGAN', width: 167, align: 'center' },
+    ] : [
       { key: 'no', label: 'NO', width: 42, align: 'center' },
       { key: 'absen', label: 'ABS', width: 46, align: 'center' },
       { key: 'nisn', label: 'NISN / ID', width: 120, align: 'left' },
@@ -686,15 +756,21 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
           } else if (c.key === 'kelas') {
             textVal = item.kelas || '-';
             textColor = '#475569';
-          } else if (c.key === 'benar') {
-            textVal = String(item.jumlah_benar ?? 0);
+          } else if (c.key === 'benar' || c.key === 'benar_pg') {
+            const val = c.key === 'benar_pg' ? (item.pg_benar ?? item.jumlah_benar ?? 0) : (item.jumlah_benar ?? 0);
+            textVal = String(val);
             textColor = '#16a34a';
-          } else if (c.key === 'salah') {
-            textVal = String(item.jumlah_salah ?? 0);
+          } else if (c.key === 'salah' || c.key === 'salah_pg') {
+            const val = c.key === 'salah_pg' ? (item.pg_salah ?? item.jumlah_salah ?? 0) : (item.jumlah_salah ?? 0);
+            textVal = String(val);
             textColor = '#dc2626';
           } else if (c.key === 'kosong') {
             textVal = String(item.jumlah_kosong ?? 0);
             textColor = '#64748b';
+          } else if (c.key === 'skor_essay') {
+            textVal = isSelesai && item.total_skor_essay !== null && item.total_skor_essay !== undefined ? String(item.total_skor_essay) : '-';
+            textColor = '#d97706';
+            fontStyle = 'bold 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           } else if (c.key === 'nilai') {
             textVal = isSelesai ? String(nilaiNum) : '-';
             textColor = isLulus ? '#0f172a' : '#b91c1c';
@@ -743,6 +819,23 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
 
         currentY += rowH;
       });
+
+      if (hasManual) {
+        currentY += 10;
+        ctx.fillStyle = '#fffbeb';
+        ctx.fillRect(padding, currentY, innerWidth, 26);
+        ctx.strokeStyle = '#fde68a';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(padding, currentY, innerWidth, 26);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#92400e';
+        ctx.font = '600 10.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const noteText = `* Transparansi Penilaian: Soal terdiri dari ${totalSoalPg} Pilihan Ganda (sistem otomatis) & ${totalManual} Essay/Uraian (rubrik guru). Skor Essay dinilai berdasarkan kelengkapan jawaban.`;
+        ctx.fillText(noteText, padding + 12, currentY + 17);
+
+        currentY += 26;
+      }
     }
 
     currentY += 18;
@@ -755,7 +848,11 @@ export function generateRekapTableImage({ examDetail, results = [], guruNama = '
     const summaryCards = [
       { label: 'TOTAL SISWA SELESAI', val: `${selesai.length} / ${sorted.length} Siswa`, sub: 'Mengikuti Ujian' },
       { label: 'RATA-RATA NILAI KELAS', val: rataRata, sub: `KKM Acuan: ${kkm}` },
-      { label: 'NILAI TERTINGGI / TERENDAH', val: `${nilaiTertinggi} / ${nilaiTerendah}`, sub: 'Rentang Skor' },
+      { 
+        label: hasManual ? 'KOMPOSISI SOAL ASESMEN' : 'NILAI TERTINGGI / TERENDAH', 
+        val: hasManual ? `${totalSoalPg} PG + ${totalManual} Essay` : `${nilaiTertinggi} / ${nilaiTerendah}`, 
+        sub: hasManual ? 'Sistem Objektif + Rubrik' : 'Rentang Skor Kelas' 
+      },
       { label: 'KETUNTASAN KELAS', val: `${lulusKkm} Tuntas (${persenLulus}%)`, sub: `${remedial} Siswa Remidi` },
     ];
 
@@ -870,12 +967,20 @@ export async function copyRekapImageToClipboard(dataUrl) {
 /**
  * Open a clean, beautifully formatted native print window (Print / PDF)
  */
-export function printRekapDocument({ examDetail, results = [], guruNama = '', onError }) {
+export function printRekapDocument({ examDetail, results = [], stats = null, guruNama = '', onError }) {
   if (typeof window === 'undefined') return false;
 
   const kkm = Number(examDetail?.kkm) || 75;
   const teacherName = guruNama || examDetail?.guru_nama || 'Guru Pengampu';
   const currentDate = getFormalIndonesianDate();
+
+  const totalManual = Number(examDetail?.total_soal_manual) || 
+                      Number(stats?.total_soal_manual) || 
+                      (results.length > 0 ? (Number(results[0].total_soal_manual) || 0) : 0);
+  const totalSoalPg = Number(examDetail?.total_soal_pg) || 
+                      Number(stats?.total_soal_pg) || 
+                      (results.length > 0 ? (Number(results[0].total_soal_pg) || 0) : 0);
+  const hasManual = totalManual > 0;
 
   const sorted = [...results].sort((a, b) => {
     const absA = a.no_absen ? Number(a.no_absen) : 9999;
@@ -1033,9 +1138,9 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '', on
               <th style="width: 100px;">NISN / ID</th>
               <th>NAMA LENGKAP SISWA</th>
               <th style="width: 70px;">KELAS</th>
-              <th style="width: 55px;">BENAR</th>
-              <th style="width: 55px;">SALAH</th>
-              <th style="width: 55px;">KOSONG</th>
+              <th style="width: 65px;">${hasManual ? 'BENAR PG' : 'BENAR'}</th>
+              <th style="width: 65px;">${hasManual ? 'SALAH PG' : 'SALAH'}</th>
+              <th style="width: ${hasManual ? '85px' : '55px'};">${hasManual ? 'SKOR ESSAY' : 'KOSONG'}</th>
               <th style="width: 65px;">NILAI</th>
               <th style="width: 45px;">KKM</th>
               <th style="width: 110px;">KETERANGAN</th>
@@ -1056,9 +1161,11 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '', on
                   <td>${item.username || '-'}</td>
                   <td class="font-bold">${item.nama || 'Siswa'}</td>
                   <td class="text-center">${item.kelas || '-'}</td>
-                  <td class="text-center" style="color: #16a34a;">${item.jumlah_benar ?? 0}</td>
-                  <td class="text-center" style="color: #dc2626;">${item.jumlah_salah ?? 0}</td>
-                  <td class="text-center" style="color: #64748b;">${item.jumlah_kosong ?? 0}</td>
+                  <td class="text-center" style="color: #16a34a; font-weight: 600;">${hasManual ? (item.pg_benar ?? item.jumlah_benar ?? 0) : (item.jumlah_benar ?? 0)}</td>
+                  <td class="text-center" style="color: #dc2626; font-weight: 600;">${hasManual ? (item.pg_salah ?? item.jumlah_salah ?? 0) : (item.jumlah_salah ?? 0)}</td>
+                  <td class="text-center font-bold" style="${hasManual ? 'color: #d97706; background-color: #fffbeb;' : 'color: #64748b;'}">
+                    ${hasManual ? (isSelesai && item.total_skor_essay !== null ? item.total_skor_essay : '-') : (item.jumlah_kosong ?? 0)}
+                  </td>
                   <td class="text-center font-bold" style="font-size: 12px; color: ${isLulus ? '#0f172a' : '#b91c1c'};">${isSelesai ? nilai : '-'}</td>
                   <td class="text-center">${kkm}</td>
                   <td class="text-center ${isLulus ? 'tuntas' : 'remidi'}">${statusKet}</td>
@@ -1067,6 +1174,12 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '', on
             }).join('')}
           </tbody>
         </table>
+
+        ${hasManual ? `
+          <div style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 10px; margin-bottom: 14px;">
+            <strong>* Catatan Transparansi Penilaian:</strong> Ujian ini mencakup ${totalSoalPg} soal Pilihan Ganda (sistem otomatis) dan ${totalManual} soal Essay/Uraian (dinilai oleh guru pengampu berdasarkan rubrik). Perolehan Nilai Akhir dipengaruhi oleh Skor Essay berdasarkan kelengkapan dan kedalaman jawaban siswa.
+          </div>
+        ` : ''}
 
         <div class="stats-grid">
           <div class="stats-box">
@@ -1078,8 +1191,8 @@ export function printRekapDocument({ examDetail, results = [], guruNama = '', on
             <div class="stats-val">${rataRata}</div>
           </div>
           <div class="stats-box">
-            <div class="stats-label">Skor Tertinggi / Terendah</div>
-            <div class="stats-val">${nilaiTertinggi} / ${nilaiTerendah}</div>
+            <div class="stats-label">${hasManual ? 'Komposisi Soal' : 'Skor Tertinggi / Terendah'}</div>
+            <div class="stats-val">${hasManual ? `${totalSoalPg} PG + ${totalManual} Essay` : `${nilaiTertinggi} / ${nilaiTerendah}`}</div>
           </div>
           <div class="stats-box">
             <div class="stats-label">Ketuntasan KKM</div>
