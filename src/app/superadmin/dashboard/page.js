@@ -211,25 +211,25 @@ export default function SuperAdminDashboard() {
 
         {/* Global Metric Cards (5 Cards Auto-Fit Perfectly on Mobile & Desktop) */}
         <div className="metric-grid-5">
-          <div className="card" style={{ padding: '16px', background: '#ffffff' }}>
-            <div style={{ fontSize: 12, color: '#666666', marginBottom: 4 }}>Total Guru Terdaftar</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#0a66c2' }}>{data.stats.total_guru || 0}</div>
+          <div className="card" style={{ padding: '16px', background: '#ffffff', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 12, color: '#666666', marginBottom: 6, fontWeight: 500 }}>Total Guru Terdaftar</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#0a66c2', lineHeight: 1.1 }}>{data.stats.total_guru || 0}</div>
           </div>
-          <div className="card" style={{ padding: '16px', background: '#ffffff' }}>
-            <div style={{ fontSize: 12, color: '#666666', marginBottom: 4 }}>Total Lembar Ujian</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a' }}>{data.stats.total_ujian || 0}</div>
+          <div className="card" style={{ padding: '16px', background: '#ffffff', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 12, color: '#666666', marginBottom: 6, fontWeight: 500 }}>Total Lembar Ujian</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>{data.stats.total_ujian || 0}</div>
           </div>
-          <div className="card" style={{ padding: '16px', background: '#ffffff' }}>
-            <div style={{ fontSize: 12, color: '#666666', marginBottom: 4 }}>Total Butir Soal</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a' }}>{data.stats.total_soal || 0}</div>
+          <div className="card" style={{ padding: '16px', background: '#ffffff', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 12, color: '#666666', marginBottom: 6, fontWeight: 500 }}>Total Butir Soal</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>{data.stats.total_soal || 0}</div>
           </div>
-          <div className="card" style={{ padding: '16px', background: '#ffffff' }}>
-            <div style={{ fontSize: 12, color: '#666666', marginBottom: 4 }}>Akun Siswa Terdata</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#057642' }}>{data.stats.total_siswa || 0}</div>
+          <div className="card" style={{ padding: '16px', background: '#ffffff', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 12, color: '#666666', marginBottom: 6, fontWeight: 500 }}>Akun Siswa Terdata</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#057642', lineHeight: 1.1 }}>{data.stats.total_siswa || 0}</div>
           </div>
-          <div className="card" style={{ padding: '16px', background: '#ffffff' }}>
-            <div style={{ fontSize: 12, color: '#666666', marginBottom: 4 }}>Pelanggaran Terdeteksi</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#dc2626' }}>{data.stats.total_pelanggaran || 0}</div>
+          <div className="card" style={{ padding: '16px', background: '#ffffff', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 12, color: '#666666', marginBottom: 6, fontWeight: 500 }}>Pelanggaran Terdeteksi</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#dc2626', lineHeight: 1.1 }}>{data.stats.total_pelanggaran || 0}</div>
           </div>
         </div>
 
