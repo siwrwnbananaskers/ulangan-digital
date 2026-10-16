@@ -43,6 +43,8 @@ export async function POST(request) {
         role: user.role,
         guru_id: user.guru_id || null,
         kelas: user.kelas,
+        no_absen: user.no_absen || null,
+        foto_profil: user.foto_profil || null,
       },
     });
 

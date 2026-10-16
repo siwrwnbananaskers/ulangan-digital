@@ -41,6 +41,22 @@ export function useAuth(requiredRole = null) {
 
       setUser(parsedUser);
       setToken(storedToken);
+
+      // Background sync with database to ensure fresh profile (photo, absen, etc.)
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${storedToken}` }
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.user) {
+            setUser(data.user);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: data.user }));
+            }
+          }
+        })
+        .catch(() => {});
     } catch {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -49,6 +65,17 @@ export function useAuth(requiredRole = null) {
 
     setLoading(false);
   }, [router, requiredRole]);
+
+  // Keep user in sync if profile updated anywhere in the app
+  useEffect(() => {
+    const handleProfileUpdate = (e) => {
+      if (e.detail) {
+        setUser(e.detail);
+      }
+    };
+    window.addEventListener('user-profile-updated', handleProfileUpdate);
+    return () => window.removeEventListener('user-profile-updated', handleProfileUpdate);
+  }, []);
 
   const logout = useCallback(async () => {
     try {
