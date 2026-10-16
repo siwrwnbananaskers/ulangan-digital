@@ -2635,7 +2635,8 @@ img {
   border-radius: 10px;
   cursor: pointer;
   transition: background 150ms ease;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -2662,6 +2663,7 @@ img {
 .linkedin-user-text {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -2671,9 +2673,10 @@ img {
   color: #191919;
   line-height: 1.2;
   white-space: nowrap;
-  max-width: 150px;
+  max-width: clamp(200px, 22vw, 320px);
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .linkedin-user-role-badge {
@@ -2752,7 +2755,7 @@ img {
     display: none;
   }
   .linkedin-user-name {
-    max-width: 130px;
+    max-width: clamp(170px, 18vw, 240px);
   }
 }
 
