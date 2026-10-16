@@ -578,8 +578,8 @@ export default function SuperAdminDashboard() {
                   </table>
                 </div>
 
-                {/* Pagination Controls */}
-                {totalTeacherPages > 1 && (
+                {/* Pagination Controls (5 Guru Per Halaman) */}
+                {filteredTeachers.length > 0 && (
                   <div
                     style={{
                       display: 'flex',
@@ -594,12 +594,12 @@ export default function SuperAdminDashboard() {
                       marginTop: 14,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 12, color: '#334155', fontWeight: 600 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 12, color: '#0f172a', fontWeight: 700 }}>
                         Halaman {validTeacherPage} dari {totalTeacherPages}
                       </span>
                       <span style={{ fontSize: 11, color: '#64748b' }}>
-                        ({filteredTeachers.length} akun guru)
+                        (Menampilkan {paginatedTeachers.length} dari {filteredTeachers.length} akun guru — 5 guru per halaman)
                       </span>
                     </div>
 
@@ -610,7 +610,7 @@ export default function SuperAdminDashboard() {
                         onClick={() => setTeacherPage((p) => Math.max(1, p - 1))}
                         className="btn btn-secondary btn-sm"
                         style={{
-                          padding: '5px 10px',
+                          padding: '5px 12px',
                           fontSize: 12,
                           borderRadius: 6,
                           opacity: validTeacherPage <= 1 ? 0.45 : 1,
@@ -620,6 +620,7 @@ export default function SuperAdminDashboard() {
                           gap: 4,
                           border: '1px solid #cbd5e1',
                           background: '#ffffff',
+                          color: validTeacherPage <= 1 ? '#94a3b8' : '#334155',
                         }}
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -634,8 +635,8 @@ export default function SuperAdminDashboard() {
                           type="button"
                           onClick={() => setTeacherPage(pageNum)}
                           style={{
-                            minWidth: 28,
-                            height: 28,
+                            minWidth: 30,
+                            height: 30,
                             padding: '0 6px',
                             borderRadius: 6,
                             border: pageNum === validTeacherPage ? '1px solid #0a66c2' : '1px solid #cbd5e1',
@@ -657,7 +658,7 @@ export default function SuperAdminDashboard() {
                         onClick={() => setTeacherPage((p) => Math.min(totalTeacherPages, p + 1))}
                         className="btn btn-secondary btn-sm"
                         style={{
-                          padding: '5px 10px',
+                          padding: '5px 12px',
                           fontSize: 12,
                           borderRadius: 6,
                           opacity: validTeacherPage >= totalTeacherPages ? 0.45 : 1,
@@ -667,6 +668,7 @@ export default function SuperAdminDashboard() {
                           gap: 4,
                           border: '1px solid #cbd5e1',
                           background: '#ffffff',
+                          color: validTeacherPage >= totalTeacherPages ? '#94a3b8' : '#334155',
                         }}
                       >
                         <span>Berikutnya</span>

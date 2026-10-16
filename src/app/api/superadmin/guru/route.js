@@ -26,15 +26,50 @@ export async function GET(request) {
     const teachers = await Promise.all(
       (teachersRaw || []).map(async (u) => {
         try {
-          const examCount = await db.getOne('SELECT COUNT(*) as cnt FROM ujian WHERE guru_id = ?', [u.id]);
-          const questionCount = await db.getOne('SELECT COUNT(*) as cnt FROM soal WHERE guru_id = ?', [u.id]);
+          const examCount = await db.getOne('SELECT COUNT(*) as cnt FROM ujian WHERE guru_id = ? OR guru_id = ?', [u.id, u.username]);
+          const questionCount = await db.getOne('SELECT COUNT(*) as cnt FROM soal WHERE guru_id = ? OR guru_id = ?', [u.id, u.username]);
+
+          // 1. Hitung siswa yang didaftarkan langsung oleh guru ini (users.guru_id)
+          const studentDirectRow = await db.getOne(
+            "SELECT COUNT(*) as cnt FROM users WHERE role = 'siswa' AND (guru_id = ? OR guru_id = ?)",
+            [u.id, u.username]
+          );
+          const studentDirect = studentDirectRow?.cnt || 0;
+
+          // 2. Hitung siswa unik yang telah mengikuti/mengerjakan lembar ujian dari guru ini
+          let studentTested = 0;
+          try {
+            const testedRow = await db.getOne(
+              `SELECT COUNT(DISTINCT h.siswa_id) as cnt 
+               FROM hasil_ujian h 
+               JOIN ujian uj ON h.ujian_id = uj.id 
+               WHERE uj.guru_id = ? OR uj.guru_id = ?`,
+              [u.id, u.username]
+            );
+            studentTested = testedRow?.cnt || 0;
+          } catch {}
+
+          // 3. Fallback jika ada data siswa lama dengan guru_id NULL (misal akun demo guru atau author ujian aktif tunggal)
+          let unassignedCount = 0;
+          if (studentDirect === 0 && (u.username === 'guru' || (examCount?.cnt || 0) > 0)) {
+            try {
+              const unassignedRow = await db.getOne(
+                "SELECT COUNT(*) as cnt FROM users WHERE role = 'siswa' AND (guru_id IS NULL OR guru_id = '' OR guru_id = 'NULL')"
+              );
+              unassignedCount = unassignedRow?.cnt || 0;
+            } catch {}
+          }
+
+          const totalPeserta = Math.max(studentDirect, studentTested, unassignedCount);
+
           return {
             ...u,
             total_ujian: examCount?.cnt || 0,
             total_soal: questionCount?.cnt || 0,
-            total_peserta_diuji: 0,
+            total_peserta_diuji: totalPeserta,
           };
-        } catch {
+        } catch (err) {
+          console.warn('Teacher stats err:', err.message);
           return { ...u, total_ujian: 0, total_soal: 0, total_peserta_diuji: 0 };
         }
       })
