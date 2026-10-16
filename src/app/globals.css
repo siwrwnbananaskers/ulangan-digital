@@ -2474,7 +2474,8 @@ img {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .linkedin-logo {
@@ -2538,12 +2539,13 @@ img {
   font-family: inherit;
 }
 
-/* Nav links - compact, touch-friendly, never overflows into profile */
+/* Nav links - center-aligned, compact, touch-friendly, never overflows into profile */
 .linkedin-nav-links {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  margin: 0 6px;
+  margin: 0 auto;
   height: 100%;
   flex-shrink: 0;
 }
@@ -2617,9 +2619,11 @@ img {
 .linkedin-right-section {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
-  flex-shrink: 0;
-  margin-left: auto;
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: 0;
 }
 
 .linkedin-user-profile {

@@ -212,7 +212,7 @@ export default function Navbar({ user, onLogout, role }) {
                   {currentUser?.nama || 'Akun'}
                 </span>
                 <span className="linkedin-user-role-badge">
-                  {currentUser?.role === 'superadmin' ? 'Superadmin' : role === 'guru' ? 'Guru' : 'Siswa'}
+                  {currentUser?.role === 'superadmin' ? 'Owner / Superadmin' : role === 'guru' ? 'Guru' : 'Siswa'}
                 </span>
               </div>
             </div>

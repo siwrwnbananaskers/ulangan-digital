@@ -124,9 +124,32 @@ export default function GuruDashboard() {
                 )}
               </div>
               <h3 className="linkedin-profile-name">{currentUser?.nama || 'Guru Pengawas'}</h3>
-              <p className="linkedin-profile-headline">
-                Pendidik & Pengawas Asesmen
-              </p>
+              <div className="linkedin-profile-headline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
+                {currentUser?.role === 'superadmin' ? (
+                  <>
+                    <span
+                      style={{
+                        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                        color: '#f8fafc',
+                        fontWeight: 800,
+                        fontSize: 10,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        letterSpacing: '0.05em',
+                        border: '1px solid #334155',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      OWNER
+                    </span>
+                    <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
+                      Pendidik & Pengawas Asesmen
+                    </span>
+                  </>
+                ) : (
+                  'Pendidik & Pengawas Asesmen'
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setShowEditProfile(true)}

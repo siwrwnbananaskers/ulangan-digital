@@ -664,8 +664,19 @@ export default function GuruHasilPage() {
       <main className="main-content">
         <div className="page-header-ribbon">
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Hasil & Evaluasi Ujian</h1>
-            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Pantau nilai siswa, statistik kelulusan KKM, dan status pengerjaan</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Hasil & Evaluasi Ujian</h1>
+              {user?.role === 'superadmin' && (
+                <span className="badge" style={{ background: '#0f172a', color: '#ffffff', fontSize: 11, padding: '3px 10px', fontWeight: 700 }}>
+                  Mode Superadmin — Seluruh Guru
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>
+              {user?.role === 'superadmin'
+                ? 'Memantau rekapitulasi nilai dan evaluasi asesmen yang dibuat oleh semua dewan guru'
+                : 'Pantau nilai siswa, statistik kelulusan KKM, dan status pengerjaan'}
+            </p>
           </div>
           {selectedUjianId && (
             <div className="page-header-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -702,7 +713,7 @@ export default function GuruHasilPage() {
             </label>
             <select
               className="form-select"
-              style={{ maxWidth: 450, flex: '1 1 220px', width: '100%' }}
+              style={{ maxWidth: 520, flex: '1 1 240px', width: '100%' }}
               value={selectedUjianId}
               onChange={(e) => setSelectedUjianId(e.target.value)}
             >
@@ -711,7 +722,7 @@ export default function GuruHasilPage() {
               ) : (
                 exams.map((ex) => (
                   <option key={ex.id} value={ex.id}>
-                    {ex.judul} ({ex.mata_pelajaran} - {ex.kelas_target}) [{ex.kode_ujian}]
+                    {ex.judul} ({ex.mata_pelajaran} - {ex.kelas_target}) {ex.nama_guru || ex.guru_nama ? `— Guru: ${ex.nama_guru || ex.guru_nama}` : ''} [{ex.kode_ujian}]
                   </option>
                 ))
               )}
@@ -761,6 +772,28 @@ export default function GuruHasilPage() {
                     <h2 className="card-title" style={{ margin: 0 }}>Daftar Nilai Siswa</h2>
                     <span className="badge badge-primary">{examDetail.mata_pelajaran}</span>
                     <span className="badge badge-gray">{examDetail.kelas_target}</span>
+                    {(examDetail.guru_nama || examDetail.nama_guru || user?.role === 'superadmin') && (
+                      <span
+                        className="badge"
+                        style={{
+                          background: '#ede9fe',
+                          color: '#6d28d9',
+                          border: '1px solid #ddd6fe',
+                          fontWeight: 700,
+                          fontSize: 11,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          padding: '3px 9px',
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        Dibuat oleh Guru: {examDetail.guru_nama || examDetail.nama_guru || 'Dewan Guru'}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-muted" style={{ margin: '4px 0 0 0' }}>
                     {examDetail.judul} • KKM: <strong>{examDetail.kkm}</strong> • <strong>{results.length}</strong> siswa terdaftar

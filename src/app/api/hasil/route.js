@@ -160,7 +160,7 @@ export async function GET(request) {
         );
 
         const ujian = await db.getOne(
-          `SELECT uj.*, u.nama as guru_nama,
+          `SELECT uj.*, u.nama as guru_nama, u.nama as nama_guru, u.username as guru_username,
             (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual,
             (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe NOT IN ('uraian', 'isian')) as total_soal_pg,
             (SELECT COALESCE(SUM(s.bobot), 0) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_bobot_essay,
@@ -216,16 +216,32 @@ export async function GET(request) {
         return apiResponse({ results, ujian, stats, allJawaban });
       }
 
-      // Overview of all exams
-      const exams = await db.getAll(
-        `SELECT u.*, 
-          (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
-          (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
-          (SELECT AVG(s.total_nilai) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as rata_rata
-         FROM ujian u WHERE u.guru_id = ?
-         ORDER BY u.created_at DESC`,
-        [user.id]
-      );
+      // Overview of all exams: superadmin sees ALL exams across all teachers!
+      let exams = [];
+      if (user.role === 'superadmin') {
+        exams = await db.getAll(
+          `SELECT u.*, 
+            g.nama as nama_guru,
+            g.nama as guru_nama,
+            g.username as guru_username,
+            (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
+            (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
+            (SELECT AVG(s.total_nilai) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as rata_rata
+           FROM ujian u
+           LEFT JOIN users g ON g.id = u.guru_id
+           ORDER BY u.created_at DESC`
+        );
+      } else {
+        exams = await db.getAll(
+          `SELECT u.*, 
+            (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
+            (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
+            (SELECT AVG(s.total_nilai) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as rata_rata
+           FROM ujian u WHERE u.guru_id = ?
+           ORDER BY u.created_at DESC`,
+          [user.id]
+        );
+      }
       return apiResponse({ exams });
     }
 
