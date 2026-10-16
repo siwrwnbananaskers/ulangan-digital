@@ -24,11 +24,13 @@ export default function SuperAdminDashboard() {
     nama: '',
     password: '',
   });
+  const [showGuruPassword, setShowGuruPassword] = useState(false);
   const [savingGuru, setSavingGuru] = useState(false);
 
   // Edit Teacher Modal
   const [showEditGuruModal, setShowEditGuruModal] = useState(false);
   const [editGuruForm, setEditGuruForm] = useState({ id: '', username: '', nama: '', password: '' });
+  const [showEditGuruPassword, setShowEditGuruPassword] = useState(false);
   const [savingEditGuru, setSavingEditGuru] = useState(false);
 
   // Search & Pagination for Teachers Directory
@@ -775,12 +777,47 @@ export default function SuperAdminDashboard() {
 
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label" style={{ fontSize: 12 }}>Password Login</label>
-                <input
-                  className="form-input"
-                  placeholder="Default jika kosong: guru123"
-                  value={guruForm.password}
-                  onChange={(e) => setGuruForm({ ...guruForm, password: e.target.value })}
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showGuruPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="Default jika kosong: guru123"
+                    value={guruForm.password}
+                    onChange={(e) => setGuruForm({ ...guruForm, password: e.target.value })}
+                    style={{ paddingRight: 40, width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGuruPassword(!showGuruPassword)}
+                    title={showGuruPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    aria-label={showGuruPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      padding: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {showGuruPassword ? (
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -845,14 +882,48 @@ export default function SuperAdminDashboard() {
 
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label" style={{ fontSize: 12 }}>Ganti Password Baru</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Kosongkan jika tidak ingin mengubah password"
-                  value={editGuruForm.password}
-                  onChange={(e) => setEditGuruForm({ ...editGuruForm, password: e.target.value })}
-                />
-                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showEditGuruPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="Kosongkan jika tidak ingin mengubah password"
+                    value={editGuruForm.password}
+                    onChange={(e) => setEditGuruForm({ ...editGuruForm, password: e.target.value })}
+                    style={{ paddingRight: 40, width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditGuruPassword(!showEditGuruPassword)}
+                    title={showEditGuruPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    aria-label={showEditGuruPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      padding: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {showEditGuruPassword ? (
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 4 }}>
                   Biarkan kosong apabila password guru tidak perlu diganti.
                 </span>
               </div>
