@@ -15,7 +15,7 @@ export default function GuruDashboard() {
   const [activeTab, setActiveTab] = useState('semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 1;
 
   useEffect(() => {
     if (user) setCurrentUser(user);
@@ -651,16 +651,22 @@ export default function GuruDashboard() {
                   justifyContent: 'space-between',
                   flexWrap: 'wrap',
                   gap: 12,
-                  padding: '14px 18px',
+                  padding: '12px 18px',
                   background: '#ffffff',
                   borderRadius: 10,
                   border: '1px solid #e2e8f0',
-                  marginTop: 4,
+                  marginTop: 6,
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
                 }}
               >
-                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
-                  Halaman <strong>{validCurrentPage}</strong> dari <strong>{totalPages}</strong> (Total {filteredExams.length} ujian)
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, color: '#1e293b', fontWeight: 700 }}>
+                    Ujian ke-{validCurrentPage} dari {filteredExams.length}
+                  </span>
+                  <span style={{ fontSize: 11, color: '#64748b' }}>
+                    (Halaman {validCurrentPage} dari {totalPages})
+                  </span>
+                </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <button
