@@ -92,8 +92,8 @@ export default function Navbar({ user, onLogout, role }) {
     },
     {
       href: '/guru/audit',
-      label: 'Integritas',
-      badge: 'Audit',
+      label: 'Pengawasan',
+      badge: 'Live',
       icon: (
         <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
@@ -142,11 +142,16 @@ export default function Navbar({ user, onLogout, role }) {
           <div className="linkedin-brand-section">
             <a href={role === 'guru' ? '/guru/dashboard' : '/siswa/dashboard'} className="linkedin-logo">
               <div className="linkedin-logo-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="3" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                  <polyline points="7.5 10 10.5 13 16.5 7" />
                 </svg>
               </div>
-              <span className="linkedin-brand-name">Ulangan Digital</span>
+              <span className="linkedin-brand-name">
+                Digi<span style={{ color: '#0a66c2' }}>Asesmen</span>
+              </span>
             </a>
 
             <div className="linkedin-search-container">
@@ -243,6 +248,7 @@ export default function Navbar({ user, onLogout, role }) {
           </div>
         </div>
       </header>
+      <div className="linkedin-header-spacer" aria-hidden="true" />
 
       {/* Mobile Drawer */}
       {mobileOpen && (

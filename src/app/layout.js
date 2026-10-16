@@ -2,9 +2,9 @@ import './globals.css';
 import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'Ulangan Digital - Platform Asesmen Digital Modern',
-  description: 'Platform ulangan dan asesmen digital yang aman, modern, dan mudah digunakan untuk guru dan siswa di Indonesia.',
-  keywords: 'ulangan digital, asesmen, ujian online, CBT, guru, siswa, Indonesia',
+  title: 'DigiAsesmen - Platform Ujian & Asesmen Digital Modern',
+  description: 'Platform ujian dan asesmen digital yang tertib, modern, dan mudah digunakan untuk guru dan siswa di Indonesia.',
+  keywords: 'DigiAsesmen, asesmen digital, ujian online, CBT, guru, siswa, Indonesia',
 };
 
 export default function RootLayout({ children }) {
@@ -16,7 +16,7 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#0a66c2" />
         <link
           rel="icon"
-          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><rect width='32' height='32' rx='6' fill='%23191919'/><path d='M10 8h8l5 5v11a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/><path d='M18 8v5h5' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/><line x1='12' y1='18' x2='20' y2='18' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='12' y1='22' x2='17' y2='22' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/></svg>"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><rect width='32' height='32' rx='8' fill='%230a66c2'/><rect x='5' y='5' width='22' height='15' rx='3' stroke='%23ffffff' stroke-width='2'/><line x1='10' y1='25' x2='22' y2='25' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><line x1='16' y1='20' x2='16' y2='25' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/><polyline points='10 12 14 16 22 8' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

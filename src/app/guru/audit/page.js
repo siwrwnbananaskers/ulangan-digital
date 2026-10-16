@@ -142,8 +142,8 @@ export default function GuruAuditPage() {
       <main className="main-content">
         <div className="page-header-ribbon">
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Audit Log Integritas Ujian</h1>
-            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Rekam jejak real-time aktivitas siswa (Page Visibility, Blur Focus, Exit Fullscreen)</p>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Catatan Pengawasan Ujian</h1>
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Rekam jejak ketertiban siswa saat ujian berlangsung (pindah tab, buka aplikasi lain, atau keluar layar penuh)</p>
           </div>
           {selectedUjianId && (
             <div className="page-header-actions">

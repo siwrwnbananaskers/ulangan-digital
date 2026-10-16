@@ -770,7 +770,7 @@ export default function UjianPage() {
               <div className="form-group" style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 16 }}>
                 <label className="form-label" style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, color: '#1e293b' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  Mode Keamanan Pengerjaan (Exambro / Kiosk Security) *
+                  Mode Pengawasan Ujian *
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
                   <label
@@ -795,11 +795,11 @@ export default function UjianPage() {
                     />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>Mode Asesmen Ketat (Exambro Kiosk)</span>
+                        <span>Ujian Ketat (Cegah Buka Tab Lain)</span>
                         <span className="badge badge-primary" style={{ fontSize: 9 }}>Direkomendasikan</span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>
-                        Wajib layar penuh (fullscreen), kunci pindah tab browser, deteksi kecurangan otomatis & penangguhan. Cocok untuk <strong>UTS, UAS, Asesmen Resmi</strong>.
+                        Wajib layar penuh (fullscreen), catat siswa yang membuka tab/aplikasi lain. Cocok untuk <strong>UTS, UAS, Asesmen Resmi</strong>.
                       </p>
                     </div>
                   </label>

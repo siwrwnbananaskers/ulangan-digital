@@ -225,7 +225,7 @@ export default function GuruDashboard() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                <span>Log Integritas & Kiosk</span>
+                <span>Catatan Pelanggaran Siswa</span>
               </a>
             </div>
           </div>
@@ -248,10 +248,10 @@ export default function GuruDashboard() {
             >
               <div style={{ textAlign: 'center', padding: '0 20px' }}>
                 <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', margin: 0 }}>
-                  Platform Asesmen Digital & Kiosk Security
+                  Ruang Pengawas &amp; Ujian Digital
                 </h2>
-                <p style={{ fontSize: 12, opacity: 0.85, marginTop: 4, margin: '4px 0 0' }}>
-                  Ujian berbasis web terproteksi terintegrasi Cloudflare D1
+                <p style={{ fontSize: 12, opacity: 0.9, marginTop: 4, margin: '4px 0 0' }}>
+                  Platform ujian daring sekolah yang tertib, aman, dan terkoreksi otomatis
                 </p>
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function GuruDashboard() {
                     Selamat Datang, {currentUser?.nama || 'Guru Pengawas'}
                   </h1>
                   <p style={{ fontSize: 13, color: '#666666', marginTop: 2, margin: '2px 0 0' }}>
-                    Kelola lembar asesmen, pantau kepatuhan Kiosk Mode, dan rekapitulasi nilai siswa
+                    Kelola lembar ujian, pantau ketertiban siswa, dan periksa hasil nilai dengan mudah
                   </p>
                 </div>
 
@@ -513,37 +513,46 @@ export default function GuruDashboard() {
               <span className="badge badge-success" style={{ fontSize: 10 }}>Aktif 24/7</span>
             </div>
             <div className="linkedin-widget-body" style={{ padding: '12px 16px' }}>
+              {/* Status Sistem 1: Penyimpanan Data */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 6, background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12 }}>
-                  D1
-                </div>
-                <div>
-                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Cloudflare D1</h4>
-                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Database SQL Terkoneksi</p>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 6, background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: '#eff6ff', color: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
                   </svg>
                 </div>
                 <div>
-                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Sinkronisasi Waktu</h4>
-                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Timer Otomatis Jam Server</p>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Penyimpanan Nilai</h4>
+                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Tersimpan Otomatis &amp; Aman</p>
                 </div>
               </div>
 
+              {/* Status Sistem 2: Waktu Ujian */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: '#eff6ff', color: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Waktu Ujian Akurat</h4>
+                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Penghitung Waktu Otomatis</p>
+                </div>
+              </div>
+
+              {/* Status Sistem 3: Pengawasan Ketertiban */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 6, background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: '#eff6ff', color: '#0a66c2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="m9 12 2 2 4-4" />
                   </svg>
                 </div>
                 <div>
-                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Kiosk & Integrity Mode</h4>
-                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Fullscreen & Focus Detection</p>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#191919' }}>Pengawasan Siswa</h4>
+                  <p style={{ fontSize: 11, color: '#666666', margin: 0 }}>Deteksi Pindah Tab &amp; Aplikasi</p>
                 </div>
               </div>
             </div>
