@@ -13,6 +13,9 @@ export default function GuruDashboard() {
   const [ujianList, setUjianList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('semua');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     if (user) setCurrentUser(user);
@@ -58,8 +61,21 @@ export default function GuruDashboard() {
   };
 
   const getFilteredUjian = () => {
-    if (activeTab === 'semua') return ujianList;
-    return ujianList.filter((u) => u.status === activeTab);
+    let list = ujianList;
+    if (activeTab !== 'semua') {
+      list = list.filter((u) => u.status === activeTab);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((u) =>
+        (u.judul && u.judul.toLowerCase().includes(q)) ||
+        (u.mata_pelajaran && u.mata_pelajaran.toLowerCase().includes(q)) ||
+        (u.kelas_target && String(u.kelas_target).toLowerCase().includes(q)) ||
+        (u.kode_ujian && u.kode_ujian.toLowerCase().includes(q)) ||
+        (u.deskripsi && u.deskripsi.toLowerCase().includes(q))
+      );
+    }
+    return list;
   };
 
   if (authLoading) {
@@ -72,6 +88,12 @@ export default function GuruDashboard() {
   }
 
   const filteredExams = getFilteredUjian();
+  const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE) || 1;
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedExams = filteredExams.slice(
+    (validCurrentPage - 1) * ITEMS_PER_PAGE,
+    validCurrentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
@@ -285,22 +307,113 @@ export default function GuruDashboard() {
                 </div>
               </div>
 
-              {/* Tab Navigation row */}
-              <div style={{ display: 'flex', gap: 6, marginTop: 16, paddingTop: 12, borderTop: '1px solid #f3f2ef', overflowX: 'auto' }}>
-                {[
-                  { key: 'semua', label: `Semua Ujian (${stats.ujian})` },
-                  { key: 'aktif', label: 'Sedang Aktif' },
-                  { key: 'selesai', label: 'Selesai' },
-                  { key: 'draft', label: 'Draft' },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    className={`linkedin-pill-badge ${activeTab === tab.key ? 'active' : ''}`}
-                    onClick={() => setActiveTab(tab.key)}
+              {/* Search Bar & Tab Navigation */}
+              <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #f3f2ef', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Search Bar */}
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#64748b"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                   >
-                    {tab.label}
-                  </button>
-                ))}
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Cari judul ujian, mata pelajaran, kelas, atau kode token..."
+                    style={{
+                      width: '100%',
+                      padding: '9px 36px 9px 36px',
+                      borderRadius: 8,
+                      border: '1px solid #cbd5e1',
+                      fontSize: 13,
+                      background: '#f8fafc',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      color: '#0f172a',
+                      fontFamily: 'inherit',
+                      transition: 'all 150ms ease',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.background = '#ffffff';
+                      e.target.style.borderColor = '#0a66c2';
+                      e.target.style.boxShadow = '0 0 0 2px rgba(10, 102, 194, 0.15)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.background = '#f8fafc';
+                      e.target.style.borderColor = '#cbd5e1';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setCurrentPage(1);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        right: 10,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        padding: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Hapus pencarian"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Tab Row & Results Count */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    {[
+                      { key: 'semua', label: `Semua (${ujianList.length})` },
+                      { key: 'aktif', label: `Sedang Aktif (${ujianList.filter((u) => u.status === 'aktif').length})` },
+                      { key: 'selesai', label: `Selesai (${ujianList.filter((u) => u.status === 'selesai').length})` },
+                      { key: 'draft', label: `Draft (${ujianList.filter((u) => u.status === 'draft').length})` },
+                    ].map((tab) => (
+                      <button
+                        key={tab.key}
+                        className={`linkedin-pill-badge ${activeTab === tab.key ? 'active' : ''}`}
+                        onClick={() => {
+                          setActiveTab(tab.key);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
+                    {filteredExams.length} ujian ditemukan
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -313,39 +426,65 @@ export default function GuruDashboard() {
             </div>
           ) : filteredExams.length === 0 ? (
             <div className="linkedin-card" style={{ padding: 36, textAlign: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: '#f1f5f9', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </div>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#191919', marginBottom: 6 }}>
-                Belum Ada Ujian {activeTab !== 'semua' ? `(${activeTab})` : ''}
+                {searchQuery ? `Tidak ada ujian yang cocok dengan "${searchQuery}"` : `Belum Ada Ujian ${activeTab !== 'semua' ? `(${activeTab})` : ''}`}
               </h3>
               <p style={{ fontSize: 13, color: '#666666', marginBottom: 14 }}>
-                Mulai susun lembar asesmen pertama Anda dengan butir soal yang sudah ada.
+                {searchQuery ? 'Coba periksa kata kunci atau reset filter pencarian.' : 'Mulai susun lembar asesmen pertama Anda dengan butir soal yang sudah ada.'}
               </p>
-              <a href="/guru/ujian" className="btn btn-primary btn-sm" style={{ borderRadius: 9999, background: '#0a66c2' }}>
-                Buat Ujian Sekarang
-              </a>
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCurrentPage(1);
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ borderRadius: 9999 }}
+                >
+                  Reset Pencarian
+                </button>
+              ) : (
+                <a href="/guru/ujian" className="btn btn-primary btn-sm" style={{ borderRadius: 9999, background: '#0a66c2' }}>
+                  Buat Ujian Sekarang
+                </a>
+              )}
             </div>
           ) : (
-            filteredExams.map((exam) => (
-              <div key={exam.id} className="linkedin-card">
-                <div style={{ padding: '16px 20px' }}>
-                  {/* Card Header with Badges */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 6,
-                          background: '#f1f5f9',
-                          color: '#0a66c2',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 700,
-                          fontSize: 15,
-                        }}
-                      >
-                        {exam.mata_pelajaran?.charAt(0) || 'U'}
-                      </div>
+            <>
+              {paginatedExams.map((exam) => (
+                <div key={exam.id} className="linkedin-card">
+                  <div style={{ padding: '16px 20px' }}>
+                    {/* Card Header with Badges */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div
+                          style={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 8,
+                            background: '#eff6ff',
+                            color: '#0a66c2',
+                            border: '1px solid #dbeafe',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                          title={exam.mata_pelajaran}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                            <path d="m9 14 2 2 4-4" />
+                          </svg>
+                        </div>
                       <div>
                         <h3 style={{ fontSize: 15, fontWeight: 700, color: '#191919', margin: 0 }}>
                           {exam.judul}
@@ -501,8 +640,115 @@ export default function GuruDashboard() {
                   </div>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 12,
+                  padding: '14px 18px',
+                  background: '#ffffff',
+                  borderRadius: 10,
+                  border: '1px solid #e2e8f0',
+                  marginTop: 4,
+                }}
+              >
+                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
+                  Halaman <strong>{validCurrentPage}</strong> dari <strong>{totalPages}</strong> (Total {filteredExams.length} ujian)
+                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    type="button"
+                    disabled={validCurrentPage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      borderRadius: 6,
+                      opacity: validCurrentPage <= 1 ? 0.5 : 1,
+                      cursor: validCurrentPage <= 1 ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    <span>Sebelumnya</span>
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((pageNum) => {
+                      return (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        Math.abs(pageNum - validCurrentPage) <= 1
+                      );
+                    })
+                    .map((pageNum, idx, arr) => {
+                      const prev = arr[idx - 1];
+                      return (
+                        <span key={pageNum} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          {prev && pageNum - prev > 1 && (
+                            <span style={{ padding: '0 4px', color: '#94a3b8', fontSize: 12 }}>...</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage(pageNum)}
+                            style={{
+                              minWidth: 32,
+                              height: 32,
+                              padding: '0 8px',
+                              borderRadius: 6,
+                              border: pageNum === validCurrentPage ? '1px solid #0a66c2' : '1px solid #cbd5e1',
+                              background: pageNum === validCurrentPage ? '#0a66c2' : '#ffffff',
+                              color: pageNum === validCurrentPage ? '#ffffff' : '#334155',
+                              fontWeight: pageNum === validCurrentPage ? 700 : 500,
+                              fontSize: 12,
+                              cursor: 'pointer',
+                              transition: 'all 150ms ease',
+                            }}
+                          >
+                            {pageNum}
+                          </button>
+                        </span>
+                      );
+                    })}
+
+                  <button
+                    type="button"
+                    disabled={validCurrentPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      borderRadius: 6,
+                      opacity: validCurrentPage >= totalPages ? 0.5 : 1,
+                      cursor: validCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span>Selanjutnya</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
         </section>
 
         {/* === RIGHT COLUMN: Clean Enterprise Widgets === */}
