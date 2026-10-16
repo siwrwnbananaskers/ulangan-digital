@@ -1666,11 +1666,19 @@ img {
   color: var(--gray-400);
 }
 
-.empty-state svg {
-  width: 80px;
-  height: 80px;
+.empty-state > svg,
+.empty-state-illustration svg {
+  width: 64px;
+  height: 64px;
   margin-bottom: var(--space-lg);
   opacity: 0.5;
+}
+
+.empty-state .btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  margin-bottom: 0 !important;
+  opacity: 1 !important;
 }
 
 .empty-state h3 {
@@ -3429,5 +3437,23 @@ img {
   }
 }
 
+/* === Responsive Student Results Page === */
+.hasil-table-desktop {
+  display: block;
+}
 
+.hasil-cards-mobile {
+  display: none;
+}
 
+@media (max-width: 640px) {
+  .hasil-table-desktop {
+    display: none !important;
+  }
+
+  .hasil-cards-mobile {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+}

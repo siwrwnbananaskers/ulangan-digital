@@ -17,6 +17,11 @@ export default function SuperadminGuruManagementPage() {
   const [form, setForm] = useState({ username: '', nama: '', password: 'guru123' });
   const [saving, setSaving] = useState(false);
 
+  // Modal Edit Guru
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ id: '', username: '', nama: '', password: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
   // Search filter
   const [search, setSearch] = useState('');
 
@@ -65,6 +70,41 @@ export default function SuperadminGuruManagementPage() {
       setAlert({ type: 'danger', message: 'Terjadi kesalahan sistem' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOpenEdit = (guru) => {
+    setEditForm({
+      id: guru.id,
+      username: guru.username,
+      nama: guru.nama,
+      password: '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setSavingEdit(true);
+    setAlert(null);
+
+    try {
+      const res = await authFetch('/api/superadmin/guru', {
+        method: 'PUT',
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'danger', message: data.error || 'Gagal memperbarui akun guru' });
+      } else {
+        setAlert({ type: 'success', message: data.message });
+        setShowEditModal(false);
+        loadTeachers();
+      }
+    } catch {
+      setAlert({ type: 'danger', message: 'Terjadi kesalahan sistem saat memperbarui' });
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -203,22 +243,35 @@ export default function SuperadminGuruManagementPage() {
                       <td style={{ fontSize: 11, color: '#666666' }}>
                         {t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID') : '-'}
                       </td>
-                      <td style={{ textAlign: 'center' }}>
-                        {t.username !== 'guru' ? (
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                           <button
                             className="btn btn-ghost btn-sm"
-                            style={{ color: '#dc2626', padding: '4px 8px' }}
-                            onClick={() => handleDelete(t.id, t.nama)}
-                            title="Hapus Akun Guru"
+                            style={{ color: '#0a66c2', padding: '4px 8px', borderRadius: 6 }}
+                            onClick={() => handleOpenEdit(t)}
+                            title="Edit Akun Guru (Nama, Username, Password)"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
                           </button>
-                        ) : (
-                          <span style={{ fontSize: 11, color: '#94a3b8' }}>Protected</span>
-                        )}
+                          {t.username !== 'guru' ? (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: '#dc2626', padding: '4px 8px', borderRadius: 6 }}
+                              onClick={() => handleDelete(t.id, t.nama)}
+                              title="Hapus Akun Guru"
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: 11, color: '#94a3b8', padding: '0 4px' }}>Demo</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -292,6 +345,80 @@ export default function SuperadminGuruManagementPage() {
                   disabled={saving}
                 >
                   {saving ? 'Menyimpan...' : 'Simpan Akun Guru'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Guru */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowEditModal(false)}>
+          <div className="modal" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h2 className="modal-title" style={{ fontSize: 17, fontWeight: 700 }}>
+                Edit Akun Guru ({editForm.username})
+              </h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} style={{ padding: 20 }}>
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Nama Lengkap & Gelar Guru *</label>
+                <input
+                  className="form-input"
+                  placeholder="cth: Dra. Siti Rahmawati, M.Pd."
+                  value={editForm.nama}
+                  onChange={(e) => setEditForm({ ...editForm, nama: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Username Login *</label>
+                <input
+                  className="form-input"
+                  placeholder="cth: sitirahmawati"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value.toLowerCase() })}
+                  required
+                />
+                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
+                  Username digunakan guru untuk masuk ke sistem DigiAsesmen.
+                </span>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Ganti Password Baru</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Kosongkan jika tidak ingin mengubah password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                />
+                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
+                  Biarkan kosong apabila password saat ini tidak perlu diganti.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={savingEdit}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ background: '#0a66c2' }}
+                  disabled={savingEdit}
+                >
+                  {savingEdit ? 'Memperbarui...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </form>

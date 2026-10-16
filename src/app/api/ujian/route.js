@@ -19,9 +19,9 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const isMasterAll = searchParams.get('all') === 'true';
 
-    // Superadmin master view (e.g. from /superadmin/dashboard)
-    if (user.role === 'superadmin' && isMasterAll) {
-      const ujianList = await db.getAll(
+    // Superadmin master view: see ALL exams from all teachers with teacher attribution
+    if (user.role === 'superadmin') {
+      const ujianListRaw = await db.getAll(
         `SELECT 
           u.id as id, u.guru_id as guru_id, u.judul as judul, u.mata_pelajaran as mata_pelajaran,
           u.kelas_target as kelas_target, u.kode_ujian as kode_ujian, u.deskripsi as deskripsi,
@@ -32,14 +32,27 @@ export async function GET(request) {
           u.created_at as created_at, u.updated_at as updated_at,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
           (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
-          (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru
+          (SELECT nama FROM users g WHERE g.id = u.guru_id) as nama_guru,
+          (SELECT username FROM users g WHERE g.id = u.guru_id) as username_guru
          FROM ujian u ORDER BY u.created_at DESC`
       );
-      return apiResponse({ ujian: ujianList });
+      const validUjian = (ujianListRaw || []).filter(u => u && u.id && (u.judul || u.mata_pelajaran || u.kode_ujian));
+
+      let kelasOptions = [];
+      try {
+        const kelasRows = await db.getAll(
+          `SELECT DISTINCT kelas FROM users WHERE role = 'siswa' AND kelas IS NOT NULL AND kelas != '' ORDER BY kelas ASC`
+        );
+        kelasOptions = (kelasRows || []).map(r => r.kelas).filter(Boolean);
+      } catch (err) {
+        console.warn('Failed to fetch kelas options for ujian:', err.message);
+      }
+
+      return apiResponse({ ujian: validUjian, kelas_options: kelasOptions });
     }
 
-    // Teacher & personal view: strictly ONLY see exams owned by user.id!
-    if (user.role === 'guru' || user.role === 'superadmin') {
+    // Teacher personal view: strictly ONLY see exams owned by user.id
+    if (user.role === 'guru') {
       const ujianListRaw = await db.getAll(
         `SELECT 
           u.id as id, u.guru_id as guru_id, u.judul as judul, u.mata_pelajaran as mata_pelajaran,

@@ -492,6 +492,30 @@ export default function GuruDashboard() {
                         <p style={{ fontSize: 12, color: '#666666', margin: 0 }}>
                           {exam.mata_pelajaran} • Kelas: <strong>{exam.kelas_target}</strong>
                         </p>
+                        {(exam.nama_guru || user?.role === 'superadmin') && (
+                          <div style={{ marginTop: 4 }}>
+                            <span
+                              className="badge"
+                              style={{
+                                background: '#ede9fe',
+                                color: '#6d28d9',
+                                border: '1px solid #ddd6fe',
+                                fontWeight: 700,
+                                fontSize: 10,
+                                padding: '2px 8px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                              </svg>
+                              Dibuat oleh: {exam.nama_guru || exam.username_guru || 'Dewan Guru'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

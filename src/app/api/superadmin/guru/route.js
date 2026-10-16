@@ -157,6 +157,62 @@ export async function POST(request) {
   }
 }
 
+export async function PUT(request) {
+  try {
+    await requireRole(request, 'superadmin');
+    const body = await request.json();
+    const { id, username, nama, password } = body;
+
+    if (!id || !username || !nama) {
+      return apiError('ID, Username, dan Nama Guru wajib diisi', 400);
+    }
+
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanNama = sanitizeInput(nama.trim());
+    const db = getDB();
+
+    const target = await db.getOne("SELECT id, role, username FROM users WHERE id = ? AND role = 'guru'", [id]);
+    if (!target) {
+      return apiError('Akun guru tidak ditemukan', 404);
+    }
+
+    // Check duplicate username on other accounts
+    const duplicate = await db.getOne('SELECT id FROM users WHERE username = ? AND id != ?', [cleanUsername, id]);
+    if (duplicate) {
+      return apiError(`Username "${cleanUsername}" sudah digunakan oleh akun lain`, 409);
+    }
+
+    if (password && password.trim().length > 0) {
+      const passwordHash = await hashPassword(password.trim());
+      await db.run(
+        'UPDATE users SET username = ?, nama = ?, password_hash = ? WHERE id = ?',
+        [cleanUsername, cleanNama, passwordHash, id]
+      );
+    } else {
+      await db.run(
+        'UPDATE users SET username = ?, nama = ? WHERE id = ?',
+        [cleanUsername, cleanNama, id]
+      );
+    }
+
+    return apiResponse({
+      success: true,
+      message: `Akun guru "${cleanNama}" (${cleanUsername}) berhasil diperbarui!`,
+      guru: {
+        id,
+        username: cleanUsername,
+        nama: cleanNama,
+      },
+    });
+  } catch (error) {
+    if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
+      return authErrorResponse(error);
+    }
+    console.error('Superadmin update guru error:', error);
+    return apiError('Gagal memperbarui akun guru', 500);
+  }
+}
+
 export async function DELETE(request) {
   try {
     await requireRole(request, 'superadmin');

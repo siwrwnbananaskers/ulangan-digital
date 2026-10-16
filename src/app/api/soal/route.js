@@ -27,7 +27,7 @@ export async function GET(request) {
     let sql = '';
     const params = [];
 
-    if (user.role === 'superadmin' && isMasterAll) {
+    if (user.role === 'superadmin') {
       // Super Admin master view across all teachers
       sql = `SELECT s.*, u.nama as nama_guru, u.username as username_guru 
              FROM soal s 
@@ -48,9 +48,9 @@ export async function GET(request) {
       if (conditions.length > 0) {
         sql += ' WHERE ' + conditions.join(' AND ');
       }
-      sql += ' ORDER BY s.created_at ASC, s.rowid ASC';
+      sql += ' ORDER BY s.created_at DESC, s.rowid DESC';
     } else {
-      // Teachers and superadmin in personal bank-soal: STRICTLY ONLY see own questions!
+      // Regular teachers strictly see only their own questions
       sql = 'SELECT * FROM soal WHERE guru_id = ?';
       params.push(user.id);
 
@@ -253,10 +253,10 @@ export async function PUT(request) {
 
     const db = getDB();
 
-    // Verify ownership
+    // Verify ownership or superadmin role
     const existing = await db.getOne(
-      'SELECT id FROM soal WHERE id = ? AND guru_id = ?',
-      [body.id, user.id]
+      'SELECT id FROM soal WHERE id = ? AND (guru_id = ? OR ? = \'superadmin\')',
+      [body.id, user.id, user.role]
     );
     if (!existing) {
       return apiError('Soal tidak ditemukan', 404);
@@ -270,7 +270,7 @@ export async function PUT(request) {
         pilihan_a = ?, pilihan_b = ?, pilihan_c = ?, pilihan_d = ?, pilihan_e = ?,
         kunci_jawaban = ?, bobot = COALESCE(?, bobot),
         updated_at = datetime('now')
-       WHERE id = ? AND guru_id = ?`,
+       WHERE id = ? AND (guru_id = ? OR ? = 'superadmin')`,
       [
         body.mata_pelajaran ? sanitizeInput(body.mata_pelajaran) : null,
         body.tipe || null,
@@ -282,7 +282,7 @@ export async function PUT(request) {
         body.pilihan_e ? sanitizeInput(body.pilihan_e) : null,
         body.kunci_jawaban ? sanitizeInput(body.kunci_jawaban) : null,
         body.bobot || null,
-        body.id, user.id,
+        body.id, user.id, user.role,
       ]
     );
 
@@ -307,8 +307,8 @@ export async function DELETE(request) {
 
     const db = getDB();
     const result = await db.run(
-      'DELETE FROM soal WHERE id = ? AND guru_id = ?',
-      [id, user.id]
+      'DELETE FROM soal WHERE id = ? AND (guru_id = ? OR ? = \'superadmin\')',
+      [id, user.id, user.role]
     );
 
     if (result.changes === 0) {

@@ -335,9 +335,18 @@ export default function UjianPage() {
         {/* Header */}
         <div className="page-header-ribbon">
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Manajemen Ujian</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Manajemen Ujian</h1>
+              {user?.role === 'superadmin' && (
+                <span className="badge" style={{ background: '#0f172a', color: '#ffffff', fontSize: 11, padding: '3px 10px', fontWeight: 700 }}>
+                  Mode Superadmin — Seluruh Guru
+                </span>
+              )}
+            </div>
             <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>
-              Buat, jadwalkan, atur butir soal, dan pantau status pelaksanaan asesmen siswa
+              {user?.role === 'superadmin' 
+                ? 'Memantau seluruh ruang ujian yang dibuat oleh semua dewan guru' 
+                : 'Buat, jadwalkan, atur butir soal, dan pantau status pelaksanaan asesmen siswa'}
             </p>
           </div>
           <div className="page-header-actions">
@@ -449,6 +458,30 @@ export default function UjianPage() {
                         <p style={{ fontSize: 12, color: '#64748b', margin: '3px 0 0' }}>
                           {mataPelajaran} • Kelas <strong>{kelasTarget}</strong>
                         </p>
+                        {(ujian.nama_guru || user?.role === 'superadmin') && (
+                          <div style={{ marginTop: 5 }}>
+                            <span
+                              className="badge"
+                              style={{
+                                background: '#ede9fe',
+                                color: '#6d28d9',
+                                border: '1px solid #ddd6fe',
+                                fontWeight: 700,
+                                fontSize: 10,
+                                padding: '2px 8px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                              </svg>
+                              Dibuat oleh: {ujian.nama_guru || ujian.username_guru || 'Dewan Guru'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
                         <span className="badge" style={{ fontSize: 10, padding: '2px 7px', background: ujian.mode_exambro === 0 ? '#ecfdf5' : '#eff6ff', color: ujian.mode_exambro === 0 ? '#047857' : '#0369a1', border: `1px solid ${ujian.mode_exambro === 0 ? '#a7f3d0' : '#bae6fd'}` }}>

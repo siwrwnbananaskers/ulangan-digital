@@ -26,6 +26,11 @@ export default function SuperAdminDashboard() {
   });
   const [savingGuru, setSavingGuru] = useState(false);
 
+  // Edit Teacher Modal
+  const [showEditGuruModal, setShowEditGuruModal] = useState(false);
+  const [editGuruForm, setEditGuruForm] = useState({ id: '', username: '', nama: '', password: '' });
+  const [savingEditGuru, setSavingEditGuru] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     loadDashboard();
@@ -77,6 +82,41 @@ export default function SuperAdminDashboard() {
       setAlert({ type: 'danger', message: 'Terjadi kesalahan sistem' });
     } finally {
       setSavingGuru(false);
+    }
+  };
+
+  const handleOpenEditGuru = (guru) => {
+    setEditGuruForm({
+      id: guru.id,
+      username: guru.username,
+      nama: guru.nama,
+      password: '',
+    });
+    setShowEditGuruModal(true);
+  };
+
+  const handleSaveEditGuru = async (e) => {
+    e.preventDefault();
+    setSavingEditGuru(true);
+    setAlert(null);
+
+    try {
+      const res = await authFetch('/api/superadmin/guru', {
+        method: 'PUT',
+        body: JSON.stringify(editGuruForm),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'danger', message: resData.error || 'Gagal memperbarui akun guru' });
+      } else {
+        setAlert({ type: 'success', message: resData.message });
+        setShowEditGuruModal(false);
+        loadDashboard();
+      }
+    } catch {
+      setAlert({ type: 'danger', message: 'Terjadi kesalahan sistem' });
+    } finally {
+      setSavingEditGuru(false);
     }
   };
 
@@ -247,22 +287,35 @@ export default function SuperAdminDashboard() {
                         <td><strong>{t.total_ujian || 0}</strong> Sesi</td>
                         <td><strong>{t.total_soal || 0}</strong> Butir</td>
                         <td><strong>{t.total_peserta_diuji || 0}</strong> Siswa</td>
-                        <td style={{ textAlign: 'center' }}>
-                          {t.username !== 'guru' ? (
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                             <button
                               className="btn btn-ghost btn-sm"
-                              style={{ color: '#dc2626', padding: '2px 8px' }}
-                              onClick={() => handleDeleteGuru(t.id, t.nama)}
-                              title="Hapus Akun Guru"
+                              style={{ color: '#0a66c2', padding: '3px 6px', borderRadius: 6 }}
+                              onClick={() => handleOpenEditGuru(t)}
+                              title="Edit Akun Guru (Nama, Username, Password)"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
                             </button>
-                          ) : (
-                            <span style={{ fontSize: 11, color: '#94a3b8' }}>Protected</span>
-                          )}
+                            {t.username !== 'guru' ? (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ color: '#dc2626', padding: '3px 6px', borderRadius: 6 }}
+                                onClick={() => handleDeleteGuru(t.id, t.nama)}
+                                title="Hapus Akun Guru"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 10, color: '#94a3b8', padding: '0 4px' }}>Demo</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -388,6 +441,80 @@ export default function SuperAdminDashboard() {
                   disabled={savingGuru}
                 >
                   {savingGuru ? 'Menyimpan...' : 'Buat Akun Guru'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Guru */}
+      {showEditGuruModal && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowEditGuruModal(false)}>
+          <div className="modal" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h2 className="modal-title" style={{ fontSize: 17, fontWeight: 700 }}>
+                Edit Akun Guru ({editGuruForm.username})
+              </h2>
+              <button className="modal-close" onClick={() => setShowEditGuruModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEditGuru} style={{ padding: 20 }}>
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Nama Lengkap & Gelar Guru *</label>
+                <input
+                  className="form-input"
+                  placeholder="cth: Dra. Siti Rahmawati, M.Pd."
+                  value={editGuruForm.nama}
+                  onChange={(e) => setEditGuruForm({ ...editGuruForm, nama: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Username Login *</label>
+                <input
+                  className="form-input"
+                  placeholder="cth: sitirahmawati"
+                  value={editGuruForm.username}
+                  onChange={(e) => setEditGuruForm({ ...editGuruForm, username: e.target.value.toLowerCase() })}
+                  required
+                />
+                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
+                  Username digunakan guru untuk masuk ke portal.
+                </span>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Ganti Password Baru</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Kosongkan jika tidak ingin mengubah password"
+                  value={editGuruForm.password}
+                  onChange={(e) => setEditGuruForm({ ...editGuruForm, password: e.target.value })}
+                />
+                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
+                  Biarkan kosong apabila password guru tidak perlu diganti.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowEditGuruModal(false)}
+                  disabled={savingEditGuru}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ background: '#0a66c2' }}
+                  disabled={savingEditGuru}
+                >
+                  {savingEditGuru ? 'Memperbarui...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </form>

@@ -101,94 +101,224 @@ export default function SiswaHasilPage() {
             </div>
           </div>
         ) : (
-          <div className="card">
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Judul Ujian</th>
-                    <th>Mata Pelajaran</th>
-                    <th>Waktu Pengumpulan</th>
-                    <th>Status KKM</th>
-                    <th>Nilai Akhir</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((res, idx) => {
-                    const hasScore = res.tampilkan_nilai && res.total_nilai !== null;
-                    const isLulus = hasScore && res.total_nilai >= (res.kkm || 75);
+          <div>
+            {/* Desktop Table View */}
+            <div className="card hasil-table-desktop">
+              <div className="table-container">
+                <table className="table" style={{ minWidth: 680 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 40 }}>No</th>
+                      <th>Judul Ujian</th>
+                      <th>Mata Pelajaran</th>
+                      <th>Waktu Pengumpulan</th>
+                      <th>Status KKM</th>
+                      <th style={{ minWidth: 160, whiteSpace: 'nowrap' }}>Nilai Akhir</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((res, idx) => {
+                      const hasScore = res.tampilkan_nilai && res.total_nilai !== null;
+                      const isLulus = hasScore && res.total_nilai >= (res.kkm || 75);
 
-                    return (
-                      <tr key={res.id || idx}>
-                        <td>{idx + 1}</td>
-                        <td>
-                          <strong>{res.judul}</strong>
-                        </td>
-                        <td>
-                          <span className="badge badge-primary">{res.mata_pelajaran}</span>
-                        </td>
-                        <td className="text-xs text-muted">
-                          {res.waktu_selesai ? formatTanggal(res.waktu_selesai) : '-'}
-                        </td>
-                        <td>
-                          {res.menunggu_koreksi ? (
-                            <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
-                              Menunggu Koreksi Guru
-                            </span>
-                          ) : hasScore ? (
-                            <span className={`badge ${isLulus ? 'badge-success' : 'badge-danger'}`}>
-                              {isLulus ? 'Tuntas KKM' : 'Perlu Remedial'} (KKM: {res.kkm || 75})
-                            </span>
-                          ) : (
-                            <span className="badge badge-gray">Disimpan Guru</span>
-                          )}
-                        </td>
-                        <td>
-                          {res.menunggu_koreksi ? (
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: '#b45309' }}>
-                                Proses Penilaian Guru
+                      return (
+                        <tr key={res.id || idx}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <strong>{res.judul}</strong>
+                          </td>
+                          <td>
+                            <span className="badge badge-primary">{res.mata_pelajaran}</span>
+                          </td>
+                          <td className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>
+                            {res.waktu_selesai ? formatTanggal(res.waktu_selesai) : '-'}
+                          </td>
+                          <td>
+                            {res.menunggu_koreksi ? (
+                              <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
+                                Menunggu Koreksi
                               </span>
-                              <span className="text-xs text-muted">
-                                ({res.jumlah_benar || 0} PG Benar)
+                            ) : hasScore ? (
+                              <span className={`badge ${isLulus ? 'badge-success' : 'badge-danger'}`} style={{ whiteSpace: 'nowrap' }}>
+                                {isLulus ? 'Tuntas KKM' : 'Perlu Remedial'} (KKM: {res.kkm || 75})
                               </span>
-                            </div>
-                          ) : hasScore ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                                <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: isLulus ? 'var(--success)' : 'var(--danger)' }}>
-                                  {res.total_nilai}
+                            ) : (
+                              <span className="badge badge-gray" style={{ whiteSpace: 'nowrap' }}>Disimpan Guru</span>
+                            )}
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            {res.menunggu_koreksi ? (
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: '#b45309' }}>
+                                  Proses Penilaian
                                 </span>
                                 <span className="text-xs text-muted">
-                                  ({res.jumlah_benar || 0} Benar)
+                                  ({res.jumlah_benar || 0} PG Benar)
                                 </span>
                               </div>
-                              <button
-                                type="button"
-                                className="btn btn-secondary btn-xs"
-                                onClick={() => handleDownloadCard(res)}
-                                disabled={downloadingId === res.id}
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, width: 'fit-content', fontWeight: 600, padding: '3px 8px', fontSize: 11 }}
-                                title="Unduh kartu hasil ujian ini dalam format gambar"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                                  <polyline points="21 15 16 10 5 21"/>
-                                </svg>
-                                {downloadingId === res.id ? 'Menyusun...' : 'Unduh Gambar'}
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted">Belum Dipublikasikan</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            ) : hasScore ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                                  <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: isLulus ? 'var(--success)' : 'var(--danger)' }}>
+                                    {res.total_nilai}
+                                  </span>
+                                  <span className="text-xs text-muted">
+                                    ({res.jumlah_benar || 0} Benar)
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary btn-xs"
+                                  onClick={() => handleDownloadCard(res)}
+                                  disabled={downloadingId === res.id}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 5,
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 600,
+                                    padding: '4px 10px',
+                                    fontSize: 11,
+                                    borderRadius: 6,
+                                  }}
+                                  title="Unduh kartu hasil ujian ini dalam format gambar"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                  </svg>
+                                  {downloadingId === res.id ? 'Menyusun...' : 'Unduh Gambar'}
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted">Belum Dipublikasikan</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="hasil-cards-mobile">
+              {results.map((res, idx) => {
+                const hasScore = res.tampilkan_nilai && res.total_nilai !== null;
+                const isLulus = hasScore && res.total_nilai >= (res.kkm || 75);
+
+                return (
+                  <div
+                    key={res.id || idx}
+                    className="card"
+                    style={{
+                      padding: '16px',
+                      background: '#ffffff',
+                      borderRadius: 12,
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <span className="badge badge-primary" style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6 }}>
+                        {res.mata_pelajaran}
+                      </span>
+                      <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {res.waktu_selesai ? formatTanggal(res.waktu_selesai) : '-'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', lineHeight: 1.35 }}>
+                        {res.judul}
+                      </h3>
+                      <div>
+                        {res.menunggu_koreksi ? (
+                          <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', fontSize: 11 }}>
+                            Menunggu Koreksi Guru
+                          </span>
+                        ) : hasScore ? (
+                          <span className={`badge ${isLulus ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 11 }}>
+                            {isLulus ? 'Tuntas KKM' : 'Perlu Remedial'} (KKM: {res.kkm || 75})
+                          </span>
+                        ) : (
+                          <span className="badge badge-gray" style={{ fontSize: 11 }}>Disimpan Guru</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Score & Action Row */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingTop: 12,
+                        borderTop: '1px solid #f1f5f9',
+                        marginTop: 2,
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Nilai Akhir
+                        </div>
+                        {hasScore ? (
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
+                            <span style={{ fontSize: 24, fontWeight: 900, color: isLulus ? 'var(--success)' : 'var(--danger)', lineHeight: 1 }}>
+                              {res.total_nilai}
+                            </span>
+                            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>
+                              ({res.jumlah_benar || 0} Benar)
+                            </span>
+                          </div>
+                        ) : res.menunggu_koreksi ? (
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#b45309' }}>
+                            Proses Penilaian
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 12, color: '#94a3b8' }}>Belum Dipublikasikan</span>
+                        )}
+                      </div>
+
+                      {hasScore && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => handleDownloadCard(res)}
+                          disabled={downloadingId === res.id}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '8px 14px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            borderRadius: 8,
+                            whiteSpace: 'nowrap',
+                            height: 38,
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                          </svg>
+                          {downloadingId === res.id ? 'Menyusun...' : 'Unduh Gambar'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

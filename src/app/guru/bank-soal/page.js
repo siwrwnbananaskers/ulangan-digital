@@ -404,8 +404,19 @@ export default function BankSoal() {
       <main className="main-content">
         <div className="page-header-ribbon">
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Bank Soal</h1>
-            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>Kelola koleksi soal untuk asesmen dan ujian siswa</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#191919', margin: 0 }}>Bank Soal</h1>
+              {user?.role === 'superadmin' && (
+                <span className="badge" style={{ background: '#0f172a', color: '#ffffff', fontSize: 11, padding: '3px 10px', fontWeight: 700 }}>
+                  Mode Superadmin — Seluruh Guru
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 4, margin: '4px 0 0' }}>
+              {user?.role === 'superadmin' 
+                ? 'Memantau seluruh butir soal yang dibuat oleh semua dewan guru' 
+                : 'Kelola koleksi butir soal untuk asesmen dan lembar ujian siswa'}
+            </p>
           </div>
           <div className="page-header-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <button
@@ -483,24 +494,82 @@ export default function BankSoal() {
           {loading ? (
             <div className="loading-page" style={{ minHeight: 200 }}><div className="spinner" /></div>
           ) : soalList.length === 0 ? (
-            <div className="empty-state">
-              <h3>Belum ada soal</h3>
-              <p>Mulai tambahkan soal secara manual atau import masal dari Excel</p>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 14 }}>
+            <div className="empty-state" style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 14,
+                  background: '#f1f5f9',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 28, height: 28, marginBottom: 0, opacity: 1 }}>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>Belum ada butir soal</h3>
+              <p style={{ fontSize: 13, color: '#64748b', maxWidth: 420, margin: '0 auto 20px', lineHeight: 1.5 }}>
+                Mulai susun butir soal secara manual atau gunakan fitur import masal langsung dari file Excel.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={handleOpenImport}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  style={{
+                    height: 42,
+                    padding: '0 18px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    color: '#0f172a',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16, margin: 0, opacity: 1 }}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
                   Import dari Excel
                 </button>
-                <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleOpenCreate}
+                  style={{
+                    height: 42,
+                    padding: '0 18px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: '#0a66c2',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    boxShadow: '0 1px 2px rgba(10,102,194,0.2)',
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16, margin: 0, opacity: 1 }}>
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
                   Tambah Soal Baru
                 </button>
               </div>
@@ -511,12 +580,33 @@ export default function BankSoal() {
                 <div key={soal.id} className="card" style={{ padding: 'var(--space-lg)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-md)' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span className="badge badge-primary">{soal.mata_pelajaran}</span>
                         <span className="badge badge-gray">
                           {TIPE_SOAL.find(t => t.value === soal.tipe)?.label || soal.tipe}
                         </span>
                         <span className="badge badge-info">Bobot: {soal.bobot}</span>
+                        {(soal.nama_guru || user?.role === 'superadmin') && (
+                          <span
+                            className="badge"
+                            style={{
+                              background: '#ede9fe',
+                              color: '#6d28d9',
+                              border: '1px solid #ddd6fe',
+                              fontWeight: 700,
+                              fontSize: 11,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12, margin: 0, opacity: 1 }}>
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Guru: {soal.nama_guru || soal.username_guru || 'Dewan Guru'}
+                          </span>
+                        )}
                       </div>
                       <p style={{ fontSize: 'var(--font-size-md)', color: 'var(--gray-800)', lineHeight: 1.6 }}>
                         <strong>#{idx + 1}</strong> — {soal.pertanyaan}
