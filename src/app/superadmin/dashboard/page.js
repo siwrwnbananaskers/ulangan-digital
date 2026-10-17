@@ -330,256 +330,272 @@ export default function SuperAdminDashboard() {
               </p>
             </div>
 
-            {/* Animasi Rombongan Sekolah & Konvoi Kendaraan (Minimalist Vector & Anti AI-Slop) */}
-            <div className="kids-runner-track" title="Konvoi Kejar-Kejaran: Siswa, Guru, Operator, Kepsek, Emak, Bapak, Nenek, Kakek, City Car, Hatchback, Sedan, MPV, dan SUV!">
+            {/* Animasi Rombongan Sekolah & Konvoi Kendaraan (Minimalist Vector & Anti AI-Slop - Loop Berkelanjutan Jeda 2 Detik) */}
+            <div className="kids-runner-track" title="Konvoi Kejar-Kejaran Berkelanjutan: Siswa, Guru, Operator, Kepsek, Emak, Bapak, Nenek, Kakek, City Car, Hatchback, Sedan, MPV, dan SUV!">
               <div className="kids-runner-group">
-                {/* Kepulan asap knalpot & hembusan angin kecepatan di barisan paling belakang */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.6, marginBottom: 5 }}>
-                  <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#94a3b8', opacity: 0.5 }} />
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#cbd5e1', opacity: 0.7 }} />
-                    <div style={{ width: 14, height: 1.5, background: '#94a3b8', borderRadius: 1 }} />
+                {[0, 1, 2, 3].map((unitIdx) => (
+                  <div
+                    key={unitIdx}
+                    style={{
+                      width: 660,
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      gap: 9,
+                    }}
+                  >
+                    {/* Kepulan asap knalpot & hembusan angin kecepatan di barisan paling belakang */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.6, marginBottom: 5 }}>
+                      <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#94a3b8', opacity: 0.5 }} />
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#cbd5e1', opacity: 0.7 }} />
+                        <div style={{ width: 14, height: 1.5, background: '#94a3b8', borderRadius: 1 }} />
+                      </div>
+                      <div style={{ width: 10, height: 1.5, background: '#cbd5e1', borderRadius: 1, marginLeft: 6 }} />
+                      <div style={{ width: 16, height: 1.5, background: '#94a3b8', borderRadius: 1, marginLeft: 2 }} />
+                    </div>
+
+                    {/* 13. SUV (Sport Utility Vehicle - Tangguh, ground clearance tinggi & roof rail) */}
+                    <div className="car-rumble-5" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="SUV: Sport Utility Vehicle tangguh dengan ground clearance tinggi">
+                      <svg width="50" height="25" viewBox="0 0 52 26" fill="none">
+                        {/* Roof rail di atap */}
+                        <line x1="12" y1="2.5" x2="34" y2="2.5" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                        <line x1="15" y1="2.5" x2="15" y2="4.5" stroke="#64748b" strokeWidth="1.2" />
+                        <line x1="31" y1="2.5" x2="31" y2="4.5" stroke="#64748b" strokeWidth="1.2" />
+                        {/* Body SUV gagah, ground clearance tinggi */}
+                        <path d="M 2 17 C 2 14 3 6.5 5 4.5 C 6 4 7 4 8.5 4 L 32 4 C 34 4 35.5 5 36.8 6.8 L 41 12 L 48 13 C 50.5 13.5 51.5 14.5 51.5 16.5 L 51.5 19.5 C 51.5 20 51 20 50 20 L 46 20 C 46 17 43.5 15 40.5 15 C 37.5 15 35 17 35 20 L 19 20 C 19 17 16.5 15 13.5 15 C 10.5 15 8 17 8 20 L 2.5 20 C 1.5 20 1 19.5 1 18.5 Z" fill="#1e293b" />
+                        {/* Overfender kotak khas SUV */}
+                        <path d="M 7 20 C 7 16 10 14 13.5 14 C 17 14 20 16 20 20" stroke="#0f172a" strokeWidth="1.5" fill="none" />
+                        <path d="M 34 20 C 34 16 37 14 40.5 14 C 44 14 47 16 47 20" stroke="#0f172a" strokeWidth="1.5" fill="none" />
+                        {/* Kaca SUV */}
+                        <path d="M 6 6 L 15 6 L 15 11.5 L 4.5 11.5 C 4.5 9 5.2 7 6 6 Z" fill="#0f172a" />
+                        <rect x="17" y="6" width="11" height="5.5" rx="0.5" fill="#0f172a" />
+                        <path d="M 30 6 L 32.5 6 C 33.8 6 34.8 6.8 35.5 7.8 L 38.5 11.5 L 30 11.5 Z" fill="#0f172a" />
+                        {/* Lampu depan proyektor & taillight */}
+                        <circle cx="49.5" cy="14.5" r="1.3" fill="#f8fafc" />
+                        <rect x="1.2" y="9" width="1.5" height="5" rx="0.5" fill="#ef4444" />
+                        {/* Roda besar tapak tebal SUV */}
+                        <circle cx="13.5" cy="20" r="4.2" fill="#020617" />
+                        <circle cx="13.5" cy="20" r="2" fill="#475569" />
+                        <circle cx="40.5" cy="20" r="4.2" fill="#020617" />
+                        <circle cx="40.5" cy="20" r="2" fill="#475569" />
+                      </svg>
+                    </div>
+
+                    {/* 12. MPV (Multi-Purpose Vehicle - Lega 3 baris kaca pengangkut keluarga) */}
+                    <div className="car-rumble-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="MPV: Multi-Purpose Vehicle dirancang lega untuk mengangkut keluarga">
+                      <svg width="48" height="23" viewBox="0 0 50 24" fill="none">
+                        {/* Body MPV tinggi lega */}
+                        <path d="M 1 16 C 1 12 1.5 6 4 4 C 5 3 6.5 3 8 3 L 31 3 C 33 3 34.5 4 36 6 L 41 12 L 47 13.5 C 49 14 49.5 15 49.5 16.5 L 49.5 19 C 49.5 19.5 49 19.5 48 19.5 L 44 19.5 C 44 16.8 42 15 39.5 15 C 37 15 35 16.8 35 19.5 L 17 19.5 C 17 16.8 15 15 12.5 15 C 10 15 8 16.8 8 19.5 L 2 19.5 C 1 19.5 0.5 19 0.5 18 Z" fill="#475569" />
+                        {/* Kaca baris 3 (belakang) */}
+                        <path d="M 4 5 L 12 5 L 12 11 L 3 11 C 3 8 3.5 6 4 5 Z" fill="#0f172a" />
+                        {/* Kaca baris 2 (tengah kabin keluarga) */}
+                        <rect x="14" y="5" width="10" height="6" rx="0.5" fill="#0f172a" />
+                        {/* Kaca baris 1 (depan supir) */}
+                        <path d="M 26 5 L 30 5 C 31.5 5 32.5 5.8 33.5 7 L 37.5 11 L 26 11 Z" fill="#0f172a" />
+                        {/* Lampu vertikal khas MPV & lampu depan */}
+                        <rect x="0.8" y="7" width="1.2" height="6" rx="0.5" fill="#ef4444" />
+                        <line x1="47" y1="14.5" x2="49.2" y2="15" stroke="#fcd34d" strokeWidth="1.2" />
+                        {/* Roda MPV */}
+                        <circle cx="12.5" cy="19.5" r="3.8" fill="#0f172a" />
+                        <circle cx="12.5" cy="19.5" r="1.6" fill="#cbd5e1" />
+                        <circle cx="39.5" cy="19.5" r="3.8" fill="#0f172a" />
+                        <circle cx="39.5" cy="19.5" r="1.6" fill="#cbd5e1" />
+                      </svg>
+                    </div>
+
+                    {/* 11. Sedan (Desain aerodinamis & elegan dengan buntut bagasi belakang) */}
+                    <div className="car-rumble-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Sedan: Berdesain aerodinamis dan elegan">
+                      <svg width="46" height="19" viewBox="0 0 48 20" fill="none">
+                        {/* Body sedan aerodinamis dengan buntut bagasi belakang */}
+                        <path d="M 1 14 C 1 13 2 11.5 3.5 11.5 L 9 11.5 L 14 5 C 15 3.8 17 3.5 19 3.5 L 30 3.5 C 32 3.5 33.5 4 34.5 5.5 L 39 10.5 L 45 11.5 C 47 12 47.5 13 47.5 14.5 L 47.5 16 C 47.5 16.5 47 16.5 46 16.5 L 42 16.5 C 42 14.2 40 12.8 37.5 12.8 C 35 12.8 33 14.2 33 16.5 L 17 16.5 C 17 14.2 15 12.8 12.5 12.8 C 10 12.8 8 14.2 8 16.5 L 2 16.5 C 1 16.5 0.5 16 0.5 15 Z" fill="#0f172a" />
+                        {/* Kaca samping aerodinamis depan & belakang */}
+                        <path d="M 14 10 L 17 5.5 C 17.5 5 18.5 5 19.5 5 L 23 5 L 23 10 Z" fill="#38bdf8" fillOpacity="0.75" />
+                        <path d="M 24.5 5 L 29.5 5 C 31 5 32 5.5 32.8 6.5 L 36 10 L 24.5 10 Z" fill="#38bdf8" fillOpacity="0.75" />
+                        {/* Garis lampu LED depan & taillight bagasi belakang */}
+                        <line x1="45" y1="12.5" x2="47.5" y2="13" stroke="#60a5fa" strokeWidth="1.2" strokeLinecap="round" />
+                        <line x1="1" y1="12" x2="3" y2="12" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                        {/* Roda sport */}
+                        <circle cx="12.5" cy="16.5" r="3.5" fill="#1e293b" />
+                        <circle cx="12.5" cy="16.5" r="1.5" fill="#38bdf8" />
+                        <circle cx="37.5" cy="16.5" r="3.5" fill="#1e293b" />
+                        <circle cx="37.5" cy="16.5" r="1.5" fill="#38bdf8" />
+                      </svg>
+                    </div>
+
+                    {/* 10. Hatchback (Desain serbaguna tanpa buntut & roof spoiler) */}
+                    <div className="car-rumble-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Hatchback: Desain serbaguna tanpa buntut">
+                      <svg width="40" height="20" viewBox="0 0 42 22" fill="none">
+                        {/* Body hatchback sporty tanpa buntut */}
+                        <path d="M 1 15 C 1 12 2 7 5 5 C 6 4.5 7.5 4.5 9 4.5 L 23 4.5 C 26 4.5 28 5.5 29.5 7.5 L 34 11.5 L 39 12.5 C 41 13 41.5 14 41.5 15.5 L 41.5 17 C 41.5 17.5 41 17.5 40 17.5 L 36 17.5 C 36 15 34 13.5 31.5 13.5 C 29 13.5 27 15 27 17.5 L 15 17.5 C 15 15 13 13.5 10.5 13.5 C 8 13.5 6 15 6 17.5 L 2 17.5 C 1 17.5 0.5 17 0.5 16 Z" fill="#334155" />
+                        {/* Spoiler atap belakang */}
+                        <path d="M 4 4.5 L 8 4.5 L 6 3 L 2 3 Z" fill="#0f172a" />
+                        {/* Jendela kaca */}
+                        <path d="M 8 6.5 L 17 6.5 L 17 11 L 6.5 11 Z" fill="#0f172a" />
+                        <path d="M 19 6.5 L 24 6.5 C 25.5 6.5 26.5 7.2 27.5 8.5 L 31 11 L 19 11 Z" fill="#0f172a" />
+                        {/* Lampu depan & belakang */}
+                        <path d="M 39.5 13.5 L 41.5 14 L 41 15 L 39 14.5 Z" fill="#60a5fa" />
+                        <rect x="0.8" y="11" width="1.5" height="3" rx="0.5" fill="#ef4444" />
+                        {/* Roda */}
+                        <circle cx="10.5" cy="17.5" r="3.6" fill="#0f172a" />
+                        <circle cx="10.5" cy="17.5" r="1.5" fill="#cbd5e1" />
+                        <circle cx="31.5" cy="17.5" r="3.6" fill="#0f172a" />
+                        <circle cx="31.5" cy="17.5" r="1.5" fill="#cbd5e1" />
+                      </svg>
+                    </div>
+
+                    {/* 9. City Car / Microcar (Sangat ringkas untuk perkotaan) */}
+                    <div className="car-rumble-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="City Car / Microcar: Sangat ringkas untuk perkotaan">
+                      <svg width="30" height="20" viewBox="0 0 32 22" fill="none">
+                        {/* Body mikro kompak perkotaan */}
+                        <path d="M 2 15 C 2 12.5 3 8 7 6 L 11 2.5 C 13 2 15 2 20 2 L 23 2 C 25 2 26 3 27 5 L 29 10 C 30.5 11.5 31 13 31 15 L 31 16.5 C 31 17.2 30.5 17.5 29.5 17.5 L 26 17.5 C 26 15 24 13.5 22 13.5 C 20 13.5 18 15 18 17.5 L 12 17.5 C 12 15 10 13.5 8 13.5 C 6 13.5 4 15 4 17.5 L 1.5 17.5 C 1 17.5 0.5 17 0.5 16.5 L 0.5 15 Z" fill="#0284c7" />
+                        {/* Kaca samping */}
+                        <path d="M 11 4 L 19 4 C 20.5 4 21.5 4.5 22 5.5 L 24 10 L 10 10 L 9.5 6 C 9.5 5 10 4.2 11 4 Z" fill="#0f172a" />
+                        {/* Lampu depan & belakang */}
+                        <circle cx="30" cy="12" r="1.2" fill="#38bdf8" />
+                        <circle cx="1.5" cy="12" r="1" fill="#ef4444" />
+                        {/* Roda depan & belakang */}
+                        <circle cx="8" cy="17.5" r="3.5" fill="#0f172a" />
+                        <circle cx="8" cy="17.5" r="1.5" fill="#94a3b8" />
+                        <circle cx="22" cy="17.5" r="3.5" fill="#0f172a" />
+                        <circle cx="22" cy="17.5" r="1.5" fill="#94a3b8" />
+                      </svg>
+                    </div>
+
+                    {/* 8. Kakek (Bawa tongkat jalan, lari santai terseok-seok) */}
+                    <div className="runner-bob-8" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Kakek (Bawa tongkat)">
+                      <svg width="22" height="25" viewBox="0 0 24 26" fill="none">
+                        <circle cx="11" cy="5.5" r="3" fill="#94a3b8" />
+                        <path d="M10 9 L7.5 16 L9.5 16 L12 10 Z" fill="#94a3b8" />
+                        {/* Tongkat jalan */}
+                        <line x1="15" y1="11" x2="16.5" y2="24" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                        <path d="M14 11 A 2 2 0 0 0 16 11" stroke="#64748b" strokeWidth="1.5" fill="none" />
+                        {/* Tangan pegang tongkat */}
+                        <path d="M11 10 L14.5 12 L13.5 13 L10.5 11 Z" fill="#94a3b8" />
+                        {/* Kaki bungkuk */}
+                        <path d="M9.5 15.5 L12 21 L13.5 21 L11 15.5 Z" fill="#94a3b8" />
+                        <path d="M7.5 15.5 L4.5 20 L3.5 19 L6 14.5 Z" fill="#64748b" />
+                      </svg>
+                    </div>
+
+                    {/* 7. Nenek (Rambut sanggul, lari ceria) */}
+                    <div className="runner-bob-7" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Nenek (Semangat)">
+                      <svg width="22" height="25" viewBox="0 0 24 26" fill="none">
+                        {/* Sanggul & Kepala */}
+                        <circle cx="8" cy="4" r="1.8" fill="#64748b" />
+                        <circle cx="12" cy="5.5" r="3" fill="#64748b" />
+                        {/* Gaun/Baju */}
+                        <path d="M10.5 9 L7 17 L13 17 L13 9.5 Z" fill="#64748b" />
+                        {/* Tangan terayun */}
+                        <path d="M12 10.5 L15.5 14 L14.5 14.8 L11 11.5 Z" fill="#64748b" />
+                        {/* Kaki lari */}
+                        <path d="M11 17 L13 21.5 L14.5 21.5 L12 17 Z" fill="#475569" />
+                        <path d="M8.5 17 L6 21 L5 20 L7.5 17 Z" fill="#475569" />
+                      </svg>
+                    </div>
+
+                    {/* 6. Bapak (Pake peci/topi, lari panik) */}
+                    <div className="runner-bob-6" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Bapak (Pake peci)">
+                      <svg width="23" height="26" viewBox="0 0 24 26" fill="none">
+                        {/* Peci hitam */}
+                        <rect x="10.5" y="1.5" width="5.5" height="2.5" rx="0.8" fill="#0f172a" />
+                        <circle cx="13" cy="5.5" r="3" fill="#475569" />
+                        {/* Badan kemeja */}
+                        <path d="M11.5 9 L8.5 16.5 L11 16.5 L13.5 10 Z" fill="#475569" />
+                        {/* Tangan mengayun */}
+                        <path d="M12.5 10 L17 12 L16.5 13.2 L11.5 11 Z" fill="#475569" />
+                        {/* Kaki langkah lebar */}
+                        <path d="M11 16 L15 22 L16.5 21.5 L12.5 16 Z" fill="#334155" />
+                        <path d="M9 16 L4.5 21.5 L3.5 20.5 L7.5 15 Z" fill="#1e293b" />
+                      </svg>
+                    </div>
+
+                    {/* 5. Emak (Ibu bawa tas jinjing ngejar) */}
+                    <div className="runner-bob-5" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Emak (Ngejar anak)">
+                      <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
+                        <circle cx="13" cy="5" r="3.2" fill="#334155" />
+                        {/* Badan gamis/daster */}
+                        <path d="M11.5 8.5 L8 17 L13.5 17 L13.5 9.5 Z" fill="#334155" />
+                        {/* Tas jinjing */}
+                        <rect x="15" y="12" width="4" height="4.5" rx="1" fill="#f59e0b" />
+                        <path d="M16 12 A 1.5 1.5 0 0 1 18 12" stroke="#d97706" strokeWidth="1" fill="none" />
+                        {/* Tangan bawa tas */}
+                        <path d="M12.5 9.5 L16.5 12.5 L15.5 13.5 L11.5 10.5 Z" fill="#334155" />
+                        {/* Kaki lari */}
+                        <path d="M11.5 17 L14.5 22 L16 21.5 L13 17 Z" fill="#1e293b" />
+                        <path d="M9 17 L6 21.5 L5 20.5 L8 17 Z" fill="#0f172a" />
+                      </svg>
+                    </div>
+
+                    {/* 4. Kepala Sekolah (Kepsek berjas & dasi bawa map dinas) */}
+                    <div className="runner-bob-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Kepala Sekolah (Bawa map dinas)">
+                      <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
+                        <circle cx="13.5" cy="5" r="3.2" fill="#0f172a" />
+                        {/* Jas */}
+                        <path d="M11.5 8.5 L8.5 16.5 L12 16.5 L14 9.5 Z" fill="#0f172a" />
+                        {/* Dasi biru */}
+                        <path d="M12.5 9 L13 13 L12.2 13 Z" fill="#0a66c2" />
+                        {/* Map dinas */}
+                        <rect x="15" y="10" width="5" height="4" rx="0.8" fill="#d97706" />
+                        {/* Tangan bawa map */}
+                        <path d="M12.5 9.5 L17 11.5 L16.5 12.8 L11.5 10.5 Z" fill="#0f172a" />
+                        {/* Celana panjang & sepatu */}
+                        <path d="M11 16 L15 22 L16.5 22 L12.5 16 Z" fill="#0f172a" />
+                        <path d="M9 16 L5 21.5 L4 20.5 L7.5 15.5 Z" fill="#1e293b" />
+                      </svg>
+                    </div>
+
+                    {/* 3. Operator Sekolah (OPS lari buru-buru bawa laptop) */}
+                    <div className="runner-bob-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Operator Sekolah (Bawa laptop)">
+                      <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
+                        <circle cx="13" cy="5" r="3" fill="#334155" />
+                        <path d="M11.5 8.5 L9 16 L11.5 16 L13.5 9.5 Z" fill="#334155" />
+                        {/* Mini Laptop terbuka */}
+                        <path d="M15 10 L19 10 L18 13 L14 13 Z" fill="#38bdf8" />
+                        <line x1="14" y1="13" x2="18.5" y2="13" stroke="#0284c7" strokeWidth="1.2" />
+                        {/* Tangan jinjing laptop */}
+                        <path d="M12 9.5 L16 11.5 L15 12.8 L11 10.5 Z" fill="#334155" />
+                        {/* Kaki lari gesit */}
+                        <path d="M11 15.5 L14.5 21.5 L16 21 Z" fill="#1e293b" />
+                        <path d="M9 15.5 L5 21 L4 20 L7.5 15 Z" fill="#334155" />
+                      </svg>
+                    </div>
+
+                    {/* 2. Guru (Bu Guru bawa buku/map tugas) */}
+                    <div className="runner-bob-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Bu Guru (Bawa buku tugas)">
+                      <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
+                        <circle cx="14" cy="5" r="3.2" fill="#1e293b" />
+                        <path d="M12 8.5 L9 16 L11.5 16 L14 10 Z" fill="#1e293b" />
+                        {/* Buku tugas biru */}
+                        <rect x="15" y="10" width="4.5" height="5" rx="1" fill="#2563eb" />
+                        {/* Tangan bawa buku */}
+                        <path d="M13 9.5 L17.5 11.5 L17 13 L12 11 Z" fill="#1e293b" />
+                        {/* Kaki lari */}
+                        <path d="M11 15 L15 19.5 L17 19 L13 15 Z" fill="#1e293b" />
+                        <path d="M9.5 15 L4 22 L3 21 L8 14.5 Z" fill="#0f172a" />
+                      </svg>
+                    </div>
+
+                    {/* 1. Siswa (Anak Sekolah ransel biru lari paling depan ngibrit kabur!) */}
+                    <div className="runner-bob-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Siswa (Kabur duluan)">
+                      <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
+                        <circle cx="15" cy="5" r="3.4" fill="#0a66c2" />
+                        <path d="M13 8.5 L10 16 L12 16 L15 10 Z" fill="#0a66c2" />
+                        {/* Ransel sekolah biru muda */}
+                        <rect x="7" y="9" width="3.5" height="5.5" rx="1.5" fill="#38bdf8" />
+                        {/* Tangan mengayun kencang */}
+                        <path d="M14 9.5 L18.5 13 L17.5 14 L13 11 Z" fill="#0a66c2" />
+                        <path d="M12 10 L8 12.5 L7.5 11.5 L11 9.5 Z" fill="#0284c7" />
+                        {/* Kaki lari ngibrit */}
+                        <path d="M12 15 L17.5 21.5 L19 21 L14 16 Z" fill="#0a66c2" />
+                        <path d="M10 15 L5 20.5 L4 19.5 L8 14 Z" fill="#0284c7" />
+                      </svg>
+                    </div>
+
+                    {/* Jeda 2 Detik (Spacer kosong persis ~2 detik sebelum barisan Siswa berikutnya masuk) */}
+                    <div style={{ width: 117, flexShrink: 0, height: 1 }} />
                   </div>
-                  <div style={{ width: 10, height: 1.5, background: '#cbd5e1', borderRadius: 1, marginLeft: 6 }} />
-                  <div style={{ width: 16, height: 1.5, background: '#94a3b8', borderRadius: 1, marginLeft: 2 }} />
-                </div>
-
-                {/* 13. SUV (Sport Utility Vehicle - Tangguh, ground clearance tinggi & roof rail) */}
-                <div className="car-rumble-5" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="SUV: Sport Utility Vehicle tangguh dengan ground clearance tinggi">
-                  <svg width="50" height="25" viewBox="0 0 52 26" fill="none">
-                    {/* Roof rail di atap */}
-                    <line x1="12" y1="2.5" x2="34" y2="2.5" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="15" y1="2.5" x2="15" y2="4.5" stroke="#64748b" strokeWidth="1.2" />
-                    <line x1="31" y1="2.5" x2="31" y2="4.5" stroke="#64748b" strokeWidth="1.2" />
-                    {/* Body SUV gagah, ground clearance tinggi */}
-                    <path d="M 2 17 C 2 14 3 6.5 5 4.5 C 6 4 7 4 8.5 4 L 32 4 C 34 4 35.5 5 36.8 6.8 L 41 12 L 48 13 C 50.5 13.5 51.5 14.5 51.5 16.5 L 51.5 19.5 C 51.5 20 51 20 50 20 L 46 20 C 46 17 43.5 15 40.5 15 C 37.5 15 35 17 35 20 L 19 20 C 19 17 16.5 15 13.5 15 C 10.5 15 8 17 8 20 L 2.5 20 C 1.5 20 1 19.5 1 18.5 Z" fill="#1e293b" />
-                    {/* Overfender kotak khas SUV */}
-                    <path d="M 7 20 C 7 16 10 14 13.5 14 C 17 14 20 16 20 20" stroke="#0f172a" strokeWidth="1.5" fill="none" />
-                    <path d="M 34 20 C 34 16 37 14 40.5 14 C 44 14 47 16 47 20" stroke="#0f172a" strokeWidth="1.5" fill="none" />
-                    {/* Kaca SUV */}
-                    <path d="M 6 6 L 15 6 L 15 11.5 L 4.5 11.5 C 4.5 9 5.2 7 6 6 Z" fill="#0f172a" />
-                    <rect x="17" y="6" width="11" height="5.5" rx="0.5" fill="#0f172a" />
-                    <path d="M 30 6 L 32.5 6 C 33.8 6 34.8 6.8 35.5 7.8 L 38.5 11.5 L 30 11.5 Z" fill="#0f172a" />
-                    {/* Lampu depan proyektor & taillight */}
-                    <circle cx="49.5" cy="14.5" r="1.3" fill="#f8fafc" />
-                    <rect x="1.2" y="9" width="1.5" height="5" rx="0.5" fill="#ef4444" />
-                    {/* Roda besar tapak tebal SUV */}
-                    <circle cx="13.5" cy="20" r="4.2" fill="#020617" />
-                    <circle cx="13.5" cy="20" r="2" fill="#475569" />
-                    <circle cx="40.5" cy="20" r="4.2" fill="#020617" />
-                    <circle cx="40.5" cy="20" r="2" fill="#475569" />
-                  </svg>
-                </div>
-
-                {/* 12. MPV (Multi-Purpose Vehicle - Lega 3 baris kaca pengangkut keluarga) */}
-                <div className="car-rumble-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="MPV: Multi-Purpose Vehicle dirancang lega untuk mengangkut keluarga">
-                  <svg width="48" height="23" viewBox="0 0 50 24" fill="none">
-                    {/* Body MPV tinggi lega */}
-                    <path d="M 1 16 C 1 12 1.5 6 4 4 C 5 3 6.5 3 8 3 L 31 3 C 33 3 34.5 4 36 6 L 41 12 L 47 13.5 C 49 14 49.5 15 49.5 16.5 L 49.5 19 C 49.5 19.5 49 19.5 48 19.5 L 44 19.5 C 44 16.8 42 15 39.5 15 C 37 15 35 16.8 35 19.5 L 17 19.5 C 17 16.8 15 15 12.5 15 C 10 15 8 16.8 8 19.5 L 2 19.5 C 1 19.5 0.5 19 0.5 18 Z" fill="#475569" />
-                    {/* Kaca baris 3 (belakang) */}
-                    <path d="M 4 5 L 12 5 L 12 11 L 3 11 C 3 8 3.5 6 4 5 Z" fill="#0f172a" />
-                    {/* Kaca baris 2 (tengah kabin keluarga) */}
-                    <rect x="14" y="5" width="10" height="6" rx="0.5" fill="#0f172a" />
-                    {/* Kaca baris 1 (depan supir) */}
-                    <path d="M 26 5 L 30 5 C 31.5 5 32.5 5.8 33.5 7 L 37.5 11 L 26 11 Z" fill="#0f172a" />
-                    {/* Lampu vertikal khas MPV & lampu depan */}
-                    <rect x="0.8" y="7" width="1.2" height="6" rx="0.5" fill="#ef4444" />
-                    <line x1="47" y1="14.5" x2="49.2" y2="15" stroke="#fcd34d" strokeWidth="1.2" />
-                    {/* Roda MPV */}
-                    <circle cx="12.5" cy="19.5" r="3.8" fill="#0f172a" />
-                    <circle cx="12.5" cy="19.5" r="1.6" fill="#cbd5e1" />
-                    <circle cx="39.5" cy="19.5" r="3.8" fill="#0f172a" />
-                    <circle cx="39.5" cy="19.5" r="1.6" fill="#cbd5e1" />
-                  </svg>
-                </div>
-
-                {/* 11. Sedan (Desain aerodinamis & elegan dengan buntut bagasi belakang) */}
-                <div className="car-rumble-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Sedan: Berdesain aerodinamis dan elegan">
-                  <svg width="46" height="19" viewBox="0 0 48 20" fill="none">
-                    {/* Body sedan aerodinamis dengan buntut bagasi belakang */}
-                    <path d="M 1 14 C 1 13 2 11.5 3.5 11.5 L 9 11.5 L 14 5 C 15 3.8 17 3.5 19 3.5 L 30 3.5 C 32 3.5 33.5 4 34.5 5.5 L 39 10.5 L 45 11.5 C 47 12 47.5 13 47.5 14.5 L 47.5 16 C 47.5 16.5 47 16.5 46 16.5 L 42 16.5 C 42 14.2 40 12.8 37.5 12.8 C 35 12.8 33 14.2 33 16.5 L 17 16.5 C 17 14.2 15 12.8 12.5 12.8 C 10 12.8 8 14.2 8 16.5 L 2 16.5 C 1 16.5 0.5 16 0.5 15 Z" fill="#0f172a" />
-                    {/* Kaca samping aerodinamis depan & belakang */}
-                    <path d="M 14 10 L 17 5.5 C 17.5 5 18.5 5 19.5 5 L 23 5 L 23 10 Z" fill="#38bdf8" fillOpacity="0.75" />
-                    <path d="M 24.5 5 L 29.5 5 C 31 5 32 5.5 32.8 6.5 L 36 10 L 24.5 10 Z" fill="#38bdf8" fillOpacity="0.75" />
-                    {/* Garis lampu LED depan & taillight bagasi belakang */}
-                    <line x1="45" y1="12.5" x2="47.5" y2="13" stroke="#60a5fa" strokeWidth="1.2" strokeLinecap="round" />
-                    <line x1="1" y1="12" x2="3" y2="12" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    {/* Roda sport */}
-                    <circle cx="12.5" cy="16.5" r="3.5" fill="#1e293b" />
-                    <circle cx="12.5" cy="16.5" r="1.5" fill="#38bdf8" />
-                    <circle cx="37.5" cy="16.5" r="3.5" fill="#1e293b" />
-                    <circle cx="37.5" cy="16.5" r="1.5" fill="#38bdf8" />
-                  </svg>
-                </div>
-
-                {/* 10. Hatchback (Desain serbaguna tanpa buntut & roof spoiler) */}
-                <div className="car-rumble-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Hatchback: Desain serbaguna tanpa buntut">
-                  <svg width="40" height="20" viewBox="0 0 42 22" fill="none">
-                    {/* Body hatchback sporty tanpa buntut */}
-                    <path d="M 1 15 C 1 12 2 7 5 5 C 6 4.5 7.5 4.5 9 4.5 L 23 4.5 C 26 4.5 28 5.5 29.5 7.5 L 34 11.5 L 39 12.5 C 41 13 41.5 14 41.5 15.5 L 41.5 17 C 41.5 17.5 41 17.5 40 17.5 L 36 17.5 C 36 15 34 13.5 31.5 13.5 C 29 13.5 27 15 27 17.5 L 15 17.5 C 15 15 13 13.5 10.5 13.5 C 8 13.5 6 15 6 17.5 L 2 17.5 C 1 17.5 0.5 17 0.5 16 Z" fill="#334155" />
-                    {/* Spoiler atap belakang */}
-                    <path d="M 4 4.5 L 8 4.5 L 6 3 L 2 3 Z" fill="#0f172a" />
-                    {/* Jendela kaca */}
-                    <path d="M 8 6.5 L 17 6.5 L 17 11 L 6.5 11 Z" fill="#0f172a" />
-                    <path d="M 19 6.5 L 24 6.5 C 25.5 6.5 26.5 7.2 27.5 8.5 L 31 11 L 19 11 Z" fill="#0f172a" />
-                    {/* Lampu depan & belakang */}
-                    <path d="M 39.5 13.5 L 41.5 14 L 41 15 L 39 14.5 Z" fill="#60a5fa" />
-                    <rect x="0.8" y="11" width="1.5" height="3" rx="0.5" fill="#ef4444" />
-                    {/* Roda */}
-                    <circle cx="10.5" cy="17.5" r="3.6" fill="#0f172a" />
-                    <circle cx="10.5" cy="17.5" r="1.5" fill="#cbd5e1" />
-                    <circle cx="31.5" cy="17.5" r="3.6" fill="#0f172a" />
-                    <circle cx="31.5" cy="17.5" r="1.5" fill="#cbd5e1" />
-                  </svg>
-                </div>
-
-                {/* 9. City Car / Microcar (Sangat ringkas untuk perkotaan) */}
-                <div className="car-rumble-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="City Car / Microcar: Sangat ringkas untuk perkotaan">
-                  <svg width="30" height="20" viewBox="0 0 32 22" fill="none">
-                    {/* Body mikro kompak perkotaan */}
-                    <path d="M 2 15 C 2 12.5 3 8 7 6 L 11 2.5 C 13 2 15 2 20 2 L 23 2 C 25 2 26 3 27 5 L 29 10 C 30.5 11.5 31 13 31 15 L 31 16.5 C 31 17.2 30.5 17.5 29.5 17.5 L 26 17.5 C 26 15 24 13.5 22 13.5 C 20 13.5 18 15 18 17.5 L 12 17.5 C 12 15 10 13.5 8 13.5 C 6 13.5 4 15 4 17.5 L 1.5 17.5 C 1 17.5 0.5 17 0.5 16.5 L 0.5 15 Z" fill="#0284c7" />
-                    {/* Kaca samping */}
-                    <path d="M 11 4 L 19 4 C 20.5 4 21.5 4.5 22 5.5 L 24 10 L 10 10 L 9.5 6 C 9.5 5 10 4.2 11 4 Z" fill="#0f172a" />
-                    {/* Lampu depan & belakang */}
-                    <circle cx="30" cy="12" r="1.2" fill="#38bdf8" />
-                    <circle cx="1.5" cy="12" r="1" fill="#ef4444" />
-                    {/* Roda depan & belakang */}
-                    <circle cx="8" cy="17.5" r="3.5" fill="#0f172a" />
-                    <circle cx="8" cy="17.5" r="1.5" fill="#94a3b8" />
-                    <circle cx="22" cy="17.5" r="3.5" fill="#0f172a" />
-                    <circle cx="22" cy="17.5" r="1.5" fill="#94a3b8" />
-                  </svg>
-                </div>
-
-                {/* 8. Kakek (Bawa tongkat jalan, lari santai terseok-seok) */}
-                <div className="runner-bob-8" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Kakek (Bawa tongkat)">
-                  <svg width="22" height="25" viewBox="0 0 24 26" fill="none">
-                    <circle cx="11" cy="5.5" r="3" fill="#94a3b8" />
-                    <path d="M10 9 L7.5 16 L9.5 16 L12 10 Z" fill="#94a3b8" />
-                    {/* Tongkat jalan */}
-                    <line x1="15" y1="11" x2="16.5" y2="24" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M14 11 A 2 2 0 0 0 16 11" stroke="#64748b" strokeWidth="1.5" fill="none" />
-                    {/* Tangan pegang tongkat */}
-                    <path d="M11 10 L14.5 12 L13.5 13 L10.5 11 Z" fill="#94a3b8" />
-                    {/* Kaki bungkuk */}
-                    <path d="M9.5 15.5 L12 21 L13.5 21 L11 15.5 Z" fill="#94a3b8" />
-                    <path d="M7.5 15.5 L4.5 20 L3.5 19 L6 14.5 Z" fill="#64748b" />
-                  </svg>
-                </div>
-
-                {/* 7. Nenek (Rambut sanggul, lari ceria) */}
-                <div className="runner-bob-7" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Nenek (Semangat)">
-                  <svg width="22" height="25" viewBox="0 0 24 26" fill="none">
-                    {/* Sanggul & Kepala */}
-                    <circle cx="8" cy="4" r="1.8" fill="#64748b" />
-                    <circle cx="12" cy="5.5" r="3" fill="#64748b" />
-                    {/* Gaun/Baju */}
-                    <path d="M10.5 9 L7 17 L13 17 L13 9.5 Z" fill="#64748b" />
-                    {/* Tangan terayun */}
-                    <path d="M12 10.5 L15.5 14 L14.5 14.8 L11 11.5 Z" fill="#64748b" />
-                    {/* Kaki lari */}
-                    <path d="M11 17 L13 21.5 L14.5 21.5 L12 17 Z" fill="#475569" />
-                    <path d="M8.5 17 L6 21 L5 20 L7.5 17 Z" fill="#475569" />
-                  </svg>
-                </div>
-
-                {/* 6. Bapak (Pake peci/topi, lari panik) */}
-                <div className="runner-bob-6" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Bapak (Pake peci)">
-                  <svg width="23" height="26" viewBox="0 0 24 26" fill="none">
-                    {/* Peci hitam */}
-                    <rect x="10.5" y="1.5" width="5.5" height="2.5" rx="0.8" fill="#0f172a" />
-                    <circle cx="13" cy="5.5" r="3" fill="#475569" />
-                    {/* Badan kemeja */}
-                    <path d="M11.5 9 L8.5 16.5 L11 16.5 L13.5 10 Z" fill="#475569" />
-                    {/* Tangan mengayun */}
-                    <path d="M12.5 10 L17 12 L16.5 13.2 L11.5 11 Z" fill="#475569" />
-                    {/* Kaki langkah lebar */}
-                    <path d="M11 16 L15 22 L16.5 21.5 L12.5 16 Z" fill="#334155" />
-                    <path d="M9 16 L4.5 21.5 L3.5 20.5 L7.5 15 Z" fill="#1e293b" />
-                  </svg>
-                </div>
-
-                {/* 5. Emak (Ibu bawa tas jinjing ngejar) */}
-                <div className="runner-bob-5" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Emak (Ngejar anak)">
-                  <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
-                    <circle cx="13" cy="5" r="3.2" fill="#334155" />
-                    {/* Badan gamis/daster */}
-                    <path d="M11.5 8.5 L8 17 L13.5 17 L13.5 9.5 Z" fill="#334155" />
-                    {/* Tas jinjing */}
-                    <rect x="15" y="12" width="4" height="4.5" rx="1" fill="#f59e0b" />
-                    <path d="M16 12 A 1.5 1.5 0 0 1 18 12" stroke="#d97706" strokeWidth="1" fill="none" />
-                    {/* Tangan bawa tas */}
-                    <path d="M12.5 9.5 L16.5 12.5 L15.5 13.5 L11.5 10.5 Z" fill="#334155" />
-                    {/* Kaki lari */}
-                    <path d="M11.5 17 L14.5 22 L16 21.5 L13 17 Z" fill="#1e293b" />
-                    <path d="M9 17 L6 21.5 L5 20.5 L8 17 Z" fill="#0f172a" />
-                  </svg>
-                </div>
-
-                {/* 4. Kepala Sekolah (Kepsek berjas & dasi bawa map dinas) */}
-                <div className="runner-bob-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Kepala Sekolah (Bawa map dinas)">
-                  <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
-                    <circle cx="13.5" cy="5" r="3.2" fill="#0f172a" />
-                    {/* Jas */}
-                    <path d="M11.5 8.5 L8.5 16.5 L12 16.5 L14 9.5 Z" fill="#0f172a" />
-                    {/* Dasi biru */}
-                    <path d="M12.5 9 L13 13 L12.2 13 Z" fill="#0a66c2" />
-                    {/* Map dinas */}
-                    <rect x="15" y="10" width="5" height="4" rx="0.8" fill="#d97706" />
-                    {/* Tangan bawa map */}
-                    <path d="M12.5 9.5 L17 11.5 L16.5 12.8 L11.5 10.5 Z" fill="#0f172a" />
-                    {/* Celana panjang & sepatu */}
-                    <path d="M11 16 L15 22 L16.5 22 L12.5 16 Z" fill="#0f172a" />
-                    <path d="M9 16 L5 21.5 L4 20.5 L7.5 15.5 Z" fill="#1e293b" />
-                  </svg>
-                </div>
-
-                {/* 3. Operator Sekolah (OPS lari buru-buru bawa laptop) */}
-                <div className="runner-bob-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Operator Sekolah (Bawa laptop)">
-                  <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
-                    <circle cx="13" cy="5" r="3" fill="#334155" />
-                    <path d="M11.5 8.5 L9 16 L11.5 16 L13.5 9.5 Z" fill="#334155" />
-                    {/* Mini Laptop terbuka */}
-                    <path d="M15 10 L19 10 L18 13 L14 13 Z" fill="#38bdf8" />
-                    <line x1="14" y1="13" x2="18.5" y2="13" stroke="#0284c7" strokeWidth="1.2" />
-                    {/* Tangan jinjing laptop */}
-                    <path d="M12 9.5 L16 11.5 L15 12.8 L11 10.5 Z" fill="#334155" />
-                    {/* Kaki lari gesit */}
-                    <path d="M11 15.5 L14.5 21.5 L16 21 Z" fill="#1e293b" />
-                    <path d="M9 15.5 L5 21 L4 20 L7.5 15 Z" fill="#334155" />
-                  </svg>
-                </div>
-
-                {/* 2. Guru (Bu Guru bawa buku/map tugas) */}
-                <div className="runner-bob-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Bu Guru (Bawa buku tugas)">
-                  <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
-                    <circle cx="14" cy="5" r="3.2" fill="#1e293b" />
-                    <path d="M12 8.5 L9 16 L11.5 16 L14 10 Z" fill="#1e293b" />
-                    {/* Buku tugas biru */}
-                    <rect x="15" y="10" width="4.5" height="5" rx="1" fill="#2563eb" />
-                    {/* Tangan bawa buku */}
-                    <path d="M13 9.5 L17.5 11.5 L17 13 L12 11 Z" fill="#1e293b" />
-                    {/* Kaki lari */}
-                    <path d="M11 15 L15 19.5 L17 19 L13 15 Z" fill="#1e293b" />
-                    <path d="M9.5 15 L4 22 L3 21 L8 14.5 Z" fill="#0f172a" />
-                  </svg>
-                </div>
-
-                {/* 1. Siswa (Anak Sekolah ransel biru lari paling depan ngibrit kabur!) */}
-                <div className="runner-bob-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Siswa (Kabur duluan)">
-                  <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
-                    <circle cx="15" cy="5" r="3.4" fill="#0a66c2" />
-                    <path d="M13 8.5 L10 16 L12 16 L15 10 Z" fill="#0a66c2" />
-                    {/* Ransel sekolah biru muda */}
-                    <rect x="7" y="9" width="3.5" height="5.5" rx="1.5" fill="#38bdf8" />
-                    {/* Tangan mengayun kencang */}
-                    <path d="M14 9.5 L18.5 13 L17.5 14 L13 11 Z" fill="#0a66c2" />
-                    <path d="M12 10 L8 12.5 L7.5 11.5 L11 9.5 Z" fill="#0284c7" />
-                    {/* Kaki lari ngibrit */}
-                    <path d="M12 15 L17.5 21.5 L19 21 L14 16 Z" fill="#0a66c2" />
-                    <path d="M10 15 L5 20.5 L4 19.5 L8 14 Z" fill="#0284c7" />
-                  </svg>
-                </div>
+                ))}
               </div>
             </div>
 

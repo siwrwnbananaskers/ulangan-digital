@@ -3827,11 +3827,11 @@ input:-webkit-autofill:active {
 .kids-runner-group {
   position: absolute;
   bottom: 3px;
+  left: 0;
   display: flex;
   align-items: flex-end;
-  gap: 9px;
-  animation: squadChaseAcross 18s linear infinite;
-  will-change: left;
+  animation: seamlessConvoyChase 11s linear infinite;
+  will-change: transform;
 }
 
 .runner-bob-1 { animation: runnerBob1 0.3s ease-in-out infinite alternate; }
@@ -3849,12 +3849,12 @@ input:-webkit-autofill:active {
 .car-rumble-4 { animation: carRumble 0.16s ease-in-out infinite alternate 0.02s; }
 .car-rumble-5 { animation: carRumble 0.17s ease-in-out infinite alternate 0.06s; }
 
-@keyframes squadChaseAcross {
+@keyframes seamlessConvoyChase {
   0% {
-    left: -640px;
+    transform: translateX(-660px);
   }
   100% {
-    left: 100%;
+    transform: translateX(0px);
   }
 }
 
@@ -3886,7 +3886,7 @@ input:-webkit-autofill:active {
 @media (prefers-reduced-motion: reduce) {
   .kids-runner-group {
     animation: none;
-    left: 16px;
+    transform: translateX(-200px);
   }
   .runner-bob-1, .runner-bob-2, .runner-bob-3, .runner-bob-4,
   .runner-bob-5, .runner-bob-6, .runner-bob-7, .runner-bob-8,
