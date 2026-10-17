@@ -226,47 +226,247 @@ export default function SuperAdminDashboard() {
 
       <main className="main-content">
         {/* Header Konsol Superadmin (Rapi, Seimbang & Bebas Visual Clutter) */}
+        {/* Header Ribbon Konsol Superadmin + Widget Integritas */}
         <div
           className="card page-header-ribbon"
           style={{
             padding: '24px 28px',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
-            borderRadius: 12,
+            borderRadius: 14,
             boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
             marginBottom: 20,
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: 'stretch',
             flexWrap: 'wrap',
-            gap: 18,
+            gap: 22,
           }}
         >
-          <div style={{ maxWidth: 620 }}>
-            {/* Status Pill Bersih & Kohesif (Satu Kesatuan Elegan) */}
+          {/* Kolom Kiri: Info Konsol & Tombol Aksi */}
+          <div
+            style={{
+              flex: '1 1 500px',
+              minWidth: 280,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              {/* Status Pill Bersih & Kohesif */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 12px',
+                  borderRadius: 20,
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  marginBottom: 10,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#334155',
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#0f172a', fontWeight: 700 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  Superadmin
+                </span>
+                <span style={{ color: '#cbd5e1' }}>•</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: 11.5 }}>
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: '#10b981',
+                      boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
+                    }}
+                  />
+                  Sistem Normal
+                </span>
+              </div>
+
+              {/* Title */}
+              <h1
+                style={{
+                  fontSize: 'clamp(21px, 2.2vw, 25px)',
+                  fontWeight: 800,
+                  color: '#0f172a',
+                  margin: 0,
+                  letterSpacing: '-0.025em',
+                  lineHeight: 1.25,
+                }}
+              >
+                Konsol Superadmin
+              </h1>
+
+              {/* Subtitle */}
+              <p
+                style={{
+                  fontSize: 13.5,
+                  color: '#64748b',
+                  margin: '6px 0 0',
+                  lineHeight: 1.5,
+                  fontWeight: 400,
+                }}
+              >
+                Kelola akun guru resmi, pantau seluruh aktivitas pembuatan soal/ujian, dan audit integritas sekolah
+              </p>
+            </div>
+
+            {/* Kelompok Tombol Aksi */}
             <div
               style={{
-                display: 'inline-flex',
+                display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '4px 12px',
-                borderRadius: 20,
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                marginBottom: 10,
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#334155',
+                flexWrap: 'wrap',
+                marginTop: 20,
               }}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#0f172a', fontWeight: 700 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.5">
+              <button
+                type="button"
+                onClick={() => setShowProfileModal(true)}
+                className="btn btn-secondary"
+                style={{
+                  borderRadius: 8,
+                  padding: '9px 14px',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#334155',
+                  height: 38,
+                }}
+                title="Ganti Password & Kelola Profil Superadmin"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Ganti Password
+              </button>
+
+              <a
+                href="/superadmin/guru"
+                className="btn btn-secondary"
+                style={{
+                  borderRadius: 8,
+                  padding: '9px 14px',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#334155',
+                  height: 38,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Kelola Guru
+              </a>
+
+              <a
+                href="/guru/ujian"
+                className="btn btn-secondary"
+                style={{
+                  borderRadius: 8,
+                  padding: '9px 14px',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#334155',
+                  height: 38,
+                }}
+              >
+                Semua Ujian →
+              </a>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleOpenAddGuru}
+                style={{
+                  background: '#0a66c2',
+                  borderRadius: 8,
+                  padding: '9px 18px',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  height: 38,
+                  boxShadow: '0 1px 3px rgba(10, 102, 194, 0.25)',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Tambah Guru
+              </button>
+            </div>
+          </div>
+
+          {/* Kolom Kanan: Widget Integritas & Sesi Ujian Aktif (Anti AI-Slop) */}
+          <div
+            style={{
+              flex: '0 1 350px',
+              minWidth: 280,
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 12,
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: 14,
+            }}
+          >
+            {/* Widget Top Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                Superadmin
-              </span>
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: 11.5 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  Integritas &amp; Sesi Aktif
+                </span>
+              </div>
+
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '3px 8px',
+                  borderRadius: 12,
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#065f46',
+                }}
+                title="Protokol Anti-Cheat dan Kiosk Lock aktif pada semua ujian siswa"
+              >
                 <span
                   style={{
                     width: 6,
@@ -276,140 +476,110 @@ export default function SuperAdminDashboard() {
                     boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
                   }}
                 />
-                Sistem Normal
+                Kiosk Lock Aktif
               </span>
             </div>
 
-            {/* Title */}
-            <h1
+            {/* Widget Metrics Box (2 Grid Columns) */}
+            <div
               style={{
-                fontSize: 'clamp(21px, 2.2vw, 25px)',
-                fontWeight: 800,
-                color: '#0f172a',
-                margin: 0,
-                letterSpacing: '-0.025em',
-                lineHeight: 1.25,
-              }}
-            >
-              Konsol Superadmin
-            </h1>
-
-            {/* Subtitle */}
-            <p
-              style={{
-                fontSize: 13.5,
-                color: '#64748b',
-                margin: '6px 0 0',
-                lineHeight: 1.5,
-                fontWeight: 400,
-              }}
-            >
-              Kelola akun guru resmi, pantau seluruh aktivitas pembuatan soal/ujian, dan audit integritas sekolah
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              flexWrap: 'wrap',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowProfileModal(true)}
-              className="btn btn-secondary"
-              style={{
-                borderRadius: 8,
-                padding: '9px 14px',
-                fontWeight: 600,
-                fontSize: 13,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                border: '1px solid #cbd5e1',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 12,
                 background: '#ffffff',
-                color: '#334155',
-                height: 38,
+                border: '1px solid #e2e8f0',
+                borderRadius: 9,
+                padding: '10px 14px',
               }}
-              title="Ganti Password & Kelola Profil Superadmin"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              Ganti Password
-            </button>
+              <div style={{ borderRight: '1px solid #f1f5f9', paddingRight: 8 }}>
+                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500, marginBottom: 2 }}>
+                  Ujian Aktif
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
+                    {data.stats.total_ujian_aktif || 0}
+                  </span>
+                  <span style={{ fontSize: 11, color: '#64748b' }}>lembar</span>
+                </div>
+                <div style={{ fontSize: 10.5, color: '#059669', fontWeight: 600, marginTop: 3 }}>
+                  {data.stats.total_sesi_aktif || 0} siswa aktif
+                </div>
+              </div>
 
-            <a
-              href="/superadmin/guru"
-              className="btn btn-secondary"
-              style={{
-                borderRadius: 8,
-                padding: '9px 14px',
-                fontWeight: 600,
-                fontSize: 13,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#334155',
-                height: 38,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              Kelola Guru
-            </a>
+              <div style={{ paddingLeft: 4 }}>
+                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500, marginBottom: 2 }}>
+                  Pelanggaran
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: (data.stats.total_pelanggaran || 0) > 0 ? '#dc2626' : '#0f172a', lineHeight: 1 }}>
+                    {data.stats.total_pelanggaran || 0}
+                  </span>
+                  <span style={{ fontSize: 11, color: '#64748b' }}>kasus</span>
+                </div>
+                <div style={{ fontSize: 10.5, color: '#64748b', marginTop: 3 }}>
+                  Audit integritas
+                </div>
+              </div>
+            </div>
 
-            <a
-              href="/guru/ujian"
-              className="btn btn-secondary"
-              style={{
-                borderRadius: 8,
-                padding: '9px 14px',
-                fontWeight: 600,
-                fontSize: 13,
-                display: 'inline-flex',
-                alignItems: 'center',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#334155',
-                height: 38,
-              }}
-            >
-              Semua Ujian →
-            </a>
+            {/* Widget Bottom Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11.5 }}>
+              <button
+                type="button"
+                onClick={loadDashboard}
+                disabled={loading}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: '#64748b',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#0a66c2')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                title="Perbarui data realtime tanpa reload halaman"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }}
+                >
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>{loading ? 'Menyinkronkan...' : 'Sinkronisasi Realtime'}</span>
+              </button>
 
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleOpenAddGuru}
-              style={{
-                background: '#0a66c2',
-                borderRadius: 8,
-                padding: '9px 18px',
-                fontWeight: 600,
-                fontSize: 13,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                height: 38,
-                boxShadow: '0 1px 3px rgba(10, 102, 194, 0.25)',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Tambah Guru
-            </button>
+              <a
+                href="/guru/audit"
+                style={{
+                  color: '#0a66c2',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 3,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                Buka Audit Log
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
 

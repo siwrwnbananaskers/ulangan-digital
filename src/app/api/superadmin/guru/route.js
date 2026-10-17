@@ -77,12 +77,16 @@ export async function GET(request) {
 
     // 3. Global system stats for superadmin overview
     let totalUjian = 0;
+    let totalUjianAktif = 0;
+    let totalSesiAktif = 0;
     let totalSoal = 0;
     let totalSiswa = 0;
     let totalPelanggaran = 0;
 
     try {
       totalUjian = (await db.getOne('SELECT COUNT(*) as cnt FROM ujian'))?.cnt || 0;
+      totalUjianAktif = (await db.getOne("SELECT COUNT(*) as cnt FROM ujian WHERE status = 'aktif'"))?.cnt || 0;
+      totalSesiAktif = (await db.getOne("SELECT COUNT(*) as cnt FROM hasil_ujian WHERE status = 'berlangsung'"))?.cnt || 0;
       totalSoal = (await db.getOne('SELECT COUNT(*) as cnt FROM soal'))?.cnt || 0;
       totalSiswa = (await db.getOne("SELECT COUNT(*) as cnt FROM users WHERE role = 'siswa'"))?.cnt || 0;
       totalPelanggaran = (await db.getOne('SELECT COUNT(*) as cnt FROM audit_log'))?.cnt || 0;
@@ -93,9 +97,11 @@ export async function GET(request) {
     const stats = {
       total_guru: teachers.length,
       total_ujian: totalUjian,
+      total_ujian_aktif: totalUjianAktif,
+      total_sesi_aktif: totalSesiAktif,
       total_soal: totalSoal,
       total_siswa: totalSiswa,
-      total_sesi: 0,
+      total_sesi: totalSesiAktif,
       total_pelanggaran: totalPelanggaran,
     };
 
