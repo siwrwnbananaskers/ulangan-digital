@@ -221,9 +221,11 @@ export default function SuperAdminDashboard() {
   );
 
   // Metrik kalkulasi diagram integritas asesmen
-  const totalUjian = data.stats.total_ujian || 0;
-  const totalPelanggaran = data.stats.total_pelanggaran || 0;
-  const totalUjianAktif = data.stats.total_ujian_aktif || 0;
+  const totalUjian = data?.stats?.total_ujian || 0;
+  const totalPelanggaran = data?.stats?.total_pelanggaran || 0;
+  const totalUjianAktif = data?.stats?.total_ujian_aktif || 0;
+  const totalSoal = data?.stats?.total_soal || 0;
+  const totalSiswa = data?.stats?.total_siswa || 0;
   const integrityScore = totalPelanggaran === 0 ? 100 : Math.max(88, 100 - (totalPelanggaran * 2));
   const normalCompliance = totalPelanggaran === 0 ? 100 : Math.max(90, 100 - totalPelanggaran);
   const examActiveRate = totalUjian > 0 ? Math.min(100, Math.round((totalUjianAktif / totalUjian) * 100)) : 0;
