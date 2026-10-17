@@ -3359,16 +3359,17 @@ img {
   }
   .exam-card-sign-space {
     flex: 1 !important;
-    min-height: 8mm !important;
+    min-height: 15mm !important;
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
+    margin: 0.5mm 0 !important;
   }
   .exam-card-sign-img {
-    max-height: 7.5mm !important;
-    max-width: 32mm !important;
+    max-height: 15mm !important;
+    max-width: 34mm !important;
     object-fit: contain !important;
     display: block !important;
     margin: 0 auto !important;

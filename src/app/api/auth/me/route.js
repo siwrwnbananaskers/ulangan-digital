@@ -5,7 +5,7 @@
  * POST /api/auth/me - Logout user
  */
 
-import { getCurrentUser, generateToken, COOKIE_NAME } from '@/lib/auth';
+import { getCurrentUser, generateToken, COOKIE_NAME, hashPassword } from '@/lib/auth';
 import { getDB } from '@/lib/db';
 import { apiResponse, apiError } from '@/lib/utils';
 
@@ -50,7 +50,7 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { nama, foto_profil, tanda_tangan } = body;
+    const { nama, foto_profil, tanda_tangan, password } = body;
 
     if (!nama || !nama.trim()) {
       return apiError('Nama lengkap tidak boleh kosong', 400);
@@ -70,11 +70,28 @@ export async function PUT(request) {
     const cleanFoto = foto_profil !== undefined ? foto_profil : null;
     const cleanTtd = tanda_tangan !== undefined ? tanda_tangan : null;
 
-    // Persist to Cloudflare D1 SQL database
-    await db.run(
-      'UPDATE users SET nama = ?, foto_profil = ?, tanda_tangan = ?, updated_at = datetime("now") WHERE id = ?',
-      [cleanNama, cleanFoto, cleanTtd, user.id]
-    );
+    // Khusus akun superadmin bisa mengganti password mandiri
+    if (password && password.trim().length > 0) {
+      if (user.role !== 'superadmin') {
+        return apiError('Hanya akun superadmin yang diizinkan mengganti password mandiri', 403);
+      }
+      const cleanPassword = password.trim();
+      if (cleanPassword.length < 5) {
+        return apiError('Password baru minimal 5 karakter', 400);
+      }
+      const passwordHash = await hashPassword(cleanPassword);
+
+      await db.run(
+        'UPDATE users SET nama = ?, foto_profil = ?, tanda_tangan = ?, password_hash = ?, updated_at = datetime("now") WHERE id = ?',
+        [cleanNama, cleanFoto, cleanTtd, passwordHash, user.id]
+      );
+    } else {
+      // Persist to Cloudflare D1 SQL database without touching password
+      await db.run(
+        'UPDATE users SET nama = ?, foto_profil = ?, tanda_tangan = ?, updated_at = datetime("now") WHERE id = ?',
+        [cleanNama, cleanFoto, cleanTtd, user.id]
+      );
+    }
 
     // Fetch freshly updated row
     const updatedUser = await db.getOne(
@@ -87,7 +104,9 @@ export async function PUT(request) {
 
     const response = apiResponse({
       success: true,
-      message: 'Profil berhasil diperbarui dan disinkronkan ke database',
+      message: password && password.trim()
+        ? 'Profil dan password superadmin berhasil diperbarui!'
+        : 'Profil berhasil diperbarui dan disinkronkan ke database',
       user: resultUser,
       token: newToken,
     });

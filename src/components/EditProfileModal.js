@@ -6,6 +6,9 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
   const [nama, setNama] = useState(user?.nama || '');
   const [fotoProfil, setFotoProfil] = useState(user?.foto_profil || '');
   const [tandaTangan, setTandaTangan] = useState(user?.tanda_tangan || '');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -105,6 +108,17 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
       return;
     }
 
+    if (user?.role === 'superadmin' && newPassword) {
+      if (newPassword.length < 5) {
+        setErrorMsg('Password baru superadmin minimal 5 karakter');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setErrorMsg('Konfirmasi password baru tidak cocok');
+        return;
+      }
+    }
+
     setSaving(true);
     setErrorMsg('');
     setSuccessMsg('');
@@ -121,6 +135,7 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
           nama: nama.trim(),
           foto_profil: fotoProfil || null,
           tanda_tangan: tandaTangan || null,
+          ...(user?.role === 'superadmin' && newPassword ? { password: newPassword.trim() } : {}),
         }),
       });
 
@@ -336,11 +351,14 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
                       color: '#0f172a',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 7,
                       margin: 0,
                     }}
                   >
-                    <span>✍️</span> Tanda Tangan Digital Guru
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                    Tanda Tangan Digital Guru
                   </label>
                   <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
                     Otomatis dicantumkan pada Kartu Login Siswa, Cetak Lembar Hasil Siswa, dan Leger Nilai.
@@ -402,10 +420,95 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
                     style={{ maxHeight: 70, maxWidth: '90%', objectFit: 'contain' }}
                   />
                 ) : (
-                  <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-                    <div style={{ fontSize: 20, marginBottom: 2 }}>✍️</div>
-                    <div style={{ fontSize: 11.5, fontWeight: 600 }}>Klik untuk Unggah Foto/Scan Tanda Tangan</div>
-                    <div style={{ fontSize: 10, marginTop: 2 }}>Format PNG (latar transparan/putih), JPG atau WEBP</div>
+                  <div style={{ textAlign: 'center', color: '#64748b' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 4px', display: 'block' }}>
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                      <path d="M2 22h20" />
+                    </svg>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#334155' }}>Klik untuk Unggah Foto/Scan Tanda Tangan</div>
+                    <div style={{ fontSize: 10, marginTop: 2, color: '#94a3b8' }}>Format PNG (latar transparan/putih), JPG atau WEBP</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Khusus Akun Superadmin: Ganti Password Mandiri */}
+          {user?.role === 'superadmin' && (
+            <div
+              style={{
+                marginBottom: 20,
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 8,
+                padding: '14px 16px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <label
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    margin: 0,
+                  }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Ganti Password Superadmin
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#0a66c2',
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {showPassword ? 'Sembunyikan' : 'Lihat Karakter'}
+                </button>
+              </div>
+              <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 10 }}>
+                Kosongkan jika Anda tidak ingin mengubah password akun Superadmin.
+              </span>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11.5, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 3 }}>
+                    Password Baru
+                  </label>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Masukkan password baru (minimal 5 karakter)..."
+                    style={{ fontSize: 13, padding: '8px 12px' }}
+                  />
+                </div>
+                {newPassword.length > 0 && (
+                  <div>
+                    <label style={{ fontSize: 11.5, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 3 }}>
+                      Konfirmasi Password Baru
+                    </label>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="form-input"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Ketik ulang password baru..."
+                      style={{ fontSize: 13, padding: '8px 12px' }}
+                    />
                   </div>
                 )}
               </div>

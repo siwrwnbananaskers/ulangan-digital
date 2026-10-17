@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
+import EditProfileModal from '@/components/EditProfileModal';
 
 export default function SuperAdminDashboard() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('superadmin');
@@ -16,6 +17,7 @@ export default function SuperAdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
   const { dialogState, confirm: showConfirm, handleConfirm, handleClose } = useConfirmDialog();
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // New Teacher Modal
   const [showAddGuruModal, setShowAddGuruModal] = useState(false);
@@ -175,71 +177,58 @@ export default function SuperAdminDashboard() {
       <Navbar user={user} onLogout={logout} role="guru" />
 
       <main className="main-content">
-        {/* Modern Executive Header (Anti-AI Slop, Clean & Professional) */}
+        {/* Header Konsol Superadmin (Rapi, Seimbang & Bebas Visual Clutter) */}
         <div
           className="card page-header-ribbon"
           style={{
-            padding: '20px 24px',
+            padding: '24px 28px',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
             borderRadius: 12,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
             marginBottom: 20,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: 16,
+            gap: 18,
           }}
         >
-          <div style={{ maxWidth: 650 }}>
-            {/* Meta Status Badges */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-              <span
-                style={{
-                  background: '#0f172a',
-                  color: '#f8fafc',
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
-                  padding: '3px 10px',
-                  borderRadius: 6,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  border: '1px solid #1e293b',
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <div style={{ maxWidth: 620 }}>
+            {/* Status Pill Bersih & Kohesif (Satu Kesatuan Elegan) */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '4px 12px',
+                borderRadius: 20,
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                marginBottom: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#334155',
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#0f172a', fontWeight: 700 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.5">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                HAK AKSES PENUH (OWNER)
+                Superadmin
               </span>
-
-              <span
-                style={{
-                  background: '#f0fdf4',
-                  color: '#15803d',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: '3px 10px',
-                  borderRadius: 6,
-                  border: '1px solid #bbf7d0',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-              >
+              <span style={{ color: '#cbd5e1' }}>•</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: 11.5 }}>
                 <span
                   style={{
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    background: '#16a34a',
-                    boxShadow: '0 0 0 2px rgba(22, 163, 74, 0.2)',
+                    background: '#10b981',
+                    boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
                   }}
                 />
-                Sistem Berjalan Normal
+                Sistem Normal
               </span>
             </div>
 
@@ -271,13 +260,21 @@ export default function SuperAdminDashboard() {
             </p>
           </div>
 
-          <div className="page-header-actions">
-            <a
-              href="/superadmin/guru"
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowProfileModal(true)}
               className="btn btn-secondary"
               style={{
                 borderRadius: 8,
-                padding: '9px 16px',
+                padding: '9px 14px',
                 fontWeight: 600,
                 fontSize: 13,
                 display: 'inline-flex',
@@ -286,18 +283,64 @@ export default function SuperAdminDashboard() {
                 border: '1px solid #cbd5e1',
                 background: '#ffffff',
                 color: '#334155',
+                height: 38,
+              }}
+              title="Ganti Password & Kelola Profil Superadmin"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Ganti Password
+            </button>
+
+            <a
+              href="/superadmin/guru"
+              className="btn btn-secondary"
+              style={{
+                borderRadius: 8,
+                padding: '9px 14px',
+                fontWeight: 600,
+                fontSize: 13,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#334155',
+                height: 38,
               }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              Kelola Guru Terdaftar
+              Kelola Guru
+            </a>
+
+            <a
+              href="/guru/ujian"
+              className="btn btn-secondary"
+              style={{
+                borderRadius: 8,
+                padding: '9px 14px',
+                fontWeight: 600,
+                fontSize: 13,
+                display: 'inline-flex',
+                alignItems: 'center',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#334155',
+                height: 38,
+              }}
+            >
+              Semua Ujian →
             </a>
 
             <button
+              type="button"
               className="btn btn-primary"
               onClick={() => setShowAddGuruModal(true)}
               style={{
@@ -309,34 +352,16 @@ export default function SuperAdminDashboard() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
+                height: 38,
                 boxShadow: '0 1px 3px rgba(10, 102, 194, 0.25)',
               }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Tambah Guru
             </button>
-
-            <a
-              href="/guru/ujian"
-              className="btn btn-secondary"
-              style={{
-                borderRadius: 8,
-                padding: '9px 16px',
-                fontWeight: 600,
-                fontSize: 13,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#334155',
-              }}
-            >
-              Kelola Semua Ujian →
-            </a>
           </div>
         </div>
 
@@ -953,6 +978,17 @@ export default function SuperAdminDashboard() {
 
       {/* Modal Konfirmasi Modern */}
       <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
+
+      {/* Edit Profile & Ganti Password Superadmin */}
+      {showProfileModal && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowProfileModal(false)}
+          onUpdate={() => {
+            loadDashboard();
+          }}
+        />
+      )}
     </div>
   );
 }

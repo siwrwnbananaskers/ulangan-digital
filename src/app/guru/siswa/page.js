@@ -470,7 +470,10 @@ export default function SiswaManagementPage() {
               }}
               title="Atur foto/scan tanda tangan digital guru untuk kartu login dan lembar hasil"
             >
-              <span>✍️</span> {user?.tanda_tangan ? 'TTD Siap' : 'Upload TTD'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+              </svg>
+              <span>{user?.tanda_tangan ? 'TTD Siap' : 'Upload TTD'}</span>
             </button>
             <button
               className="btn btn-secondary"
@@ -1403,7 +1406,10 @@ export default function SiswaManagementPage() {
                   }}
                   title="Atur / upload foto tanda tangan digital guru"
                 >
-                  <span>✍️</span> {user?.tanda_tangan ? 'Ganti TTD Guru' : 'Upload TTD Guru'}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                  <span>{user?.tanda_tangan ? 'Ganti TTD Guru' : 'Upload TTD Guru'}</span>
                 </button>
                 <button
                   type="button"
@@ -1700,19 +1706,20 @@ export default function SiswaManagementPage() {
                             <div
                               style={{
                                 flex: 1,
-                                minHeight: 26,
+                                minHeight: 52,
                                 width: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 textAlign: 'center',
+                                margin: '2px 0',
                               }}
                             >
                               {ttdGuru && (
                                 <img
                                   src={ttdGuru}
                                   alt="TTD Guru"
-                                  style={{ maxHeight: 26, maxWidth: 110, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                                  style={{ maxHeight: 52, maxWidth: 130, objectFit: 'contain', display: 'block', margin: '0 auto' }}
                                 />
                               )}
                             </div>
