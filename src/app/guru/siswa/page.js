@@ -7,6 +7,16 @@ import { useAuth } from '@/hooks/useAuth';
 import UpgradeModal from '@/components/UpgradeModal';
 import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
+const formatCardDate = (date = new Date()) => {
+  const d = date instanceof Date ? date : new Date(date);
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+};
+
 export default function SiswaManagementPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
   const { dialogState, confirm: showConfirm, handleConfirm, handleClose } = useConfirmDialog();
@@ -1127,65 +1137,87 @@ export default function SiswaManagementPage() {
       {/* PRINT-ONLY SECTION: Standar KTP 85.60 mm x 53.98 mm */}
       <div className="print-only">
         <div className="print-cards-grid">
-          {filteredPrintStudents.map((siswa, idx) => (
-            <div key={siswa.id || idx} className="exam-card-badge">
-              <div className="exam-card-cut-corner">✂</div>
-              <div className="exam-card-header">
-                <div className="exam-card-logo-group">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5">
-                    <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
-                    <polyline points="9 12 11 14 15 10" />
-                  </svg>
-                  <div>
-                    <div className="exam-card-logo">ULANGAN DIGITAL</div>
-                    <div className="exam-card-sublogo">SISTEM ASESMEN & UJIAN</div>
-                  </div>
-                </div>
-                <div className="exam-card-title">KARTU PESERTA</div>
-              </div>
+          {filteredPrintStudents.map((siswa, idx) => {
+            const namaGuru = siswa.nama_guru || user?.nama || 'Guru Pengampu';
+            return (
+              <div key={siswa.id || idx} className="exam-card-badge">
+                <div className="exam-card-cut-corner">✂</div>
 
-              <div className="exam-card-body">
-                <div className="exam-card-info-col">
-                  <div className="exam-card-row">
-                    <span className="exam-card-label">Nama Siswa</span>
-                    <span className="exam-card-val exam-card-val-name">: {siswa.nama}</span>
+                {/* Header Kop Resmi & Universal */}
+                <div className="exam-card-header">
+                  <div className="exam-card-logo-group">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5">
+                      <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
+                      <polyline points="9 12 11 14 15 10" />
+                    </svg>
+                    <div>
+                      <div className="exam-card-logo">KARTU PESERTA ASESMEN & UJIAN</div>
+                      <div className="exam-card-sublogo">Asesmen Berbasis Komputer & CBT</div>
+                    </div>
                   </div>
-                  <div className="exam-card-row">
-                    <span className="exam-card-label">Kelas / Absen</span>
-                    <span className="exam-card-val">: {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}</span>
-                  </div>
-                  <div className="exam-card-row">
-                    <span className="exam-card-label">ID Peserta</span>
-                    <span className="exam-card-val" style={{ fontFamily: 'Consolas, monospace' }}>: {siswa.username}</span>
-                  </div>
+                  <div className="exam-card-title">KARTU LOGIN</div>
                 </div>
 
-                <div className="exam-card-login-box">
-                  <div className="exam-card-login-head">AKSES LOGIN</div>
-                  <div className="exam-card-login-row">
-                    <span className="exam-card-login-key">USER</span>
-                    <span className="exam-card-login-val">{siswa.username}</span>
+                {/* Identitas Siswa Full-Width (Anti-Terpotong) */}
+                <div className="exam-card-student-section">
+                  <div className="exam-card-name-row">
+                    <span className="exam-card-label-wide">Nama Siswa</span>
+                    <span className="exam-card-val-name">: {siswa.nama}</span>
                   </div>
-                  <div className="exam-card-login-row">
-                    <span className="exam-card-login-key">PASS</span>
-                    <span className="exam-card-login-val">{siswa.password_plain || '123456'}</span>
+                  <div className="exam-card-meta-row">
+                    <div className="exam-card-meta-item">
+                      <span className="exam-card-label-narrow">Kelas / Absen :</span>
+                      <span className="exam-card-val-meta">{siswa.kelas || '-'} / No. {siswa.no_absen || '-'}</span>
+                    </div>
+                    <div className="exam-card-meta-item">
+                      <span className="exam-card-label-narrow">ID Peserta :</span>
+                      <span className="exam-card-val-meta" style={{ fontFamily: 'Consolas, monospace' }}>{siswa.username}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="exam-card-footer">
-                <span className="exam-card-footer-portal">
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                  ujian.about-wrwn.site
-                </span>
-                <span>Simpan & jaga kerahasiaan akun</span>
+                {/* Bagian Bawah: Kiri (Login Box & Portal) & Kanan (Tanggal & TTD Guru Pengampu) */}
+                <div className="exam-card-bottom-grid">
+                  {/* Sisi Kiri: Box Akses Login & Portal */}
+                  <div className="exam-card-login-col">
+                    <div className="exam-card-login-box">
+                      <div className="exam-card-login-head">AKSES LOGIN</div>
+                      <div className="exam-card-login-row">
+                        <span className="exam-card-login-key">USER</span>
+                        <span className="exam-card-login-val">{siswa.username}</span>
+                      </div>
+                      <div className="exam-card-login-row">
+                        <span className="exam-card-login-key">PASS</span>
+                        <span className="exam-card-login-val">{siswa.password_plain || '123456'}</span>
+                      </div>
+                    </div>
+                    <div className="exam-card-portal-badge">
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                      <span>ujian.about-wrwn.site</span>
+                    </div>
+                  </div>
+
+                  {/* Sisi Kanan (Sudut Bawah Kanan): Tanggal Cetak & TTD Guru Pengampu */}
+                  <div className="exam-card-sign-col">
+                    <div className="exam-card-sign-date">{formatCardDate()}</div>
+                    <div className="exam-card-sign-label">Guru Pengampu,</div>
+                    <div className="exam-card-sign-space"></div>
+                    <div className="exam-card-sign-name" title={namaGuru}>( {namaGuru} )</div>
+                  </div>
+                </div>
+
+                {/* Footer Kartu */}
+                <div className="exam-card-footer">
+                  <span>*Simpan kartu & jaga kerahasiaan akses login</span>
+                  <span>Kartu Resmi Peserta</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -1398,198 +1430,251 @@ export default function SiswaManagementPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  {filteredPrintStudents.map((siswa, idx) => (
-                    <div
-                      key={siswa.id || idx}
-                      style={{
-                        width: '100%',
-                        maxWidth: 360,
-                        aspectRatio: '85.6 / 53.98',
-                        background: '#ffffff',
-                        border: '1px dashed #64748b',
-                        borderRadius: 10,
-                        padding: '10px 14px',
-                        boxSizing: 'border-box',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07)',
-                        position: 'relative',
-                      }}
-                    >
+                  {filteredPrintStudents.map((siswa, idx) => {
+                    const namaGuru = siswa.nama_guru || user?.nama || 'Guru Pengampu';
+                    return (
                       <div
+                        key={siswa.id || idx}
                         style={{
-                          position: 'absolute',
-                          top: 2,
-                          left: 4,
-                          fontSize: 9,
-                          color: '#94a3b8',
-                          lineHeight: 1,
-                        }}
-                      >
-                        ✂
-                      </div>
-                      {/* Card Header */}
-                      <div
-                        style={{
-                          borderBottom: '1.5px solid #0f172a',
-                          paddingBottom: 6,
+                          width: '100%',
+                          maxWidth: 360,
+                          aspectRatio: '85.6 / 53.98',
+                          background: '#ffffff',
+                          border: '1px dashed #64748b',
+                          borderRadius: 10,
+                          padding: '9px 12px 7px 12px',
+                          boxSizing: 'border-box',
                           display: 'flex',
+                          flexDirection: 'column',
                           justifyContent: 'space-between',
-                          alignItems: 'center',
+                          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07)',
+                          position: 'relative',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5">
-                            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
-                            <polyline points="9 12 11 14 15 10" />
-                          </svg>
-                          <div>
-                            <div style={{ fontSize: 10.5, fontWeight: 900, color: '#0f172a', letterSpacing: 0.5, lineHeight: 1.1 }}>
-                              ULANGAN DIGITAL
-                            </div>
-                            <div style={{ fontSize: 7.5, color: '#64748b', fontWeight: 600 }}>
-                              SISTEM ASESMEN & UJIAN
-                            </div>
-                          </div>
-                        </div>
                         <div
                           style={{
+                            position: 'absolute',
+                            top: 2,
+                            left: 4,
                             fontSize: 9,
-                            fontWeight: 800,
-                            background: '#0f172a',
-                            color: '#ffffff',
-                            padding: '2px 7px',
-                            borderRadius: 3,
-                            letterSpacing: 0.4,
+                            color: '#94a3b8',
+                            lineHeight: 1,
                           }}
                         >
-                          KARTU PESERTA
+                          ✂
                         </div>
-                      </div>
 
-                      {/* Card Body */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 10,
-                          alignItems: 'center',
-                          flex: 1,
-                          padding: '4px 0',
-                        }}
-                      >
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                        {/* Card Header Kop Resmi & Universal */}
+                        <div
+                          style={{
+                            borderBottom: '1.2px solid #0f172a',
+                            paddingBottom: 4,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5">
+                              <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
+                              <polyline points="9 12 11 14 15 10" />
+                            </svg>
+                            <div>
+                              <div style={{ fontSize: 9.8, fontWeight: 900, color: '#0f172a', letterSpacing: 0.3, lineHeight: 1.1 }}>
+                                KARTU PESERTA ASESMEN & UJIAN
+                              </div>
+                              <div style={{ fontSize: 7, color: '#64748b', fontWeight: 600 }}>
+                                Asesmen Berbasis Komputer & CBT
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 8,
+                              fontWeight: 800,
+                              background: '#0f172a',
+                              color: '#ffffff',
+                              padding: '2px 6px',
+                              borderRadius: 3,
+                              letterSpacing: 0.4,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            KARTU LOGIN
+                          </div>
+                        </div>
+
+                        {/* Identitas Siswa Full-Width (Anti-Terpotong) */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                            paddingBottom: 4,
+                            borderBottom: '0.6px dashed #cbd5e1',
+                          }}
+                        >
                           <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
-                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0 }}>Nama Siswa</span>
+                            <span style={{ width: 68, color: '#475569', fontWeight: 600, flexShrink: 0, fontSize: 9 }}>Nama Siswa</span>
                             <span
                               style={{
                                 flex: 1,
                                 fontWeight: 800,
                                 color: '#000000',
                                 textTransform: 'uppercase',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
+                                lineHeight: 1.15,
+                                fontSize: 9.8,
+                                wordBreak: 'break-word',
                               }}
                             >
                               : {siswa.nama}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
-                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0 }}>Kelas / Absen</span>
-                            <span style={{ flex: 1, fontWeight: 700, color: '#0f172a' }}>
-                              : {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
-                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0 }}>ID Peserta</span>
-                            <span style={{ flex: 1, fontFamily: 'Consolas, monospace', fontWeight: 600, color: '#0f172a' }}>
-                              : {siswa.username}
-                            </span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8.5 }}>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                              <span style={{ color: '#475569', fontWeight: 600 }}>Kelas / Absen :</span>
+                              <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                                {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                              <span style={{ color: '#475569', fontWeight: 600 }}>ID Peserta :</span>
+                              <span style={{ fontFamily: 'Consolas, monospace', fontWeight: 700, color: '#0f172a' }}>
+                                {siswa.username}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Login Credential Box */}
+                        {/* Bagian Bawah: Kiri (Login Box) & Kanan (Tanggal & TTD Guru Pengampu) */}
                         <div
                           style={{
-                            width: 125,
-                            border: '1px solid #0f172a',
-                            borderRadius: 4,
-                            background: '#f8fafc',
-                            padding: '4px 6px',
                             display: 'flex',
-                            flexDirection: 'column',
-                            gap: 3,
-                            flexShrink: 0,
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            gap: 8,
+                            flex: 1,
+                            paddingTop: 3,
                           }}
                         >
-                          <div
-                            style={{
-                              fontSize: 7.5,
-                              fontWeight: 800,
-                              color: '#475569',
-                              letterSpacing: 0.5,
-                              borderBottom: '0.5px solid #cbd5e1',
-                              paddingBottom: 2,
-                              textAlign: 'center',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            AKSES LOGIN
+                          {/* Sisi Kiri: Login Box & Portal Link */}
+                          <div style={{ width: 125, display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+                            <div
+                              style={{
+                                border: '1px solid #0f172a',
+                                borderRadius: 3,
+                                background: '#f8fafc',
+                                padding: '3px 5px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: 7,
+                                  fontWeight: 800,
+                                  color: '#475569',
+                                  letterSpacing: 0.5,
+                                  borderBottom: '0.5px solid #cbd5e1',
+                                  paddingBottom: 1,
+                                  textAlign: 'center',
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                AKSES LOGIN
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  fontFamily: 'Consolas, monospace',
+                                  fontSize: 8.5,
+                                  lineHeight: 1.1,
+                                }}
+                              >
+                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 7.5 }}>USER</span>
+                                <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.username}</span>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  fontFamily: 'Consolas, monospace',
+                                  fontSize: 8.5,
+                                  lineHeight: 1.1,
+                                }}
+                              >
+                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 7.5 }}>PASS</span>
+                                <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.password_plain || '123456'}</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 7, fontWeight: 700, color: '#334155' }}>
+                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                              </svg>
+                              <span>ujian.about-wrwn.site</span>
+                            </div>
                           </div>
+
+                          {/* Sisi Kanan (Sudut Bawah Kanan): Tanggal Cetak & TTD Guru Pengampu */}
                           <div
                             style={{
+                              flex: 1,
                               display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              fontFamily: 'Consolas, monospace',
-                              fontSize: 10,
-                              lineHeight: 1.1,
+                              flexDirection: 'column',
+                              alignItems: 'flex-end',
+                              textAlign: 'right',
+                              minWidth: 0,
                             }}
                           >
-                            <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8.5 }}>USER</span>
-                            <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.username}</span>
-                          </div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              fontFamily: 'Consolas, monospace',
-                              fontSize: 10,
-                              lineHeight: 1.1,
-                            }}
-                          >
-                            <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8.5 }}>PASS</span>
-                            <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.password_plain || '123456'}</span>
+                            <div style={{ fontSize: 7.5, fontWeight: 600, color: '#334155', lineHeight: 1.1 }}>
+                              {formatCardDate()}
+                            </div>
+                            <div style={{ fontSize: 7.5, fontWeight: 600, color: '#475569', lineHeight: 1.1, marginTop: 1 }}>
+                              Guru Pengampu,
+                            </div>
+                            <div style={{ height: 24, width: '100%' }}></div>
+                            <div
+                              style={{
+                                fontSize: 8.5,
+                                fontWeight: 800,
+                                color: '#0f172a',
+                                lineHeight: 1.1,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: 170,
+                              }}
+                              title={namaGuru}
+                            >
+                              ( {namaGuru} )
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Card Footer */}
-                      <div
-                        style={{
-                          borderTop: '0.8px solid #cbd5e1',
-                          paddingTop: 4,
-                          fontSize: 8,
-                          color: '#475569',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <span style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 3 }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="2" y1="12" x2="22" y2="12" />
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                          </svg>
-                          ujian.about-wrwn.site
-                        </span>
-                        <span>Simpan & jaga kerahasiaan akun</span>
+                        {/* Card Footer */}
+                        <div
+                          style={{
+                            borderTop: '0.6px solid #e2e8f0',
+                            paddingTop: 3,
+                            fontSize: 7,
+                            color: '#64748b',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <span>*Simpan kartu & jaga kerahasiaan akun login</span>
+                          <span style={{ fontWeight: 600, color: '#0f172a' }}>Kartu Resmi Peserta</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
