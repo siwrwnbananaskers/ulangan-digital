@@ -330,48 +330,141 @@ export default function SuperAdminDashboard() {
               </p>
             </div>
 
-            {/* Animasi Anak-Anak Lari Kejar-Kejaran (Minimalist & Anti AI-Slop) */}
-            <div className="kids-runner-track" title="Aktivitas siswa sekolah">
+            {/* Animasi Rombongan Sekolah Lari Kejar-Kejaran (Minimalist Vector & Anti AI-Slop) */}
+            <div className="kids-runner-track" title="Rombongan sekolah: Siswa, Guru, Operator, Kepsek, Emak, Bapak, Nenek & Kakek">
               <div className="kids-runner-group">
-                {/* Garis-garis angin kecepatan */}
+                {/* Garis-garis angin kecepatan paling belakang */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.5, marginBottom: 7 }}>
                   <div style={{ width: 12, height: 1.5, background: '#94a3b8', borderRadius: 1 }} />
-                  <div style={{ width: 8, height: 1.5, background: '#cbd5e1', borderRadius: 1, marginLeft: 3 }} />
+                  <div style={{ width: 8, height: 1.5, background: '#cbd5e1', borderRadius: 1, marginLeft: 4 }} />
                   <div style={{ width: 10, height: 1.5, background: '#94a3b8', borderRadius: 1 }} />
                 </div>
 
-                {/* Anak 3 (Mengejar paling belakang sambil melambaikan tangan) */}
-                <div className="kid-runner-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <svg width="22" height="24" viewBox="0 0 24 26" fill="none">
-                    <circle cx="13" cy="5" r="3" fill="#64748b" />
-                    <path d="M11.5 8.5 L9 15.5 L11 15.5 L13.5 9.5 Z" fill="#64748b" />
-                    <rect x="6.5" y="9" width="3" height="4.5" rx="1.2" fill="#94a3b8" />
-                    <path d="M12.5 9.5 L16 5.5 L17 6.2 L13.5 10.5 Z" fill="#64748b" />
-                    <path d="M11 15 L14 21 L15.5 21 L12.5 15 Z" fill="#64748b" />
-                    <path d="M9 15 L5 19.5 L4 18.5 L7.5 14 Z" fill="#475569" />
+                {/* 8. Kakek (Bawa tongkat jalan, lari santai terseok-seok) */}
+                <div className="runner-bob-8" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Kakek (Bawa tongkat)">
+                  <svg width="22" height="25" viewBox="0 0 24 26" fill="none">
+                    <circle cx="11" cy="5.5" r="3" fill="#94a3b8" />
+                    <path d="M10 9 L7.5 16 L9.5 16 L12 10 Z" fill="#94a3b8" />
+                    {/* Tongkat jalan */}
+                    <line x1="15" y1="11" x2="16.5" y2="24" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M14 11 A 2 2 0 0 0 16 11" stroke="#64748b" strokeWidth="1.5" fill="none" />
+                    {/* Tangan pegang tongkat */}
+                    <path d="M11 10 L14.5 12 L13.5 13 L10.5 11 Z" fill="#94a3b8" />
+                    {/* Kaki bungkuk */}
+                    <path d="M9.5 15.5 L12 21 L13.5 21 L11 15.5 Z" fill="#94a3b8" />
+                    <path d="M7.5 15.5 L4.5 20 L3.5 19 L6 14.5 Z" fill="#64748b" />
                   </svg>
                 </div>
 
-                {/* Anak 2 (Mengejar di tengah, tangan terayun lari semangat) */}
-                <div className="kid-runner-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {/* 7. Nenek (Rambut sanggul, lari ceria) */}
+                <div className="runner-bob-7" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Nenek (Semangat)">
+                  <svg width="22" height="25" viewBox="0 0 24 26" fill="none">
+                    {/* Sanggul & Kepala */}
+                    <circle cx="8" cy="4" r="1.8" fill="#64748b" />
+                    <circle cx="12" cy="5.5" r="3" fill="#64748b" />
+                    {/* Gaun/Baju */}
+                    <path d="M10.5 9 L7 17 L13 17 L13 9.5 Z" fill="#64748b" />
+                    {/* Tangan terayun */}
+                    <path d="M12 10.5 L15.5 14 L14.5 14.8 L11 11.5 Z" fill="#64748b" />
+                    {/* Kaki lari */}
+                    <path d="M11 17 L13 21.5 L14.5 21.5 L12 17 Z" fill="#475569" />
+                    <path d="M8.5 17 L6 21 L5 20 L7.5 17 Z" fill="#475569" />
+                  </svg>
+                </div>
+
+                {/* 6. Bapak (Pake peci/topi, lari panik) */}
+                <div className="runner-bob-6" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Bapak (Pake peci)">
+                  <svg width="23" height="26" viewBox="0 0 24 26" fill="none">
+                    {/* Peci hitam */}
+                    <rect x="10.5" y="1.5" width="5.5" height="2.5" rx="0.8" fill="#0f172a" />
+                    <circle cx="13" cy="5.5" r="3" fill="#475569" />
+                    {/* Badan kemeja */}
+                    <path d="M11.5 9 L8.5 16.5 L11 16.5 L13.5 10 Z" fill="#475569" />
+                    {/* Tangan mengayun */}
+                    <path d="M12.5 10 L17 12 L16.5 13.2 L11.5 11 Z" fill="#475569" />
+                    {/* Kaki langkah lebar */}
+                    <path d="M11 16 L15 22 L16.5 21.5 L12.5 16 Z" fill="#334155" />
+                    <path d="M9 16 L4.5 21.5 L3.5 20.5 L7.5 15 Z" fill="#1e293b" />
+                  </svg>
+                </div>
+
+                {/* 5. Emak (Ibu bawa tas jinjing ngejar) */}
+                <div className="runner-bob-5" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Emak (Ngejar anak)">
+                  <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
+                    <circle cx="13" cy="5" r="3.2" fill="#334155" />
+                    {/* Badan gamis/daster */}
+                    <path d="M11.5 8.5 L8 17 L13.5 17 L13.5 9.5 Z" fill="#334155" />
+                    {/* Tas jinjing */}
+                    <rect x="15" y="12" width="4" height="4.5" rx="1" fill="#f59e0b" />
+                    <path d="M16 12 A 1.5 1.5 0 0 1 18 12" stroke="#d97706" strokeWidth="1" fill="none" />
+                    {/* Tangan bawa tas */}
+                    <path d="M12.5 9.5 L16.5 12.5 L15.5 13.5 L11.5 10.5 Z" fill="#334155" />
+                    {/* Kaki lari */}
+                    <path d="M11.5 17 L14.5 22 L16 21.5 L13 17 Z" fill="#1e293b" />
+                    <path d="M9 17 L6 21.5 L5 20.5 L8 17 Z" fill="#0f172a" />
+                  </svg>
+                </div>
+
+                {/* 4. Kepala Sekolah (Kepsek berjas & dasi bawa map dinas) */}
+                <div className="runner-bob-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Kepala Sekolah (Bawa map dinas)">
+                  <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
+                    <circle cx="13.5" cy="5" r="3.2" fill="#0f172a" />
+                    {/* Jas */}
+                    <path d="M11.5 8.5 L8.5 16.5 L12 16.5 L14 9.5 Z" fill="#0f172a" />
+                    {/* Dasi biru */}
+                    <path d="M12.5 9 L13 13 L12.2 13 Z" fill="#0a66c2" />
+                    {/* Map dinas */}
+                    <rect x="15" y="10" width="5" height="4" rx="0.8" fill="#d97706" />
+                    {/* Tangan bawa map */}
+                    <path d="M12.5 9.5 L17 11.5 L16.5 12.8 L11.5 10.5 Z" fill="#0f172a" />
+                    {/* Celana panjang & sepatu */}
+                    <path d="M11 16 L15 22 L16.5 22 L12.5 16 Z" fill="#0f172a" />
+                    <path d="M9 16 L5 21.5 L4 20.5 L7.5 15.5 Z" fill="#1e293b" />
+                  </svg>
+                </div>
+
+                {/* 3. Operator Sekolah (OPS lari buru-buru bawa laptop) */}
+                <div className="runner-bob-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Operator Sekolah (Bawa laptop)">
                   <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
-                    <circle cx="14" cy="5" r="3.2" fill="#334155" />
-                    <path d="M12 8.5 L9 16 L11 16 L14 10 Z" fill="#334155" />
-                    <rect x="6.5" y="9.5" width="3.2" height="5" rx="1.5" fill="#64748b" />
-                    <path d="M13 9.5 L18 11.5 L17.5 13 L12 11 Z" fill="#334155" />
-                    <path d="M11 15 L15 19.5 L17 19 L13 15 Z" fill="#334155" />
-                    <path d="M9.5 15 L4 22 L3 21 L8 14.5 Z" fill="#1e293b" />
+                    <circle cx="13" cy="5" r="3" fill="#334155" />
+                    <path d="M11.5 8.5 L9 16 L11.5 16 L13.5 9.5 Z" fill="#334155" />
+                    {/* Mini Laptop terbuka */}
+                    <path d="M15 10 L19 10 L18 13 L14 13 Z" fill="#38bdf8" />
+                    <line x1="14" y1="13" x2="18.5" y2="13" stroke="#0284c7" strokeWidth="1.2" />
+                    {/* Tangan jinjing laptop */}
+                    <path d="M12 9.5 L16 11.5 L15 12.8 L11 10.5 Z" fill="#334155" />
+                    {/* Kaki lari gesit */}
+                    <path d="M11 15.5 L14.5 21.5 L16 21 Z" fill="#1e293b" />
+                    <path d="M9 15.5 L5 21 L4 20 L7.5 15 Z" fill="#334155" />
                   </svg>
                 </div>
 
-                {/* Anak 1 (Pemimpin di depan, bawa tas sekolah biru, lari kencang) */}
-                <div className="kid-runner-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {/* 2. Guru (Bu Guru bawa buku/map tugas) */}
+                <div className="runner-bob-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Bu Guru (Bawa buku tugas)">
+                  <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
+                    <circle cx="14" cy="5" r="3.2" fill="#1e293b" />
+                    <path d="M12 8.5 L9 16 L11.5 16 L14 10 Z" fill="#1e293b" />
+                    {/* Buku tugas biru */}
+                    <rect x="15" y="10" width="4.5" height="5" rx="1" fill="#2563eb" />
+                    {/* Tangan bawa buku */}
+                    <path d="M13 9.5 L17.5 11.5 L17 13 L12 11 Z" fill="#1e293b" />
+                    {/* Kaki lari */}
+                    <path d="M11 15 L15 19.5 L17 19 L13 15 Z" fill="#1e293b" />
+                    <path d="M9.5 15 L4 22 L3 21 L8 14.5 Z" fill="#0f172a" />
+                  </svg>
+                </div>
+
+                {/* 1. Siswa (Anak Sekolah ransel biru lari paling depan ngibrit kabur!) */}
+                <div className="runner-bob-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} title="Siswa (Kabur duluan)">
                   <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
                     <circle cx="15" cy="5" r="3.4" fill="#0a66c2" />
                     <path d="M13 8.5 L10 16 L12 16 L15 10 Z" fill="#0a66c2" />
+                    {/* Ransel sekolah biru muda */}
                     <rect x="7" y="9" width="3.5" height="5.5" rx="1.5" fill="#38bdf8" />
+                    {/* Tangan mengayun kencang */}
                     <path d="M14 9.5 L18.5 13 L17.5 14 L13 11 Z" fill="#0a66c2" />
                     <path d="M12 10 L8 12.5 L7.5 11.5 L11 9.5 Z" fill="#0284c7" />
+                    {/* Kaki lari ngibrit */}
                     <path d="M12 15 L17.5 21.5 L19 21 L14 16 Z" fill="#0a66c2" />
                     <path d="M10 15 L5 20.5 L4 19.5 L8 14 Z" fill="#0284c7" />
                   </svg>
