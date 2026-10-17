@@ -1228,7 +1228,7 @@ export default function SiswaManagementPage() {
 
                   {/* Sisi Kanan (Sudut Bawah Kanan): Tanggal Cetak & TTD Guru Pengampu */}
                   <div className="exam-card-sign-col">
-                    <div>
+                    <div className="exam-card-sign-head">
                       <div className="exam-card-sign-date">{formatCardDate()}</div>
                       <div className="exam-card-sign-label">Guru Pengampu,</div>
                     </div>
@@ -1684,16 +1684,16 @@ export default function SiswaManagementPage() {
                               display: 'flex',
                               flexDirection: 'column',
                               justifyContent: 'space-between',
-                              alignItems: 'flex-end',
-                              textAlign: 'right',
+                              alignItems: 'center',
+                              textAlign: 'center',
                               minWidth: 0,
                             }}
                           >
-                            <div>
-                              <div style={{ fontSize: 8, fontWeight: 600, color: '#334155', lineHeight: 1.2 }}>
+                            <div style={{ width: '100%', textAlign: 'center' }}>
+                              <div style={{ fontSize: 8, fontWeight: 600, color: '#334155', lineHeight: 1.2, textAlign: 'center' }}>
                                 {formatCardDate()}
                               </div>
-                              <div style={{ fontSize: 8, fontWeight: 600, color: '#475569', lineHeight: 1.2, marginTop: 1 }}>
+                              <div style={{ fontSize: 8, fontWeight: 600, color: '#475569', lineHeight: 1.2, marginTop: 1, textAlign: 'center' }}>
                                 Guru Pengampu,
                               </div>
                             </div>
@@ -1705,13 +1705,14 @@ export default function SiswaManagementPage() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                textAlign: 'center',
                               }}
                             >
                               {ttdGuru && (
                                 <img
                                   src={ttdGuru}
                                   alt="TTD Guru"
-                                  style={{ maxHeight: 26, maxWidth: 110, objectFit: 'contain' }}
+                                  style={{ maxHeight: 26, maxWidth: 110, objectFit: 'contain', display: 'block', margin: '0 auto' }}
                                 />
                               )}
                             </div>
@@ -1724,7 +1725,8 @@ export default function SiswaManagementPage() {
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
-                                maxWidth: 170,
+                                width: '100%',
+                                textAlign: 'center',
                               }}
                               title={namaGuru}
                             >
