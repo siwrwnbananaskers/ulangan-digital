@@ -330,6 +330,55 @@ export default function SuperAdminDashboard() {
               </p>
             </div>
 
+            {/* Animasi Anak-Anak Lari Kejar-Kejaran (Minimalist & Anti AI-Slop) */}
+            <div className="kids-runner-track" title="Aktivitas siswa sekolah">
+              <div className="kids-runner-group">
+                {/* Garis-garis angin kecepatan */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.5, marginBottom: 7 }}>
+                  <div style={{ width: 12, height: 1.5, background: '#94a3b8', borderRadius: 1 }} />
+                  <div style={{ width: 8, height: 1.5, background: '#cbd5e1', borderRadius: 1, marginLeft: 3 }} />
+                  <div style={{ width: 10, height: 1.5, background: '#94a3b8', borderRadius: 1 }} />
+                </div>
+
+                {/* Anak 3 (Mengejar paling belakang sambil melambaikan tangan) */}
+                <div className="kid-runner-3" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <svg width="22" height="24" viewBox="0 0 24 26" fill="none">
+                    <circle cx="13" cy="5" r="3" fill="#64748b" />
+                    <path d="M11.5 8.5 L9 15.5 L11 15.5 L13.5 9.5 Z" fill="#64748b" />
+                    <rect x="6.5" y="9" width="3" height="4.5" rx="1.2" fill="#94a3b8" />
+                    <path d="M12.5 9.5 L16 5.5 L17 6.2 L13.5 10.5 Z" fill="#64748b" />
+                    <path d="M11 15 L14 21 L15.5 21 L12.5 15 Z" fill="#64748b" />
+                    <path d="M9 15 L5 19.5 L4 18.5 L7.5 14 Z" fill="#475569" />
+                  </svg>
+                </div>
+
+                {/* Anak 2 (Mengejar di tengah, tangan terayun lari semangat) */}
+                <div className="kid-runner-2" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <svg width="24" height="25" viewBox="0 0 24 26" fill="none">
+                    <circle cx="14" cy="5" r="3.2" fill="#334155" />
+                    <path d="M12 8.5 L9 16 L11 16 L14 10 Z" fill="#334155" />
+                    <rect x="6.5" y="9.5" width="3.2" height="5" rx="1.5" fill="#64748b" />
+                    <path d="M13 9.5 L18 11.5 L17.5 13 L12 11 Z" fill="#334155" />
+                    <path d="M11 15 L15 19.5 L17 19 L13 15 Z" fill="#334155" />
+                    <path d="M9.5 15 L4 22 L3 21 L8 14.5 Z" fill="#1e293b" />
+                  </svg>
+                </div>
+
+                {/* Anak 1 (Pemimpin di depan, bawa tas sekolah biru, lari kencang) */}
+                <div className="kid-runner-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <svg width="24" height="26" viewBox="0 0 24 26" fill="none">
+                    <circle cx="15" cy="5" r="3.4" fill="#0a66c2" />
+                    <path d="M13 8.5 L10 16 L12 16 L15 10 Z" fill="#0a66c2" />
+                    <rect x="7" y="9" width="3.5" height="5.5" rx="1.5" fill="#38bdf8" />
+                    <path d="M14 9.5 L18.5 13 L17.5 14 L13 11 Z" fill="#0a66c2" />
+                    <path d="M12 10 L8 12.5 L7.5 11.5 L11 9.5 Z" fill="#0284c7" />
+                    <path d="M12 15 L17.5 21.5 L19 21 L14 16 Z" fill="#0a66c2" />
+                    <path d="M10 15 L5 20.5 L4 19.5 L8 14 Z" fill="#0284c7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
             {/* Kelompok Tombol Aksi (3 Tombol Muat 1 Baris) */}
             <div
               style={{
@@ -337,7 +386,7 @@ export default function SuperAdminDashboard() {
                 alignItems: 'center',
                 gap: 8,
                 flexWrap: 'wrap',
-                marginTop: 16,
+                marginTop: 4,
               }}
             >
               <a
