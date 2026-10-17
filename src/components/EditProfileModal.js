@@ -5,12 +5,14 @@ import { useState, useRef } from 'react';
 export default function EditProfileModal({ user, onClose, onUpdate }) {
   const [nama, setNama] = useState(user?.nama || '');
   const [fotoProfil, setFotoProfil] = useState(user?.foto_profil || '');
+  const [tandaTangan, setTandaTangan] = useState(user?.tanda_tangan || '');
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const fileInputRef = useRef(null);
+  const ttdInputRef = useRef(null);
 
-  // Compress & crop image to lightweight 256x256 data URI
+  // Compress & crop avatar image to lightweight 256x256 data URI
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -50,6 +52,52 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
     reader.readAsDataURL(file);
   };
 
+  // Process signature image: auto scale to crisp transparent/clean PNG data URI
+  const handleTtdChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Pilih file gambar tanda tangan yang valid (PNG, JPG, atau WEBP).');
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      setErrorMsg('Ukuran berkas tanda tangan terlalu besar (maksimal 8MB).');
+      return;
+    }
+
+    setErrorMsg('');
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        const maxW = 480;
+        const maxH = 240;
+
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const dataUrl = canvas.toDataURL('image/png');
+        setTandaTangan(dataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!nama.trim()) {
@@ -72,6 +120,7 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
         body: JSON.stringify({
           nama: nama.trim(),
           foto_profil: fotoProfil || null,
+          tanda_tangan: tandaTangan || null,
         }),
       });
 
@@ -259,16 +308,109 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: 20 }}>
-            <label className="form-label" style={{ fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
-              Hak Akses / Peran
-            </label>
-            <div>
-              <span className="badge badge-primary" style={{ fontSize: 11, padding: '4px 10px' }}>
-                {user?.role === 'superadmin' ? 'Superadmin (Owner)' : user?.role === 'guru' ? 'Guru Pengawas' : 'Siswa'}
-              </span>
+          {/* Tanda Tangan Digital Guru Section (Khusus Guru & Superadmin) */}
+          {user?.role !== 'siswa' && (
+            <div
+              style={{
+                marginBottom: 20,
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 8,
+                padding: '14px 16px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: 10,
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: '#0f172a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      margin: 0,
+                    }}
+                  >
+                    <span>✍️</span> Tanda Tangan Digital Guru
+                  </label>
+                  <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
+                    Otomatis dicantumkan pada Kartu Login Siswa, Cetak Lembar Hasil Siswa, dan Leger Nilai.
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => ttdInputRef.current?.click()}
+                    style={{ fontSize: 11.5, padding: '4px 10px', borderRadius: 6 }}
+                  >
+                    {tandaTangan ? 'Ganti TTD' : 'Unggah TTD'}
+                  </button>
+                  {tandaTangan && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setTandaTangan('')}
+                      style={{ fontSize: 11.5, padding: '4px 8px', color: '#dc2626' }}
+                    >
+                      Hapus
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <input
+                type="file"
+                ref={ttdInputRef}
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleTtdChange}
+                style={{ display: 'none' }}
+              />
+
+              {/* TTD Preview Container */}
+              <div
+                onClick={() => ttdInputRef.current?.click()}
+                style={{
+                  width: '100%',
+                  minHeight: 74,
+                  maxHeight: 110,
+                  border: '1.5px dashed #cbd5e1',
+                  borderRadius: 6,
+                  background: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 8,
+                  transition: 'all 0.2s',
+                }}
+                title="Klik untuk memilih file tanda tangan (format PNG transparan disarankan)"
+              >
+                {tandaTangan ? (
+                  <img
+                    src={tandaTangan}
+                    alt="Tanda Tangan Guru"
+                    style={{ maxHeight: 70, maxWidth: '90%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                    <div style={{ fontSize: 20, marginBottom: 2 }}>✍️</div>
+                    <div style={{ fontSize: 11.5, fontWeight: 600 }}>Klik untuk Unggah Foto/Scan Tanda Tangan</div>
+                    <div style={{ fontSize: 10, marginTop: 2 }}>Format PNG (latar transparan/putih), JPG atau WEBP</div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>

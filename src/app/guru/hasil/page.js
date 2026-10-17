@@ -13,6 +13,7 @@ import {
   printRekapDocument,
 } from '@/lib/generateRekapNilai';
 import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
+import EditProfileModal from '@/components/EditProfileModal';
 
 export default function GuruHasilPage() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -23,6 +24,7 @@ export default function GuruHasilPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [showTtdModal, setShowTtdModal] = useState(false);
   const [modalJawaban, setModalJawaban] = useState(null);
   const [filterKoreksi, setFilterKoreksi] = useState('all'); // 'all' | 'belum' | 'sudah'
   const { dialogState, confirm: showConfirm, alert: showAlert, handleConfirm, handleClose } = useConfirmDialog();
@@ -189,6 +191,7 @@ export default function GuruHasilPage() {
         jawaban: jawabanData,
         mode: initialMode,
         guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+        guruTtd: user?.tanda_tangan || examDetail?.guru_tanda_tangan || sesiData?.guru_tanda_tangan || null,
       });
       setImageModal((prev) => ({
         ...prev,
@@ -211,6 +214,7 @@ export default function GuruHasilPage() {
         jawaban: imageModal.jawaban,
         mode: newMode,
         guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+        guruTtd: user?.tanda_tangan || examDetail?.guru_tanda_tangan || imageModal.sesi?.guru_tanda_tangan || null,
       });
       setImageModal((prev) => ({ ...prev, mode: newMode, loading: false, dataUrl }));
     } catch (err) {
@@ -280,6 +284,7 @@ export default function GuruHasilPage() {
         results,
         stats,
         guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+        guruTtd: user?.tanda_tangan || examDetail?.guru_tanda_tangan || null,
       });
       setRekapModal((prev) => ({
         ...prev,
@@ -299,6 +304,7 @@ export default function GuruHasilPage() {
       results,
       stats,
       guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+      guruTtd: user?.tanda_tangan || examDetail?.guru_tanda_tangan || null,
     });
   };
 
@@ -329,6 +335,7 @@ export default function GuruHasilPage() {
       results,
       stats,
       guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+      guruTtd: user?.tanda_tangan || examDetail?.guru_tanda_tangan || null,
       onError: (msg) => {
         showAlert({
           title: 'Pop-up Diblokir',
@@ -451,6 +458,7 @@ export default function GuruHasilPage() {
           jawaban: studentAnswers,
           mode: targetMode,
           guruNama: user?.nama || examDetail?.guru_nama || 'Guru Pengampu',
+          guruTtd: user?.tanda_tangan || examDetail?.guru_tanda_tangan || null,
         });
 
         generatedItems.push({
@@ -832,6 +840,21 @@ export default function GuruHasilPage() {
                         <line x1="8" y1="17" x2="16" y2="17" />
                       </svg>
                       <span>Unduh Excel (.xlsx)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm hasil-btn-secondary"
+                      onClick={() => setShowTtdModal(true)}
+                      style={{
+                        background: user?.tanda_tangan ? '#f0fdf4' : '#ffffff',
+                        borderColor: user?.tanda_tangan ? '#86efac' : '#cbd5e1',
+                        color: user?.tanda_tangan ? '#166534' : '#334155',
+                      }}
+                      title="Upload atau ganti foto tanda tangan digital guru"
+                    >
+                      <span>✍️</span>
+                      <span>{user?.tanda_tangan ? 'TTD Siap' : 'Upload TTD'}</span>
                     </button>
 
                     <button
@@ -2511,6 +2534,15 @@ export default function GuruHasilPage() {
 
       {/* Modal Konfirmasi Modern */}
       <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
+
+      {/* Modal TTD Guru */}
+      {showTtdModal && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowTtdModal(false)}
+          onUpdate={() => {}}
+        />
+      )}
     </div>
   );
 }

@@ -20,14 +20,17 @@ export async function GET(request) {
     }
 
     const db = getDB();
-    // Ensure column exists
+    // Ensure columns exist in SQLite / Cloudflare D1
     try {
       await db.run('ALTER TABLE users ADD COLUMN foto_profil TEXT');
+    } catch (_) {}
+    try {
+      await db.run('ALTER TABLE users ADD COLUMN tanda_tangan TEXT');
     } catch (_) {}
 
     // Fetch fresh record from database
     const dbUser = await db.getOne(
-      'SELECT id, username, nama, role, guru_id, kelas, no_absen, foto_profil FROM users WHERE id = ?',
+      'SELECT id, username, nama, role, guru_id, kelas, no_absen, foto_profil, tanda_tangan FROM users WHERE id = ?',
       [user.id]
     );
 
@@ -47,7 +50,7 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { nama, foto_profil } = body;
+    const { nama, foto_profil, tanda_tangan } = body;
 
     if (!nama || !nama.trim()) {
       return apiError('Nama lengkap tidak boleh kosong', 400);
@@ -55,27 +58,31 @@ export async function PUT(request) {
 
     const db = getDB();
 
-    // Ensure foto_profil column exists in SQLite/Cloudflare D1 schema
+    // Ensure columns exist in SQLite/Cloudflare D1 schema
     try {
       await db.run('ALTER TABLE users ADD COLUMN foto_profil TEXT');
+    } catch (_) {}
+    try {
+      await db.run('ALTER TABLE users ADD COLUMN tanda_tangan TEXT');
     } catch (_) {}
 
     const cleanNama = nama.trim();
     const cleanFoto = foto_profil !== undefined ? foto_profil : null;
+    const cleanTtd = tanda_tangan !== undefined ? tanda_tangan : null;
 
     // Persist to Cloudflare D1 SQL database
     await db.run(
-      'UPDATE users SET nama = ?, foto_profil = ?, updated_at = datetime("now") WHERE id = ?',
-      [cleanNama, cleanFoto, user.id]
+      'UPDATE users SET nama = ?, foto_profil = ?, tanda_tangan = ?, updated_at = datetime("now") WHERE id = ?',
+      [cleanNama, cleanFoto, cleanTtd, user.id]
     );
 
     // Fetch freshly updated row
     const updatedUser = await db.getOne(
-      'SELECT id, username, nama, role, guru_id, kelas, no_absen, foto_profil FROM users WHERE id = ?',
+      'SELECT id, username, nama, role, guru_id, kelas, no_absen, foto_profil, tanda_tangan FROM users WHERE id = ?',
       [user.id]
     );
 
-    const resultUser = updatedUser || { ...user, nama: cleanNama, foto_profil: cleanFoto };
+    const resultUser = updatedUser || { ...user, nama: cleanNama, foto_profil: cleanFoto, tanda_tangan: cleanTtd };
     const newToken = generateToken(resultUser);
 
     const response = apiResponse({

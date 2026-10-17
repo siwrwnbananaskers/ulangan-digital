@@ -61,7 +61,7 @@ function getStudentInitials(name) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guruNama = '' }) {
+export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guruNama = '', guruTtd = null }) {
   return new Promise(async (resolve) => {
     if (typeof window === 'undefined') {
       resolve(null);
@@ -821,6 +821,26 @@ export function generateResultImage({ sesi, jawaban = [], mode = 'ringkas', guru
     ctx.fillStyle = '#334155';
     ctx.font = '600 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Mengetahui / Guru Pengampu,', signCenterX, currentY + 16);
+
+    // Draw digital signature if available
+    const ttdSource = guruTtd || sesi?.guru_tanda_tangan || null;
+    if (ttdSource) {
+      try {
+        const ttdImg = await loadImage(ttdSource);
+        if (ttdImg) {
+          const maxImgW = 120;
+          const maxImgH = 46;
+          let drawW = ttdImg.width;
+          let drawH = ttdImg.height;
+          const ratio = Math.min(maxImgW / drawW, maxImgH / drawH);
+          drawW = Math.round(drawW * ratio);
+          drawH = Math.round(drawH * ratio);
+          ctx.drawImage(ttdImg, signCenterX - drawW / 2, currentY + 22 + (maxImgH - drawH) / 2, drawW, drawH);
+        }
+      } catch (err) {
+        // ignore image draw error
+      }
+    }
 
     // Measure teacher name width dynamically
     ctx.font = 'bold 12px Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';

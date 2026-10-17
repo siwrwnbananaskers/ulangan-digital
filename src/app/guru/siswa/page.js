@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import UpgradeModal from '@/components/UpgradeModal';
 import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
+import EditProfileModal from '@/components/EditProfileModal';
 
 const formatCardDate = (date = new Date()) => {
   const d = date instanceof Date ? date : new Date(date);
@@ -30,6 +31,7 @@ export default function SiswaManagementPage() {
   const [alert, setAlert] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState('');
+  const [showTtdModal, setShowTtdModal] = useState(false);
 
   // Single Add Form
   const [singleForm, setSingleForm] = useState({
@@ -450,6 +452,26 @@ export default function SiswaManagementPage() {
             </p>
           </div>
           <div className="page-header-actions">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowTtdModal(true)}
+              style={{
+                borderRadius: 8,
+                padding: '8px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: user?.tanda_tangan ? '#f0fdf4' : '#ffffff',
+                borderColor: user?.tanda_tangan ? '#86efac' : '#cbd5e1',
+                color: user?.tanda_tangan ? '#166534' : '#334155',
+              }}
+              title="Atur foto/scan tanda tangan digital guru untuk kartu login dan lembar hasil"
+            >
+              <span>✍️</span> {user?.tanda_tangan ? 'TTD Siap' : 'Upload TTD'}
+            </button>
             <button
               className="btn btn-secondary"
               onClick={() => setShowBulkModal(true)}
@@ -1139,6 +1161,7 @@ export default function SiswaManagementPage() {
         <div className="print-cards-grid">
           {filteredPrintStudents.map((siswa, idx) => {
             const namaGuru = siswa.nama_guru || user?.nama || 'Guru Pengampu';
+            const ttdGuru = siswa.guru_tanda_tangan || user?.tanda_tangan || null;
             return (
               <div key={siswa.id || idx} className="exam-card-badge">
                 <div className="exam-card-cut-corner">✂</div>
@@ -1158,18 +1181,20 @@ export default function SiswaManagementPage() {
                   <div className="exam-card-title">KARTU LOGIN</div>
                 </div>
 
-                {/* Identitas Siswa Full-Width (Anti-Terpotong) */}
+                {/* Identitas Siswa Full-Width (Anti-Terpotong & Titik Dua Sejajar Presisi) */}
                 <div className="exam-card-student-section">
                   <div className="exam-card-name-row">
-                    <span className="exam-card-label-wide">Nama Siswa</span>
-                    <span className="exam-card-val-name">: {siswa.nama}</span>
+                    <span className="exam-card-label-col">Nama Siswa</span>
+                    <span className="exam-card-colon">:</span>
+                    <span className="exam-card-val-name">{siswa.nama}</span>
                   </div>
                   <div className="exam-card-meta-row">
-                    <div className="exam-card-meta-item">
-                      <span className="exam-card-label-narrow">Kelas / Absen :</span>
+                    <div className="exam-card-meta-left">
+                      <span className="exam-card-label-col">Kelas / Absen</span>
+                      <span className="exam-card-colon">:</span>
                       <span className="exam-card-val-meta">{siswa.kelas || '-'} / No. {siswa.no_absen || '-'}</span>
                     </div>
-                    <div className="exam-card-meta-item">
+                    <div className="exam-card-meta-right">
                       <span className="exam-card-label-narrow">ID Peserta :</span>
                       <span className="exam-card-val-meta" style={{ fontFamily: 'Consolas, monospace' }}>{siswa.username}</span>
                     </div>
@@ -1183,11 +1208,11 @@ export default function SiswaManagementPage() {
                     <div className="exam-card-login-box">
                       <div className="exam-card-login-head">AKSES LOGIN</div>
                       <div className="exam-card-login-row">
-                        <span className="exam-card-login-key">USER</span>
+                        <span className="exam-card-login-key">USERNAME</span>
                         <span className="exam-card-login-val">{siswa.username}</span>
                       </div>
                       <div className="exam-card-login-row">
-                        <span className="exam-card-login-key">PASS</span>
+                        <span className="exam-card-login-key">PASSWORD</span>
                         <span className="exam-card-login-val">{siswa.password_plain || '123456'}</span>
                       </div>
                     </div>
@@ -1207,7 +1232,11 @@ export default function SiswaManagementPage() {
                       <div className="exam-card-sign-date">{formatCardDate()}</div>
                       <div className="exam-card-sign-label">Guru Pengampu,</div>
                     </div>
-                    <div className="exam-card-sign-space"></div>
+                    <div className="exam-card-sign-space">
+                      {ttdGuru && (
+                        <img src={ttdGuru} alt="TTD Guru" className="exam-card-sign-img" />
+                      )}
+                    </div>
                     <div className="exam-card-sign-name" title={namaGuru}>( {namaGuru} )</div>
                   </div>
                 </div>
@@ -1356,7 +1385,26 @@ export default function SiswaManagementPage() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowTtdModal(true)}
+                  style={{
+                    height: 38,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: user?.tanda_tangan ? '#f0fdf4' : '#ffffff',
+                    borderColor: user?.tanda_tangan ? '#86efac' : '#cbd5e1',
+                    color: user?.tanda_tangan ? '#166534' : '#334155',
+                  }}
+                  title="Atur / upload foto tanda tangan digital guru"
+                >
+                  <span>✍️</span> {user?.tanda_tangan ? 'Ganti TTD Guru' : 'Upload TTD Guru'}
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -1434,6 +1482,7 @@ export default function SiswaManagementPage() {
                 >
                   {filteredPrintStudents.map((siswa, idx) => {
                     const namaGuru = siswa.nama_guru || user?.nama || 'Guru Pengampu';
+                    const ttdGuru = siswa.guru_tanda_tangan || user?.tanda_tangan || null;
                     return (
                       <div
                         key={siswa.id || idx}
@@ -1443,7 +1492,7 @@ export default function SiswaManagementPage() {
                           aspectRatio: '85.6 / 53.98',
                           background: '#ffffff',
                           border: '1px dashed #64748b',
-                          borderRadius: 10,
+                          borderRadius: 0,
                           padding: '11px 14px 9px 14px',
                           boxSizing: 'border-box',
                           display: 'flex',
@@ -1456,8 +1505,8 @@ export default function SiswaManagementPage() {
                         <div
                           style={{
                             position: 'absolute',
-                            top: 2,
-                            left: 4,
+                            top: 1,
+                            left: 3,
                             fontSize: 9,
                             color: '#94a3b8',
                             lineHeight: 1,
@@ -1498,7 +1547,7 @@ export default function SiswaManagementPage() {
                               background: '#0f172a',
                               color: '#ffffff',
                               padding: '2px 6px',
-                              borderRadius: 3,
+                              borderRadius: 2,
                               letterSpacing: 0.4,
                               whiteSpace: 'nowrap',
                             }}
@@ -1507,7 +1556,7 @@ export default function SiswaManagementPage() {
                           </div>
                         </div>
 
-                        {/* Identitas Siswa Full-Width (Anti-Terpotong & Berjarak Proporsional dari Kop) */}
+                        {/* Identitas Siswa Full-Width (Anti-Terpotong & Titik Dua Sejajar Rapi) */}
                         <div
                           style={{
                             display: 'flex',
@@ -1519,7 +1568,8 @@ export default function SiswaManagementPage() {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
-                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0, fontSize: 9 }}>Nama Siswa</span>
+                            <span style={{ width: 78, color: '#475569', fontWeight: 600, flexShrink: 0, fontSize: 9 }}>Nama Siswa</span>
+                            <span style={{ width: 10, textAlign: 'center', fontWeight: 700, color: '#475569', flexShrink: 0, marginRight: 5 }}>:</span>
                             <span
                               style={{
                                 flex: 1,
@@ -1531,12 +1581,13 @@ export default function SiswaManagementPage() {
                                 wordBreak: 'break-word',
                               }}
                             >
-                              : {siswa.nama}
+                              {siswa.nama}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8.5, marginTop: 2 }}>
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                              <span style={{ color: '#475569', fontWeight: 600 }}>Kelas / Absen :</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 8.5, marginTop: 2 }}>
+                            <div style={{ display: 'flex', alignItems: 'baseline', flexShrink: 0 }}>
+                              <span style={{ width: 78, color: '#475569', fontWeight: 600, flexShrink: 0, fontSize: 9 }}>Kelas / Absen</span>
+                              <span style={{ width: 10, textAlign: 'center', fontWeight: 700, color: '#475569', flexShrink: 0, marginRight: 5 }}>:</span>
                               <span style={{ fontWeight: 700, color: '#0f172a' }}>
                                 {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}
                               </span>
@@ -1563,11 +1614,11 @@ export default function SiswaManagementPage() {
                           }}
                         >
                           {/* Sisi Kiri: Login Box & Portal Link */}
-                          <div style={{ width: 130, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexShrink: 0 }}>
+                          <div style={{ width: 144, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexShrink: 0 }}>
                             <div
                               style={{
                                 border: '1px solid #0f172a',
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 background: '#f8fafc',
                                 padding: '4px 7px',
                                 display: 'flex',
@@ -1595,11 +1646,11 @@ export default function SiswaManagementPage() {
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
                                   fontFamily: 'Consolas, monospace',
-                                  fontSize: 9,
+                                  fontSize: 8.5,
                                   lineHeight: 1.1,
                                 }}
                               >
-                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8 }}>USER</span>
+                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 7.5, letterSpacing: 0.2 }}>USERNAME</span>
                                 <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.username}</span>
                               </div>
                               <div
@@ -1608,11 +1659,11 @@ export default function SiswaManagementPage() {
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
                                   fontFamily: 'Consolas, monospace',
-                                  fontSize: 9,
+                                  fontSize: 8.5,
                                   lineHeight: 1.1,
                                 }}
                               >
-                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8 }}>PASS</span>
+                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 7.5, letterSpacing: 0.2 }}>PASSWORD</span>
                                 <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.password_plain || '123456'}</span>
                               </div>
                             </div>
@@ -1646,7 +1697,24 @@ export default function SiswaManagementPage() {
                                 Guru Pengampu,
                               </div>
                             </div>
-                            <div style={{ flex: 1, minHeight: 26, width: '100%' }}></div>
+                            <div
+                              style={{
+                                flex: 1,
+                                minHeight: 26,
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {ttdGuru && (
+                                <img
+                                  src={ttdGuru}
+                                  alt="TTD Guru"
+                                  style={{ maxHeight: 26, maxWidth: 110, objectFit: 'contain' }}
+                                />
+                              )}
+                            </div>
                             <div
                               style={{
                                 fontSize: 9,
@@ -1830,6 +1898,17 @@ export default function SiswaManagementPage() {
         onConfirm={handleConfirm}
         onClose={handleClose}
       />
+
+      {/* TTD Guru Uploader Modal */}
+      {showTtdModal && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowTtdModal(false)}
+          onUpdate={() => {
+            loadSiswa();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -9,7 +9,131 @@
  */
 
 import * as XLSX from 'xlsx-js-style';
+import JSZip from 'jszip';
 import { formatWIB } from './utils';
+
+function loadImage(src) {
+  return new Promise((resolve) => {
+    if (!src) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+/**
+ * Embed teacher signature image into XLSX workbook drawing and trigger download
+ */
+async function embedSignatureToExcelAndDownload(wb, filename, ttdDataUrl, row, col) {
+  try {
+    const wbBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+    const zip = await JSZip.loadAsync(wbBuffer);
+
+    // 1. Clean base64 image data
+    const base64Data = ttdDataUrl.replace(/^data:image\/\w+;base64,/, '');
+    zip.file('xl/media/image1.png', base64Data, { base64: true });
+
+    // 2. OpenXML Drawing XML
+    const drawingXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <xdr:twoCellAnchor editAs="oneCell">
+    <xdr:from>
+      <xdr:col>${col}</xdr:col>
+      <xdr:colOff>80000</xdr:colOff>
+      <xdr:row>${row}</xdr:row>
+      <xdr:rowOff>20000</xdr:rowOff>
+    </xdr:from>
+    <xdr:to>
+      <xdr:col>${col + 3}</xdr:col>
+      <xdr:colOff>0</xdr:colOff>
+      <xdr:row>${row + 3}</xdr:row>
+      <xdr:rowOff>40000</xdr:rowOff>
+    </xdr:to>
+    <xdr:pic>
+      <xdr:nvPicPr>
+        <xdr:cNvPr id="2" name="Tanda Tangan Guru"/>
+        <xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr>
+      </xdr:nvPicPr>
+      <xdr:blipFill>
+        <a:blip r:embed="rId1"/>
+        <a:stretch><a:fillRect/></a:stretch>
+      </xdr:blipFill>
+      <xdr:spPr>
+        <a:xfrm><a:off x="0" y="0"/><a:ext cx="1200000" cy="500000"/></a:xfrm>
+        <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+      </xdr:spPr>
+    </xdr:pic>
+    <xdr:clientData/>
+  </xdr:twoCellAnchor>
+</xdr:wsDr>`;
+    zip.file('xl/drawings/drawing1.xml', drawingXml);
+
+    // 3. Drawing Relationships XML
+    const drawingRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image1.png"/>
+</Relationships>`;
+    zip.file('xl/drawings/_rels/drawing1.xml.rels', drawingRelsXml);
+
+    // 4. Worksheet Relationships XML
+    const sheetRelsPath = 'xl/worksheets/_rels/sheet1.xml.rels';
+    let sheetRelsXml = '';
+    if (zip.file(sheetRelsPath)) {
+      sheetRelsXml = await zip.file(sheetRelsPath).async('string');
+      if (!sheetRelsXml.includes('drawing1.xml')) {
+        sheetRelsXml = sheetRelsXml.replace('</Relationships>', `  <Relationship Id="rIdDrawing1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>\n</Relationships>`);
+      }
+    } else {
+      sheetRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rIdDrawing1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>
+</Relationships>`;
+    }
+    zip.file(sheetRelsPath, sheetRelsXml);
+
+    // 5. Worksheet XML with Drawing tag
+    const sheetPath = 'xl/worksheets/sheet1.xml';
+    if (zip.file(sheetPath)) {
+      let sheetXml = await zip.file(sheetPath).async('string');
+      if (!sheetXml.includes('<drawing')) {
+        if (sheetXml.includes('<pageMargins')) {
+          sheetXml = sheetXml.replace('<pageMargins', `<drawing r:id="rIdDrawing1"/>\n<pageMargins`);
+        } else {
+          sheetXml = sheetXml.replace('</worksheet>', `<drawing r:id="rIdDrawing1"/>\n</worksheet>`);
+        }
+        zip.file(sheetPath, sheetXml);
+      }
+    }
+
+    // 6. Content Types XML
+    const ctPath = '[Content_Types].xml';
+    if (zip.file(ctPath)) {
+      let ctXml = await zip.file(ctPath).async('string');
+      if (!ctXml.includes('Extension="png"')) {
+        ctXml = ctXml.replace('</Types>', `  <Default Extension="png" ContentType="image/png"/>\n</Types>`);
+      }
+      if (!ctXml.includes('PartName="/xl/drawings/drawing1.xml"')) {
+        ctXml = ctXml.replace('</Types>', `  <Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>\n</Types>`);
+      }
+      zip.file(ctPath, ctXml);
+    }
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    console.warn('Fallback to standard XLSX write:', err);
+    XLSX.writeFile(wb, filename);
+  }
+}
 
 /**
  * Format date string into Indonesian formal format: "14 Oktober 2026"
@@ -29,7 +153,7 @@ function getFormalIndonesianDate(d = new Date()) {
 /**
  * Export student grade ledger to Excel (.xlsx) with professional accountant formatting
  */
-export function exportRekapToExcel({ examDetail, results = [], stats = null, guruNama = '' }) {
+export function exportRekapToExcel({ examDetail, results = [], stats = null, guruNama = '', guruTtd = null }) {
   if (typeof window === 'undefined') return;
 
   const kkm = Number(examDetail?.kkm) || 75;
@@ -499,14 +623,19 @@ export function exportRekapToExcel({ examDetail, results = [], stats = null, gur
   const safeKelas = (examDetail?.kelas_target || 'Kelas').replace(/[^a-zA-Z0-9_-]/g, '_');
   const filename = `Rekap_Nilai_${safeJudul}_${safeKelas}.xlsx`;
 
-  XLSX.writeFile(wb, filename);
+  const ttdSource = guruTtd || examDetail?.guru_tanda_tangan || null;
+  if (ttdSource) {
+    embedSignatureToExcelAndDownload(wb, filename, ttdSource, summaryStartRow + 2, 8);
+  } else {
+    XLSX.writeFile(wb, filename);
+  }
 }
 
 /**
  * Generate a high-resolution, print-ready document image (.png) of the grade ledger
  */
-export function generateRekapTableImage({ examDetail, results = [], stats = null, guruNama = '' }) {
-  return new Promise((resolve) => {
+export function generateRekapTableImage({ examDetail, results = [], stats = null, guruNama = '', guruTtd = null }) {
+  return new Promise(async (resolve) => {
     if (typeof window === 'undefined') {
       resolve(null);
       return;
@@ -905,6 +1034,25 @@ export function generateRekapTableImage({ examDetail, results = [], stats = null
     ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Mengetahui / Guru Pengampu,', signCenterX, currentY + 32);
 
+    const ttdSource = guruTtd || examDetail?.guru_tanda_tangan || null;
+    if (ttdSource) {
+      try {
+        const ttdImg = await loadImage(ttdSource);
+        if (ttdImg) {
+          const maxImgW = 140;
+          const maxImgH = 54;
+          let drawW = ttdImg.width;
+          let drawH = ttdImg.height;
+          const ratio = Math.min(maxImgW / drawW, maxImgH / drawH);
+          drawW = Math.round(drawW * ratio);
+          drawH = Math.round(drawH * ratio);
+          ctx.drawImage(ttdImg, signCenterX - drawW / 2, currentY + 38 + (maxImgH - drawH) / 2, drawW, drawH);
+        }
+      } catch (err) {
+        // ignore image error
+      }
+    }
+
     // Measure teacher's name dynamically
     ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     const nameWidth = ctx.measureText(teacherName).width;
@@ -967,11 +1115,12 @@ export async function copyRekapImageToClipboard(dataUrl) {
 /**
  * Open a clean, beautifully formatted native print window (Print / PDF)
  */
-export function printRekapDocument({ examDetail, results = [], stats = null, guruNama = '', onError }) {
+export function printRekapDocument({ examDetail, results = [], stats = null, guruNama = '', guruTtd = null, onError }) {
   if (typeof window === 'undefined') return false;
 
   const kkm = Number(examDetail?.kkm) || 75;
   const teacherName = guruNama || examDetail?.guru_nama || 'Guru Pengampu';
+  const ttdSource = guruTtd || examDetail?.guru_tanda_tangan || null;
   const currentDate = getFormalIndonesianDate();
 
   const totalManual = Number(examDetail?.total_soal_manual) || 
@@ -1208,7 +1357,8 @@ export function printRekapDocument({ examDetail, results = [], stats = null, gur
           <div class="sign-box">
             <div>${currentDate}</div>
             <div style="font-weight: 600;">Mengetahui / Guru Pengampu,</div>
-            <div class="sign-wrapper">
+            <div class="sign-wrapper" style="${ttdSource ? 'margin-top: 10px;' : 'margin-top: 55px;'}">
+              ${ttdSource ? `<img src="${ttdSource}" alt="Tanda Tangan" style="max-height: 52px; max-width: 140px; object-fit: contain; display: block; margin: 4px auto 2px;" />` : ''}
               <div class="sign-line"></div>
               <div class="teacher-title">${teacherName}</div>
             </div>

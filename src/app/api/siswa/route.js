@@ -66,16 +66,18 @@ export async function GET(request) {
       siswaRaw = await db.getAll(fallbackQuery, params);
     }
 
-    // Enrich with teacher names for superadmin view & default password fallback
+    // Enrich with teacher names and signature for superadmin view & card print
     const siswaList = await Promise.all(
       (siswaRaw || []).map(async (s) => {
         const plainPwd = s.password_plain || '123456';
         let namaGuru = s.nama_guru;
-        if (!namaGuru) {
+        let ttdGuru = s.guru_tanda_tangan;
+        if (!namaGuru || ttdGuru === undefined) {
           if (s.guru_id) {
             try {
-              const g = await db.getOne('SELECT nama FROM users WHERE id = ?', [s.guru_id]);
+              const g = await db.getOne('SELECT nama, tanda_tangan FROM users WHERE id = ?', [s.guru_id]);
               namaGuru = g?.nama || 'Guru';
+              ttdGuru = g?.tanda_tangan || null;
             } catch {
               namaGuru = 'Guru';
             }
@@ -87,6 +89,7 @@ export async function GET(request) {
           ...s,
           password_plain: plainPwd,
           nama_guru: namaGuru,
+          guru_tanda_tangan: ttdGuru || null,
         };
       })
     );

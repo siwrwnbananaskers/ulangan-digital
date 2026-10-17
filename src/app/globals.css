@@ -3137,7 +3137,7 @@ img {
     justify-content: space-between !important;
     padding: 3mm 3.8mm 2.4mm 3.8mm !important;
     border: 1px dashed #64748b !important;
-    border-radius: 3.18mm !important;
+    border-radius: 0 !important;
     background: #ffffff !important;
     overflow: hidden !important;
   }
@@ -3188,7 +3188,7 @@ img {
     white-space: nowrap !important;
     box-shadow: none !important;
   }
-  /* Identitas Siswa Lebar Penuh (Anti-Terpotong & Berjarak Rapi dari Kop) */
+  /* Identitas Siswa Lebar Penuh dengan Kolom Label & Titik Dua Sejajar Presisi */
   .exam-card-student-section {
     display: flex !important;
     flex-direction: column !important;
@@ -3202,12 +3202,21 @@ img {
     align-items: baseline !important;
     width: 100% !important;
   }
-  .exam-card-label-wide {
-    width: 18mm !important;
+  .exam-card-label-col {
+    width: 17.5mm !important;
     color: #475569 !important;
-    font-size: 7pt !important;
+    font-size: 6.8pt !important;
     font-weight: 600 !important;
     flex-shrink: 0 !important;
+  }
+  .exam-card-colon {
+    width: 2mm !important;
+    text-align: center !important;
+    font-size: 6.8pt !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    flex-shrink: 0 !important;
+    margin-right: 1.2mm !important;
   }
   .exam-card-val-name {
     flex: 1 !important;
@@ -3222,12 +3231,17 @@ img {
   .exam-card-meta-row {
     display: flex !important;
     justify-content: space-between !important;
-    align-items: center !important;
+    align-items: baseline !important;
     width: 100% !important;
-    font-size: 7pt !important;
-    margin-top: 0.4mm !important;
+    font-size: 6.8pt !important;
+    margin-top: 0.2mm !important;
   }
-  .exam-card-meta-item {
+  .exam-card-meta-left {
+    display: flex !important;
+    align-items: baseline !important;
+    flex-shrink: 0 !important;
+  }
+  .exam-card-meta-right {
     display: flex !important;
     align-items: baseline !important;
     gap: 2px !important;
@@ -3240,7 +3254,7 @@ img {
   .exam-card-val-meta {
     font-weight: 700 !important;
     color: #0f172a !important;
-    font-size: 7pt !important;
+    font-size: 6.8pt !important;
   }
   /* Bagian Bawah: Memenuhi ruang vertikal secara seimbang tanpa sisa kosong di footer */
   .exam-card-bottom-grid {
@@ -3253,7 +3267,7 @@ img {
     min-height: 21mm !important;
   }
   .exam-card-login-col {
-    width: 38mm !important;
+    width: 41.5mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -3285,18 +3299,19 @@ img {
     justify-content: space-between !important;
     align-items: center !important;
     font-family: 'Consolas', 'Courier New', monospace !important;
-    font-size: 7pt !important;
+    font-size: 6.8pt !important;
     line-height: 1.1 !important;
   }
   .exam-card-login-key {
     font-weight: 700 !important;
     color: #64748b !important;
-    font-size: 6pt !important;
+    font-size: 5.4pt !important;
+    letter-spacing: 0.2px !important;
   }
   .exam-card-login-val {
     font-weight: 800 !important;
     color: #0f172a !important;
-    font-size: 7.4pt !important;
+    font-size: 7.2pt !important;
     letter-spacing: 0.2px !important;
   }
   .exam-card-portal-badge {
@@ -3335,6 +3350,15 @@ img {
     flex: 1 !important;
     min-height: 8mm !important;
     width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .exam-card-sign-img {
+    max-height: 7.5mm !important;
+    max-width: 34mm !important;
+    object-fit: contain !important;
+    display: block !important;
   }
   .exam-card-sign-name {
     font-size: 6.8pt !important;

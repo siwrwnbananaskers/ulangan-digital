@@ -21,7 +21,8 @@ export async function GET(request) {
         const sesi = await db.getOne(
           `SELECT su.*, u.nama, u.username, u.kelas, u.no_absen, u.foto_profil,
                   uj.judul as ujian_judul, uj.mata_pelajaran, uj.kkm, uj.durasi_menit, uj.guru_id,
-                  guru.nama as guru_nama
+                  guru.nama as guru_nama,
+                  guru.tanda_tangan as guru_tanda_tangan
            FROM sesi_ujian su
            JOIN users u ON u.id = su.siswa_id
            JOIN ujian uj ON uj.id = su.ujian_id
@@ -160,7 +161,7 @@ export async function GET(request) {
         );
 
         const ujian = await db.getOne(
-          `SELECT uj.*, u.nama as guru_nama, u.nama as nama_guru, u.username as guru_username,
+          `SELECT uj.*, u.nama as guru_nama, u.nama as nama_guru, u.username as guru_username, u.tanda_tangan as guru_tanda_tangan,
             (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_soal_manual,
             (SELECT COUNT(*) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe NOT IN ('uraian', 'isian')) as total_soal_pg,
             (SELECT COALESCE(SUM(s.bobot), 0) FROM soal s JOIN ujian_soal us ON us.soal_id = s.id WHERE us.ujian_id = uj.id AND s.tipe IN ('uraian', 'isian')) as total_bobot_essay,
@@ -224,6 +225,7 @@ export async function GET(request) {
             g.nama as nama_guru,
             g.nama as guru_nama,
             g.username as guru_username,
+            g.tanda_tangan as guru_tanda_tangan,
             (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id) as total_peserta,
             (SELECT COUNT(*) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as peserta_selesai,
             (SELECT AVG(s.total_nilai) FROM sesi_ujian s WHERE s.ujian_id = u.id AND s.status = 'selesai') as rata_rata
