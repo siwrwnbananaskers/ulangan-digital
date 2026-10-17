@@ -287,47 +287,131 @@ export default function SuperadminGuruManagementPage() {
       {/* Modal Tambah Guru */}
       {showAddModal && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}>
-          <div className="modal" style={{ maxWidth: 480 }}>
-            <div className="modal-header">
-              <h2 className="modal-title" style={{ fontSize: 17, fontWeight: 700 }}>
+          <div
+            className="modal"
+            style={{
+              maxWidth: 450,
+              width: '100%',
+              borderRadius: 18,
+              background: '#ffffff',
+              padding: '28px 28px 26px',
+              boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.18)',
+              border: 'none',
+              position: 'relative',
+            }}
+          >
+            {/* Header Bersih dengan Tombol Close Bulat */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
                 Tambah Akun Guru Resmi
               </h2>
-              <button className="modal-close" onClick={() => setShowAddModal(false)}>✕</button>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                aria-label="Tutup"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: '#f1f5f9',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#334155',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#e2e8f0')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#f1f5f9')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
 
-            <form onSubmit={handleCreate} style={{ padding: 20 }}>
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Nama Lengkap & Gelar Guru *</label>
+            <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
+                  Nama Lengkap & Gelar Guru *
+                </label>
                 <input
-                  className="form-input"
+                  type="text"
                   placeholder="cth: Dra. Siti Rahmawati, M.Pd."
                   value={form.nama}
                   onChange={(e) => setForm({ ...form, nama: e.target.value })}
                   required
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '11px 16px',
+                    borderRadius: 10,
+                    border: '1.2px solid #cbd5e1',
+                    fontSize: 14,
+                    color: '#0f172a',
+                    outline: 'none',
+                    background: '#ffffff',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Username Login *</label>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
+                  Username Login *
+                </label>
                 <input
-                  className="form-input"
+                  type="text"
                   placeholder="cth: sitirahmawati atau NIP guru"
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
                   required
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '11px 16px',
+                    borderRadius: 10,
+                    border: '1.2px solid #cbd5e1',
+                    fontSize: 14,
+                    color: '#0f172a',
+                    outline: 'none',
+                    background: '#ffffff',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 16 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Password Login</label>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
+                  Password Login
+                </label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    className="form-input"
-                    placeholder="Default jika kosong: guru123"
+                    placeholder="••••••"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    style={{ paddingRight: 40, width: '100%', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      padding: '11px 44px 11px 16px',
+                      borderRadius: 10,
+                      border: '1.2px solid #cbd5e1',
+                      fontSize: 14,
+                      color: '#0f172a',
+                      outline: 'none',
+                      background: '#ffffff',
+                      letterSpacing: !form.password && !showPassword ? '0.12em' : 'normal',
+                      transition: 'border-color 0.15s ease',
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                   />
                   <button
                     type="button"
@@ -336,50 +420,69 @@ export default function SuperadminGuruManagementPage() {
                     aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'}
                     style={{
                       position: 'absolute',
-                      right: 10,
+                      right: 12,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      background: 'transparent',
+                      background: 'none',
                       border: 'none',
                       color: '#64748b',
                       cursor: 'pointer',
                       padding: 4,
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
                     {showPassword ? (
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                         <line x1="1" y1="1" x2="23" y2="23" />
                       </svg>
                     ) : (
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     )}
                   </button>
                 </div>
-                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: 12, color: '#64748b', display: 'block', marginTop: 6 }}>
                   Default password: guru123
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 10 }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
                   onClick={() => setShowAddModal(false)}
                   disabled={saving}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 10,
+                    border: '1.2px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
-                  style={{ background: '#0a66c2' }}
                   disabled={saving}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 10,
+                    border: 'none',
+                    background: '#0a66c2',
+                    color: '#ffffff',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 5px rgba(10, 102, 194, 0.25)',
+                  }}
                 >
                   {saving ? 'Menyimpan...' : 'Simpan Akun Guru'}
                 </button>
@@ -392,50 +495,130 @@ export default function SuperadminGuruManagementPage() {
       {/* Modal Edit Guru */}
       {showEditModal && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowEditModal(false)}>
-          <div className="modal" style={{ maxWidth: 480 }}>
-            <div className="modal-header">
-              <h2 className="modal-title" style={{ fontSize: 17, fontWeight: 700 }}>
+          <div
+            className="modal"
+            style={{
+              maxWidth: 450,
+              width: '100%',
+              borderRadius: 18,
+              background: '#ffffff',
+              padding: '28px 28px 26px',
+              boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.18)',
+              border: 'none',
+              position: 'relative',
+            }}
+          >
+            {/* Header Bersih dengan Tombol Close Bulat */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
                 Edit Akun Guru ({editForm.username})
               </h2>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>✕</button>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                aria-label="Tutup"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: '#f1f5f9',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#334155',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#e2e8f0')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#f1f5f9')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} style={{ padding: 20 }}>
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Nama Lengkap & Gelar Guru *</label>
+            <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
+                  Nama Lengkap & Gelar Guru *
+                </label>
                 <input
-                  className="form-input"
+                  type="text"
                   placeholder="cth: Dra. Siti Rahmawati, M.Pd."
                   value={editForm.nama}
                   onChange={(e) => setEditForm({ ...editForm, nama: e.target.value })}
                   required
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '11px 16px',
+                    borderRadius: 10,
+                    border: '1.2px solid #cbd5e1',
+                    fontSize: 14,
+                    color: '#0f172a',
+                    outline: 'none',
+                    background: '#ffffff',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Username Login *</label>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
+                  Username Login *
+                </label>
                 <input
-                  className="form-input"
+                  type="text"
                   placeholder="cth: sitirahmawati"
                   value={editForm.username}
                   onChange={(e) => setEditForm({ ...editForm, username: e.target.value.toLowerCase() })}
                   required
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '11px 16px',
+                    borderRadius: 10,
+                    border: '1.2px solid #cbd5e1',
+                    fontSize: 14,
+                    color: '#0f172a',
+                    outline: 'none',
+                    background: '#ffffff',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                 />
-                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 2 }}>
-                  Username digunakan guru untuk masuk ke sistem DigiAsesmen.
-                </span>
               </div>
 
-              <div className="form-group" style={{ marginBottom: 16 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Ganti Password Baru</label>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
+                  Ganti Password Baru
+                </label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input
                     type={showEditPassword ? 'text' : 'password'}
-                    className="form-input"
                     placeholder="Kosongkan jika tidak ingin mengubah password"
                     value={editForm.password}
                     onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                    style={{ paddingRight: 40, width: '100%', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      padding: '11px 44px 11px 16px',
+                      borderRadius: 10,
+                      border: '1.2px solid #cbd5e1',
+                      fontSize: 14,
+                      color: '#0f172a',
+                      outline: 'none',
+                      background: '#ffffff',
+                      transition: 'border-color 0.15s ease',
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                   />
                   <button
                     type="button"
@@ -444,50 +627,69 @@ export default function SuperadminGuruManagementPage() {
                     aria-label={showEditPassword ? 'Sembunyikan password' : 'Lihat password'}
                     style={{
                       position: 'absolute',
-                      right: 10,
+                      right: 12,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      background: 'transparent',
+                      background: 'none',
                       border: 'none',
                       color: '#64748b',
                       cursor: 'pointer',
                       padding: 4,
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
                     {showEditPassword ? (
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                         <line x1="1" y1="1" x2="23" y2="23" />
                       </svg>
                     ) : (
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     )}
                   </button>
                 </div>
-                <span style={{ fontSize: 11, color: '#64748b', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: 12, color: '#64748b', display: 'block', marginTop: 6 }}>
                   Biarkan kosong apabila password saat ini tidak perlu diganti.
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 10 }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
                   onClick={() => setShowEditModal(false)}
                   disabled={savingEdit}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 10,
+                    border: '1.2px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
-                  style={{ background: '#0a66c2' }}
                   disabled={savingEdit}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 10,
+                    border: 'none',
+                    background: '#0a66c2',
+                    color: '#ffffff',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 5px rgba(10, 102, 194, 0.25)',
+                  }}
                 >
                   {savingEdit ? 'Memperbarui...' : 'Simpan Perubahan'}
                 </button>
