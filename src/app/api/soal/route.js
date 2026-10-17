@@ -178,11 +178,12 @@ export async function POST(request) {
           kunci = sanitizeInput(kunci);
         }
 
+        const gambar = item.gambar ? String(item.gambar).trim() : null;
         const id = generateId('soal');
         await db.run(
-          `INSERT INTO soal (id, guru_id, mata_pelajaran, tipe, pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, pilihan_e, kunci_jawaban, bobot)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, user.id, mapel, tipe, pertanyaan, pilA, pilB, pilC, pilD, pilE, kunci, bobot]
+          `INSERT INTO soal (id, guru_id, mata_pelajaran, tipe, pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, pilihan_e, kunci_jawaban, bobot, gambar)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, user.id, mapel, tipe, pertanyaan, pilA, pilB, pilC, pilD, pilE, kunci, bobot, gambar]
         );
         createdCount++;
       }
@@ -212,11 +213,12 @@ export async function POST(request) {
       }
     }
 
+    const gambar = body.gambar ? String(body.gambar).trim() : null;
     const id = generateId('soal');
 
     await db.run(
-      `INSERT INTO soal (id, guru_id, mata_pelajaran, tipe, pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, pilihan_e, kunci_jawaban, bobot)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO soal (id, guru_id, mata_pelajaran, tipe, pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, pilihan_e, kunci_jawaban, bobot, gambar)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, user.id,
         sanitizeInput(body.mata_pelajaran),
@@ -229,6 +231,7 @@ export async function POST(request) {
         body.pilihan_e ? sanitizeInput(body.pilihan_e) : null,
         body.kunci_jawaban ? sanitizeInput(body.kunci_jawaban) : null,
         body.bobot || 1,
+        gambar,
       ]
     );
 
@@ -255,12 +258,14 @@ export async function PUT(request) {
 
     // Verify ownership or superadmin role
     const existing = await db.getOne(
-      'SELECT id FROM soal WHERE id = ? AND (guru_id = ? OR ? = \'superadmin\')',
+      'SELECT id, gambar FROM soal WHERE id = ? AND (guru_id = ? OR ? = \'superadmin\')',
       [body.id, user.id, user.role]
     );
     if (!existing) {
       return apiError('Soal tidak ditemukan', 404);
     }
+
+    const gambar = body.gambar !== undefined ? (body.gambar ? String(body.gambar).trim() : null) : existing.gambar;
 
     await db.run(
       `UPDATE soal SET 
@@ -269,6 +274,7 @@ export async function PUT(request) {
         pertanyaan = COALESCE(?, pertanyaan),
         pilihan_a = ?, pilihan_b = ?, pilihan_c = ?, pilihan_d = ?, pilihan_e = ?,
         kunci_jawaban = ?, bobot = COALESCE(?, bobot),
+        gambar = ?,
         updated_at = datetime('now')
        WHERE id = ? AND (guru_id = ? OR ? = 'superadmin')`,
       [
@@ -282,6 +288,7 @@ export async function PUT(request) {
         body.pilihan_e ? sanitizeInput(body.pilihan_e) : null,
         body.kunci_jawaban ? sanitizeInput(body.kunci_jawaban) : null,
         body.bobot || null,
+        gambar,
         body.id, user.id, user.role,
       ]
     );

@@ -50,6 +50,7 @@ export default function SiswaManagementPage() {
 
   // Print Mode State
   const [printKelas, setPrintKelas] = useState('');
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -403,6 +404,10 @@ export default function SiswaManagementPage() {
   const filteredPrintStudents = siswaList.filter(s => !printKelas || s.kelas === printKelas);
 
   const handlePrintCards = () => {
+    setShowPrintModal(true);
+  };
+
+  const handleExecutePrint = () => {
     window.print();
   };
 
@@ -458,7 +463,7 @@ export default function SiswaManagementPage() {
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                 <rect x="6" y="14" width="12" height="8" />
               </svg>
-              Cetak Kartu Ujian ({filteredPrintStudents.length})
+              Cetak Kartu Ujian (KTP HD) ({filteredPrintStudents.length})
             </button>
           </div>
         </div>
@@ -1119,42 +1124,478 @@ export default function SiswaManagementPage() {
         </div>
       )}
 
-      {/* PRINT-ONLY SECTION: Exam Cards (Print Sheet) */}
+      {/* PRINT-ONLY SECTION: Standar KTP 85.60 mm x 53.98 mm */}
       <div className="print-only">
         <div className="print-cards-grid">
           {filteredPrintStudents.map((siswa, idx) => (
             <div key={siswa.id || idx} className="exam-card-badge">
+              <div className="exam-card-cut-corner">✂</div>
               <div className="exam-card-header">
-                <div className="exam-card-logo">ULANGAN DIGITAL</div>
-                <div className="exam-card-title">KARTU PESERTA ASESMEN</div>
+                <div className="exam-card-logo-group">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5">
+                    <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
+                    <polyline points="9 12 11 14 15 10" />
+                  </svg>
+                  <div>
+                    <div className="exam-card-logo">ULANGAN DIGITAL</div>
+                    <div className="exam-card-sublogo">SISTEM ASESMEN & UJIAN</div>
+                  </div>
+                </div>
+                <div className="exam-card-title">KARTU PESERTA</div>
               </div>
+
               <div className="exam-card-body">
-                <div className="exam-card-row">
-                  <span className="exam-card-label">Nama Siswa</span>
-                  <span className="exam-card-val">: {siswa.nama}</span>
+                <div className="exam-card-info-col">
+                  <div className="exam-card-row">
+                    <span className="exam-card-label">Nama Siswa</span>
+                    <span className="exam-card-val exam-card-val-name">: {siswa.nama}</span>
+                  </div>
+                  <div className="exam-card-row">
+                    <span className="exam-card-label">Kelas / Absen</span>
+                    <span className="exam-card-val">: {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}</span>
+                  </div>
+                  <div className="exam-card-row">
+                    <span className="exam-card-label">ID Peserta</span>
+                    <span className="exam-card-val" style={{ fontFamily: 'Consolas, monospace' }}>: {siswa.username}</span>
+                  </div>
                 </div>
-                <div className="exam-card-row">
-                  <span className="exam-card-label">Kelas / Absen</span>
-                  <span className="exam-card-val">: {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}</span>
-                </div>
-                <div className="exam-card-divider" />
-                <div className="exam-card-row">
-                  <span className="exam-card-label">Username</span>
-                  <span className="exam-card-val" style={{ fontWeight: 700 }}>: {siswa.username}</span>
-                </div>
-                <div className="exam-card-row">
-                  <span className="exam-card-label">Password</span>
-                  <span className="exam-card-val">: {siswa.password_plain || '123456'}</span>
+
+                <div className="exam-card-login-box">
+                  <div className="exam-card-login-head">AKSES LOGIN</div>
+                  <div className="exam-card-login-row">
+                    <span className="exam-card-login-key">USER</span>
+                    <span className="exam-card-login-val">{siswa.username}</span>
+                  </div>
+                  <div className="exam-card-login-row">
+                    <span className="exam-card-login-key">PASS</span>
+                    <span className="exam-card-login-val">{siswa.password_plain || '123456'}</span>
+                  </div>
                 </div>
               </div>
+
               <div className="exam-card-footer">
-                <span>Portal: ujian.about-wrwn.site</span>
-                <span>Harap jaga kerahasiaan akun</span>
+                <span className="exam-card-footer-portal">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  ujian.about-wrwn.site
+                </span>
+                <span>Simpan & jaga kerahasiaan akun</span>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* MODAL PRATINJAU CETAK KARTU SISWA (UKURAN STANDAR KTP 85.60 mm x 53.98 mm) */}
+      {showPrintModal && (
+        <div
+          className="no-print"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPrintModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: 12,
+              width: '100%',
+              maxWidth: 960,
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header Modal */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#f8fafc',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 8,
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                      Pratinjau Cetak Kartu Peserta Ujian
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        background: '#dbeafe',
+                        color: '#1e40af',
+                        padding: '2px 8px',
+                        borderRadius: 12,
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      Ukuran KTP (8,56 cm x 5,4 cm) • HD 4K
+                    </span>
+                  </div>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
+                    Standar ISO/IEC 7810 ID-1, tajam, presisi, dan mudah dibaca oleh pengawas serta siswa.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowPrintModal(false)}
+                style={{ fontSize: 18, color: '#64748b', padding: '4px 8px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Filter & Toolbar */}
+            <div
+              style={{
+                padding: '12px 20px',
+                background: '#ffffff',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>
+                  Pilih Kelas:
+                </label>
+                <select
+                  className="form-select"
+                  value={printKelas}
+                  onChange={(e) => setPrintKelas(e.target.value)}
+                  style={{ height: 36, fontSize: 13, minWidth: 160 }}
+                >
+                  <option value="">Semua Kelas ({siswaList.length} siswa)</option>
+                  {kelasList.map((k) => {
+                    const count = siswaList.filter((s) => s.kelas === k).length;
+                    return (
+                      <option key={k} value={k}>
+                        {k} ({count} siswa)
+                      </option>
+                    );
+                  })}
+                </select>
+                <span style={{ fontSize: 12, color: '#64748b' }}>
+                  Siap cetak: <strong>{filteredPrintStudents.length} kartu</strong> (muat ~8-10 kartu per lembar A4)
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowPrintModal(false)}
+                  style={{ height: 38, fontSize: 13, fontWeight: 600 }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleExecutePrint}
+                  style={{
+                    height: 38,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    background: '#0a66c2',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '0 18px',
+                    boxShadow: '0 2px 4px rgba(10, 102, 194, 0.25)',
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Cetak Sekarang (Dialog Print)
+                </button>
+              </div>
+            </div>
+
+            {/* Instruction Banner */}
+            <div
+              style={{
+                padding: '10px 20px',
+                background: '#eff6ff',
+                borderBottom: '1px solid #bfdbfe',
+                fontSize: 12,
+                color: '#1e40af',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <span>💡</span>
+              <span>
+                <strong>Petunjuk Cetak HD 4K:</strong> Di jendela cetak browser (Ctrl+P), pilih <strong>Kertas A4</strong>, Skala <strong>100% (Default)</strong>, dan centang opsi <strong>"Grafik Latar Belakang / Background Graphics"</strong> untuk hasil kartu KTP yang presisi dan tajam maksimal.
+              </span>
+            </div>
+
+            {/* Preview Cards Grid */}
+            <div
+              style={{
+                padding: 24,
+                overflowY: 'auto',
+                flex: 1,
+                background: '#f1f5f9',
+              }}
+            >
+              {filteredPrintStudents.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                  Tidak ada peserta ujian pada kelas ini.
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                    gap: 16,
+                    justifyContent: 'center',
+                  }}
+                >
+                  {filteredPrintStudents.map((siswa, idx) => (
+                    <div
+                      key={siswa.id || idx}
+                      style={{
+                        width: '100%',
+                        maxWidth: 360,
+                        aspectRatio: '85.6 / 53.98',
+                        background: '#ffffff',
+                        border: '1px dashed #64748b',
+                        borderRadius: 10,
+                        padding: '10px 14px',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07)',
+                        position: 'relative',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 2,
+                          left: 4,
+                          fontSize: 9,
+                          color: '#94a3b8',
+                          lineHeight: 1,
+                        }}
+                      >
+                        ✂
+                      </div>
+                      {/* Card Header */}
+                      <div
+                        style={{
+                          borderBottom: '1.5px solid #0f172a',
+                          paddingBottom: 6,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5">
+                            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" />
+                            <polyline points="9 12 11 14 15 10" />
+                          </svg>
+                          <div>
+                            <div style={{ fontSize: 10.5, fontWeight: 900, color: '#0f172a', letterSpacing: 0.5, lineHeight: 1.1 }}>
+                              ULANGAN DIGITAL
+                            </div>
+                            <div style={{ fontSize: 7.5, color: '#64748b', fontWeight: 600 }}>
+                              SISTEM ASESMEN & UJIAN
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 800,
+                            background: '#0f172a',
+                            color: '#ffffff',
+                            padding: '2px 7px',
+                            borderRadius: 3,
+                            letterSpacing: 0.4,
+                          }}
+                        >
+                          KARTU PESERTA
+                        </div>
+                      </div>
+
+                      {/* Card Body */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 10,
+                          alignItems: 'center',
+                          flex: 1,
+                          padding: '4px 0',
+                        }}
+                      >
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
+                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0 }}>Nama Siswa</span>
+                            <span
+                              style={{
+                                flex: 1,
+                                fontWeight: 800,
+                                color: '#000000',
+                                textTransform: 'uppercase',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              : {siswa.nama}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
+                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0 }}>Kelas / Absen</span>
+                            <span style={{ flex: 1, fontWeight: 700, color: '#0f172a' }}>
+                              : {siswa.kelas || '-'} / No. {siswa.no_absen || '-'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
+                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0 }}>ID Peserta</span>
+                            <span style={{ flex: 1, fontFamily: 'Consolas, monospace', fontWeight: 600, color: '#0f172a' }}>
+                              : {siswa.username}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Login Credential Box */}
+                        <div
+                          style={{
+                            width: 125,
+                            border: '1px solid #0f172a',
+                            borderRadius: 4,
+                            background: '#f8fafc',
+                            padding: '4px 6px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 3,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 7.5,
+                              fontWeight: 800,
+                              color: '#475569',
+                              letterSpacing: 0.5,
+                              borderBottom: '0.5px solid #cbd5e1',
+                              paddingBottom: 2,
+                              textAlign: 'center',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            AKSES LOGIN
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontFamily: 'Consolas, monospace',
+                              fontSize: 10,
+                              lineHeight: 1.1,
+                            }}
+                          >
+                            <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8.5 }}>USER</span>
+                            <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.username}</span>
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontFamily: 'Consolas, monospace',
+                              fontSize: 10,
+                              lineHeight: 1.1,
+                            }}
+                          >
+                            <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8.5 }}>PASS</span>
+                            <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.password_plain || '123456'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div
+                        style={{
+                          borderTop: '0.8px solid #cbd5e1',
+                          paddingTop: 4,
+                          fontSize: 8,
+                          color: '#475569',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="2" y1="12" x2="22" y2="12" />
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                          </svg>
+                          ujian.about-wrwn.site
+                        </span>
+                        <span>Simpan & jaga kerahasiaan akun</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Edit Siswa (CRUD) */}
       {showEditModal && editingStudent && (

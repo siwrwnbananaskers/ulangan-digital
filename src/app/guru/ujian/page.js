@@ -1088,11 +1088,16 @@ export default function UjianPage() {
                           style={{ marginTop: 3 }}
                         />
                         <div style={{ flex: 1, fontSize: 12 }}>
-                          <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
+                          <div style={{ display: 'flex', gap: 6, marginBottom: 2, alignItems: 'center' }}>
                             <span className="badge badge-gray" style={{ fontSize: 10, fontWeight: 700 }}>#{idx + 1}</span>
                             <span className="badge badge-gray" style={{ fontSize: 10 }}>{soal.tipe?.toUpperCase()}</span>
                             <span className="badge badge-primary" style={{ fontSize: 10 }}>{soal.mata_pelajaran}</span>
                             <span style={{ color: '#64748b' }}>Bobot: {soal.bobot}</span>
+                            {soal.gambar && (
+                              <span className="badge" style={{ fontSize: 9.5, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '1px 5px', fontWeight: 700 }}>
+                                🖼️ Bergambar
+                              </span>
+                            )}
                           </div>
                           <span style={{ color: '#1e293b', fontWeight: 500 }}>
                             {soal.pertanyaan?.substring(0, 110)}{soal.pertanyaan?.length > 110 ? '...' : ''}

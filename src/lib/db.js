@@ -366,6 +366,14 @@ class D1Client {
         },
         body: JSON.stringify({ sql: 'ALTER TABLE sesi_ujian ADD COLUMN urutan_soal TEXT' }),
       });
+      await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sql: 'ALTER TABLE soal ADD COLUMN gambar TEXT' }),
+      });
     } catch (_) {}
   }
 
@@ -848,6 +856,10 @@ class D1Client {
       }
 
       if (upper.includes('INTO SOAL')) {
+        let gambarVal = null;
+        if (params.length > 12 && params[12] !== undefined) {
+          gambarVal = params[12];
+        }
         fallbackStore.soal.unshift({
           id: params[0],
           guru_id: params[1],
@@ -861,6 +873,7 @@ class D1Client {
           pilihan_e: params[9],
           kunci_jawaban: params[10],
           bobot: params[11] || 1,
+          gambar: gambarVal,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -984,8 +997,18 @@ class D1Client {
       }
 
       if (upper.includes('UPDATE SOAL')) {
-        const id = params[10] || params[0];
-        const item = fallbackStore.soal.find(s => s.id === id);
+        let item = null;
+        for (const p of params) {
+          if (typeof p === 'string' && fallbackStore.soal.some(s => s.id === p)) {
+            item = fallbackStore.soal.find(s => s.id === p);
+            break;
+          }
+        }
+        if (!item) {
+          const id = params[11] || params[10] || params[0];
+          item = fallbackStore.soal.find(s => s.id === id);
+        }
+
         if (item) {
           if (params[0]) item.mata_pelajaran = params[0];
           if (params[1]) item.tipe = params[1];
@@ -996,7 +1019,10 @@ class D1Client {
           if (params[6] !== undefined) item.pilihan_d = params[6];
           if (params[7] !== undefined) item.pilihan_e = params[7];
           if (params[8] !== undefined) item.kunci_jawaban = params[8];
-          if (params[9] !== undefined) item.bobot = params[9];
+          if (params[9] !== undefined && params[9] !== null) item.bobot = params[9];
+          if (params.length > 10 && params[10] !== undefined) {
+            item.gambar = params[10];
+          }
           item.updated_at = new Date().toISOString();
         }
         savePersistedStore(fallbackStore);

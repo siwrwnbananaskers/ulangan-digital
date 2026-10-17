@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS soal (
   pilihan_e TEXT,
   kunci_jawaban TEXT,
   bobot INTEGER DEFAULT 1,
+  gambar TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (guru_id) REFERENCES users(id)

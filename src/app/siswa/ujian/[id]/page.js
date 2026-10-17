@@ -41,6 +41,7 @@ export default function LembarUjianPage() {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMobileNavDrawer, setShowMobileNavDrawer] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   // Violation handling via hook
   const handleViolationCallback = useCallback(async (violationData) => {
@@ -609,6 +610,30 @@ export default function LembarUjianPage() {
                 {currentSoal.pertanyaan}
               </div>
 
+              {/* Soal Bergambar (Jika tersedia gambar pada butir soal) */}
+              {currentSoal.gambar && (
+                <div className="exam-question-image-box">
+                  <img
+                    src={currentSoal.gambar}
+                    alt={`Gambar Soal No. ${displayNumber}`}
+                    className="exam-question-img"
+                    onClick={() => setLightboxImage(currentSoal.gambar)}
+                    title="Klik untuk memperbesar gambar (HD)"
+                  />
+                  <div className="exam-question-image-caption">
+                    <span>🖼️ Gambar pendukung butir soal</span>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '2px 8px', fontSize: 11, color: '#2563eb', fontWeight: 600, height: 26 }}
+                      onClick={() => setLightboxImage(currentSoal.gambar)}
+                    >
+                      🔍 Perbesar Gambar (HD)
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Input for Answers depending on Question Type */}
               <div className="exam-answer-area">
                 {/* 1. Multiple Choice (PG) */}
@@ -1021,6 +1046,26 @@ export default function LembarUjianPage() {
 
       {/* Modal Konfirmasi & Notifikasi Modern */}
       <ConfirmModal {...dialogState} onConfirm={handleConfirm} onClose={handleClose} />
+
+      {/* Lightbox Modal HD Gambar Soal */}
+      {lightboxImage && (
+        <div className="soal-lightbox-overlay" onClick={() => setLightboxImage(null)}>
+          <div className="soal-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="soal-lightbox-close"
+              onClick={() => setLightboxImage(null)}
+              title="Tutup Pratinjau"
+            >
+              ✕
+            </button>
+            <img src={lightboxImage} alt="Gambar Soal HD" className="soal-lightbox-img" />
+            <div style={{ marginTop: 8, fontSize: 12, color: '#64748b', textAlign: 'center' }}>
+              Gambar Soal No. {displayNumber} (Resolusi HD) • Klik silang atau area luar untuk kembali
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

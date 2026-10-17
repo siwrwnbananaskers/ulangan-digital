@@ -35,11 +35,13 @@ export default function BankSoal() {
   const [excelParsedSoal, setExcelParsedSoal] = useState([]);
   const [excelError, setExcelError] = useState(null);
   const [importProcessing, setImportProcessing] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   const [form, setForm] = useState({
     mata_pelajaran: '',
     tipe: 'pg',
     pertanyaan: '',
+    gambar: '',
     pilihan_a: '',
     pilihan_b: '',
     pilihan_c: '',
@@ -48,6 +50,57 @@ export default function BankSoal() {
     kunci_jawaban: '',
     bobot: 1,
   });
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAlert({ type: 'danger', message: 'Berkas harus berupa gambar (JPG, PNG, WEBP, GIF, SVG)' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAlert({ type: 'danger', message: 'Ukuran berkas gambar maksimal 5 MB' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const img = new Image();
+      img.onload = () => {
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (width > height) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          } else {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.88);
+          setForm((prev) => ({ ...prev, gambar: compressed }));
+        } else {
+          setForm((prev) => ({ ...prev, gambar: dataUrl }));
+        }
+      };
+      img.onerror = () => {
+        setForm((prev) => ({ ...prev, gambar: dataUrl }));
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -74,6 +127,7 @@ export default function BankSoal() {
       mata_pelajaran: '',
       tipe: 'pg',
       pertanyaan: '',
+      gambar: '',
       pilihan_a: '',
       pilihan_b: '',
       pilihan_c: '',
@@ -192,6 +246,19 @@ export default function BankSoal() {
 
           const pertanyaan = String(row['pertanyaan'] || row['soal'] || row['butirsoal'] || row['question'] || '').trim();
 
+          const gambar = String(
+            row['linkurlgambaropsional'] ||
+            row['linkurlgambar'] ||
+            row['linkgambar'] ||
+            row['urlgambar'] ||
+            row['gambar'] ||
+            row['gambarsoal'] ||
+            row['fotosoal'] ||
+            row['image'] ||
+            row['imageurl'] ||
+            ''
+          ).trim();
+
           const pilA = String(row['pilihana'] || row['opsia'] || row['a'] || '').trim();
           const pilB = String(row['pilihanb'] || row['opsib'] || row['b'] || '').trim();
           const pilC = String(row['pilihanc'] || row['opsic'] || row['c'] || '').trim();
@@ -215,7 +282,7 @@ export default function BankSoal() {
           const bobot = !isNaN(bobotRaw) && bobotRaw > 0 ? bobotRaw : 1;
 
           // If row is completely empty, skip it
-          if (!pertanyaan && !pilA && !pilB && !kunciRaw && !rawMapel) {
+          if (!pertanyaan && !pilA && !pilB && !kunciRaw && !rawMapel && !gambar) {
             return;
           }
 
@@ -240,6 +307,7 @@ export default function BankSoal() {
             mata_pelajaran: mapel,
             tipe,
             pertanyaan,
+            gambar,
             pilihan_a: pilA,
             pilihan_b: pilB,
             pilihan_c: pilC,
@@ -284,6 +352,7 @@ export default function BankSoal() {
             mata_pelajaran: s.mata_pelajaran || importDefaultMapel,
             tipe: s.tipe,
             pertanyaan: s.pertanyaan,
+            gambar: s.gambar || null,
             pilihan_a: s.pilihan_a,
             pilihan_b: s.pilihan_b,
             pilihan_c: s.pilihan_c,
@@ -361,6 +430,7 @@ export default function BankSoal() {
       mata_pelajaran: soal.mata_pelajaran,
       tipe: soal.tipe,
       pertanyaan: soal.pertanyaan,
+      gambar: soal.gambar || '',
       pilihan_a: soal.pilihan_a || '',
       pilihan_b: soal.pilihan_b || '',
       pilihan_c: soal.pilihan_c || '',
@@ -586,6 +656,26 @@ export default function BankSoal() {
                           {TIPE_SOAL.find(t => t.value === soal.tipe)?.label || soal.tipe}
                         </span>
                         <span className="badge badge-info">Bobot: {soal.bobot}</span>
+                        {soal.gambar && (
+                          <span
+                            className="badge"
+                            style={{
+                              background: '#ecfdf5',
+                              color: '#047857',
+                              border: '1px solid #a7f3d0',
+                              fontWeight: 700,
+                              fontSize: 11,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => setLightboxImage(soal.gambar)}
+                            title="Klik untuk melihat gambar soal"
+                          >
+                            🖼️ Bergambar
+                          </span>
+                        )}
                         {(soal.nama_guru || user?.role === 'superadmin') && (
                           <span
                             className="badge"
@@ -611,6 +701,46 @@ export default function BankSoal() {
                       <p style={{ fontSize: 'var(--font-size-md)', color: 'var(--gray-800)', lineHeight: 1.6 }}>
                         <strong>#{idx + 1}</strong> — {soal.pertanyaan}
                       </p>
+                      {soal.gambar && (
+                        <div style={{ margin: '8px 0 12px' }}>
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              background: '#f8fafc',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: 8,
+                              padding: '6px 12px 6px 6px',
+                              cursor: 'zoom-in',
+                              transition: 'all 0.15s ease',
+                            }}
+                            onClick={() => setLightboxImage(soal.gambar)}
+                            title="Klik untuk memperbesar gambar (HD)"
+                          >
+                            <img
+                              src={soal.gambar}
+                              alt="Gambar Soal"
+                              style={{
+                                width: 90,
+                                height: 62,
+                                objectFit: 'contain',
+                                borderRadius: 6,
+                                background: '#ffffff',
+                                border: '1px solid #e2e8f0',
+                              }}
+                            />
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+                                Gambar Terlampir
+                              </div>
+                              <div style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                🔍 Klik untuk perbesar (HD)
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {soal.tipe === 'pg' && (
                         <div style={{ marginTop: 'var(--space-sm)', fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
                           {['a', 'b', 'c', 'd', 'e'].map(opt => soal[`pilihan_${opt}`] && (
@@ -699,6 +829,132 @@ export default function BankSoal() {
                   placeholder="Tulis pertanyaan di sini..."
                   required
                 />
+              </div>
+
+              {/* Lampiran Gambar Soal (Opsional) */}
+              <div
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 8,
+                  padding: 14,
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#0f172a' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    Gambar Pendukung Soal <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>(Opsional)</span>
+                  </label>
+                  {form.gambar && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setForm({ ...form, gambar: '' })}
+                      style={{ color: '#ef4444', fontSize: 11, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      Hapus Gambar
+                    </button>
+                  )}
+                </div>
+
+                {form.gambar ? (
+                  <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div
+                      style={{
+                        position: 'relative',
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        border: '1px solid #cbd5e1',
+                        background: '#ffffff',
+                        padding: 4,
+                      }}
+                    >
+                      <img
+                        src={form.gambar}
+                        alt="Pratinjau Soal"
+                        style={{
+                          maxHeight: 180,
+                          maxWidth: '100%',
+                          display: 'block',
+                          borderRadius: 6,
+                          objectFit: 'contain',
+                          cursor: 'zoom-in',
+                        }}
+                        onClick={() => setLightboxImage(form.gambar)}
+                        title="Klik untuk memperbesar gambar"
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        ✓ Gambar terpasang pada butir soal ini
+                      </div>
+                      <p style={{ fontSize: 11, color: '#64748b', margin: '0 0 8px', lineHeight: 1.4 }}>
+                        Gambar akan otomatis tampil di bawah pertanyaan saat siswa mengerjakan ujian.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setLightboxImage(form.gambar)}
+                        style={{ fontSize: 11, height: 30 }}
+                      >
+                        🔍 Lihat Ukuran Penuh (HD)
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+                      <label
+                        className="btn btn-secondary btn-sm"
+                        style={{
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          fontSize: 12,
+                          height: 34,
+                          borderRadius: 6,
+                          background: '#ffffff',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Pilih Gambar dari Perangkat
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleImageUpload}
+                        />
+                      </label>
+                      <span style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center' }}>
+                        atau tempel URL gambar web di bawah:
+                      </span>
+                    </div>
+                    <input
+                      className="form-input"
+                      type="url"
+                      placeholder="https://... (URL gambar langsung)"
+                      value={form.gambar}
+                      onChange={(e) => setForm({ ...form, gambar: e.target.value })}
+                      style={{ fontSize: 12, height: 36, background: '#ffffff' }}
+                    />
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                      Mendukung format PNG, JPG, JPEG, WEBP, SVG, GIF (Maks. 5 MB).
+                    </div>
+                  </div>
+                )}
               </div>
 
               {form.tipe === 'pg' && (
@@ -1099,6 +1355,7 @@ export default function BankSoal() {
                           <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, width: 100 }}>TIPE</th>
                           <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, width: 110 }}>MAPEL</th>
                           <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600 }}>PERTANYAAN</th>
+                          <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, width: 75, textAlign: 'center' }}>GAMBAR</th>
                           <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, width: 80, textAlign: 'center' }}>KUNCI</th>
                           <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, width: 55, textAlign: 'center' }}>BOBOT</th>
                           <th style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, width: 85, textAlign: 'center' }}>STATUS</th>
@@ -1130,6 +1387,29 @@ export default function BankSoal() {
                                 <div style={{ fontSize: 10, color: '#b91c1c', marginTop: 2, fontWeight: 600 }}>
                                   Catatan: {item.errors.join(', ')}
                                 </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                              {item.gambar ? (
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    padding: '2px 6px',
+                                    borderRadius: 4,
+                                    background: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    cursor: 'pointer',
+                                    display: 'inline-block',
+                                    border: '1px solid #bfdbfe',
+                                  }}
+                                  onClick={() => setLightboxImage(item.gambar)}
+                                  title="Klik untuk melihat gambar"
+                                >
+                                  🖼️ Ada
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>-</span>
                               )}
                             </td>
                             <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>
@@ -1266,6 +1546,26 @@ export default function BankSoal() {
         onConfirm={handleConfirm}
         onClose={handleClose}
       />
+
+      {/* Lightbox Modal for HD Image Viewing */}
+      {lightboxImage && (
+        <div className="soal-lightbox-overlay" onClick={() => setLightboxImage(null)}>
+          <div className="soal-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="soal-lightbox-close"
+              onClick={() => setLightboxImage(null)}
+              title="Tutup Pratinjau"
+            >
+              ✕
+            </button>
+            <img src={lightboxImage} alt="Pratinjau HD" className="soal-lightbox-img" />
+            <div style={{ marginTop: 8, fontSize: 12, color: '#64748b', textAlign: 'center' }}>
+              Pratinjau Gambar Butir Soal (HD) • Klik tanda silang atau luar gambar untuk menutup
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

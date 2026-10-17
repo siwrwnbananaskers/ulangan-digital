@@ -13,6 +13,7 @@ export function buildSoalTemplateWorkbook() {
     'Mata Pelajaran',
     'Tipe Soal',
     'Pertanyaan',
+    'Link / URL Gambar (Opsional)',
     'Pilihan A',
     'Pilihan B',
     'Pilihan C',
@@ -27,7 +28,8 @@ export function buildSoalTemplateWorkbook() {
       1,
       'Informatika',
       'Pilihan Ganda',
-      'Komponen perangkat keras yang bertindak sebagai otak utama pengendali dan pemroses instruksi pada sistem komputer adalah...',
+      'Perhatikan gambar komponen komputer di atas! Komponen perangkat keras tersebut bertindak sebagai unit pengendali dan pemroses instruksi utama sistem komputer, yaitu...',
+      'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=600',
       'RAM (Random Access Memory)',
       'CPU (Central Processing Unit)',
       'Hard Disk Drive (HDD)',
@@ -41,6 +43,7 @@ export function buildSoalTemplateWorkbook() {
       'Informatika',
       'Pilihan Ganda',
       'Manakah dari pilihan sistem operasi di bawah ini yang dikembangkan secara open source dan bebas didistribusikan?',
+      '',
       'Microsoft Windows 11',
       'Apple macOS Sonoma',
       'Linux Ubuntu',
@@ -59,6 +62,7 @@ export function buildSoalTemplateWorkbook() {
       '',
       '',
       '',
+      '',
       'Benar',
       1,
     ],
@@ -72,6 +76,7 @@ export function buildSoalTemplateWorkbook() {
       '',
       '',
       '',
+      '',
       'HTTPS',
       2,
     ],
@@ -80,6 +85,7 @@ export function buildSoalTemplateWorkbook() {
       'Informatika',
       'Uraian',
       'Jelaskan fungsi penting firewall dalam melindungi keamanan jaringan lokal komputer dari ancaman lalu lintas luar!',
+      '',
       '',
       '',
       '',
@@ -99,6 +105,7 @@ export function buildSoalTemplateWorkbook() {
     { wch: 20 }, // Mata Pelajaran
     { wch: 18 }, // Tipe Soal
     { wch: 52 }, // Pertanyaan
+    { wch: 32 }, // Link / URL Gambar (Opsional)
     { wch: 28 }, // Pilihan A
     { wch: 28 }, // Pilihan B
     { wch: 26 }, // Pilihan C
@@ -129,7 +136,7 @@ export function buildSoalTemplateWorkbook() {
     },
   };
 
-  const centerColIdxs = [0, 2, 9, 10]; // No, Tipe Soal, Kunci, Bobot
+  const centerColIdxs = [0, 2, 10, 11]; // No, Tipe Soal, Kunci, Bobot
 
   // Apply styles to Sheet 1
   for (let c = 0; c < headers.length; c++) {
@@ -182,6 +189,11 @@ export function buildSoalTemplateWorkbook() {
       'Pertanyaan',
       'Teks isi butir soal. Tulis pertanyaan secara jelas dan terstruktur tanpa tanda petik pembuka yang merusak formula.',
       'Komponen komputer yang berfungsi...',
+    ],
+    [
+      'Link / URL Gambar (Opsional)',
+      'Tautan atau URL berkas gambar pendukung soal (format .jpg, .png, .webp). Bersifat opsional, kosongkan jika butir soal tidak memerlukan gambar ilustrasi.',
+      'https://contoh.com/gambar-soal.png',
     ],
     [
       'Pilihan A s/d E',
