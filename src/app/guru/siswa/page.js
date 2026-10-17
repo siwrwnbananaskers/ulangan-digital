@@ -1706,34 +1706,36 @@ export default function SiswaManagementPage() {
                             <div
                               style={{
                                 flex: 1,
-                                minHeight: 52,
+                                minHeight: 38,
+                                maxHeight: 42,
                                 width: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 textAlign: 'center',
-                                margin: '2px 0',
+                                margin: '1px 0',
                               }}
                             >
                               {ttdGuru && (
                                 <img
                                   src={ttdGuru}
                                   alt="TTD Guru"
-                                  style={{ maxHeight: 52, maxWidth: 130, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                                  style={{ maxHeight: 38, maxWidth: 110, objectFit: 'contain', display: 'block', margin: '0 auto' }}
                                 />
                               )}
                             </div>
                             <div
                               style={{
-                                fontSize: 9,
+                                fontSize: 8.5,
                                 fontWeight: 800,
                                 color: '#0f172a',
-                                lineHeight: 1.1,
+                                lineHeight: 1.15,
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 width: '100%',
                                 textAlign: 'center',
+                                marginTop: 2,
                               }}
                               title={namaGuru}
                             >
