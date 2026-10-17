@@ -1203,8 +1203,10 @@ export default function SiswaManagementPage() {
 
                   {/* Sisi Kanan (Sudut Bawah Kanan): Tanggal Cetak & TTD Guru Pengampu */}
                   <div className="exam-card-sign-col">
-                    <div className="exam-card-sign-date">{formatCardDate()}</div>
-                    <div className="exam-card-sign-label">Guru Pengampu,</div>
+                    <div>
+                      <div className="exam-card-sign-date">{formatCardDate()}</div>
+                      <div className="exam-card-sign-label">Guru Pengampu,</div>
+                    </div>
                     <div className="exam-card-sign-space"></div>
                     <div className="exam-card-sign-name" title={namaGuru}>( {namaGuru} )</div>
                   </div>
@@ -1442,7 +1444,7 @@ export default function SiswaManagementPage() {
                           background: '#ffffff',
                           border: '1px dashed #64748b',
                           borderRadius: 10,
-                          padding: '9px 12px 7px 12px',
+                          padding: '11px 14px 9px 14px',
                           boxSizing: 'border-box',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1468,7 +1470,8 @@ export default function SiswaManagementPage() {
                         <div
                           style={{
                             borderBottom: '1.2px solid #0f172a',
-                            paddingBottom: 4,
+                            paddingBottom: 5,
+                            marginBottom: 8,
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
@@ -1504,18 +1507,19 @@ export default function SiswaManagementPage() {
                           </div>
                         </div>
 
-                        {/* Identitas Siswa Full-Width (Anti-Terpotong) */}
+                        {/* Identitas Siswa Full-Width (Anti-Terpotong & Berjarak Proporsional dari Kop) */}
                         <div
                           style={{
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 2,
-                            paddingBottom: 4,
-                            borderBottom: '0.6px dashed #cbd5e1',
+                            gap: 3,
+                            paddingBottom: 6,
+                            marginBottom: 8,
+                            borderBottom: '0.8px dashed #cbd5e1',
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'baseline', fontSize: 10 }}>
-                            <span style={{ width: 68, color: '#475569', fontWeight: 600, flexShrink: 0, fontSize: 9 }}>Nama Siswa</span>
+                            <span style={{ width: 72, color: '#475569', fontWeight: 600, flexShrink: 0, fontSize: 9 }}>Nama Siswa</span>
                             <span
                               style={{
                                 flex: 1,
@@ -1523,14 +1527,14 @@ export default function SiswaManagementPage() {
                                 color: '#000000',
                                 textTransform: 'uppercase',
                                 lineHeight: 1.15,
-                                fontSize: 9.8,
+                                fontSize: 10,
                                 wordBreak: 'break-word',
                               }}
                             >
                               : {siswa.nama}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8.5 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8.5, marginTop: 2 }}>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
                               <span style={{ color: '#475569', fontWeight: 600 }}>Kelas / Absen :</span>
                               <span style={{ fontWeight: 700, color: '#0f172a' }}>
@@ -1546,38 +1550,39 @@ export default function SiswaManagementPage() {
                           </div>
                         </div>
 
-                        {/* Bagian Bawah: Kiri (Login Box) & Kanan (Tanggal & TTD Guru Pengampu) */}
+                        {/* Bagian Bawah: Mengisi ruang secara proporsional */}
                         <div
                           style={{
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            gap: 8,
+                            alignItems: 'stretch',
+                            gap: 10,
                             flex: 1,
-                            paddingTop: 3,
+                            marginBottom: 6,
+                            minHeight: 70,
                           }}
                         >
                           {/* Sisi Kiri: Login Box & Portal Link */}
-                          <div style={{ width: 125, display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+                          <div style={{ width: 130, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexShrink: 0 }}>
                             <div
                               style={{
                                 border: '1px solid #0f172a',
                                 borderRadius: 3,
                                 background: '#f8fafc',
-                                padding: '3px 5px',
+                                padding: '4px 7px',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                gap: 2,
+                                gap: 2.5,
                               }}
                             >
                               <div
                                 style={{
-                                  fontSize: 7,
+                                  fontSize: 7.2,
                                   fontWeight: 800,
                                   color: '#475569',
                                   letterSpacing: 0.5,
                                   borderBottom: '0.5px solid #cbd5e1',
-                                  paddingBottom: 1,
+                                  paddingBottom: 2,
                                   textAlign: 'center',
                                   textTransform: 'uppercase',
                                 }}
@@ -1590,11 +1595,11 @@ export default function SiswaManagementPage() {
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
                                   fontFamily: 'Consolas, monospace',
-                                  fontSize: 8.5,
+                                  fontSize: 9,
                                   lineHeight: 1.1,
                                 }}
                               >
-                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 7.5 }}>USER</span>
+                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8 }}>USER</span>
                                 <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.username}</span>
                               </div>
                               <div
@@ -1603,16 +1608,16 @@ export default function SiswaManagementPage() {
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
                                   fontFamily: 'Consolas, monospace',
-                                  fontSize: 8.5,
+                                  fontSize: 9,
                                   lineHeight: 1.1,
                                 }}
                               >
-                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 7.5 }}>PASS</span>
+                                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 8 }}>PASS</span>
                                 <span style={{ fontWeight: 800, color: '#0f172a' }}>{siswa.password_plain || '123456'}</span>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 7, fontWeight: 700, color: '#334155' }}>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 7.5, fontWeight: 700, color: '#334155', marginTop: 4 }}>
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <circle cx="12" cy="12" r="10" />
                                 <line x1="2" y1="12" x2="22" y2="12" />
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -1627,21 +1632,24 @@ export default function SiswaManagementPage() {
                               flex: 1,
                               display: 'flex',
                               flexDirection: 'column',
+                              justifyContent: 'space-between',
                               alignItems: 'flex-end',
                               textAlign: 'right',
                               minWidth: 0,
                             }}
                           >
-                            <div style={{ fontSize: 7.5, fontWeight: 600, color: '#334155', lineHeight: 1.1 }}>
-                              {formatCardDate()}
+                            <div>
+                              <div style={{ fontSize: 8, fontWeight: 600, color: '#334155', lineHeight: 1.2 }}>
+                                {formatCardDate()}
+                              </div>
+                              <div style={{ fontSize: 8, fontWeight: 600, color: '#475569', lineHeight: 1.2, marginTop: 1 }}>
+                                Guru Pengampu,
+                              </div>
                             </div>
-                            <div style={{ fontSize: 7.5, fontWeight: 600, color: '#475569', lineHeight: 1.1, marginTop: 1 }}>
-                              Guru Pengampu,
-                            </div>
-                            <div style={{ height: 24, width: '100%' }}></div>
+                            <div style={{ flex: 1, minHeight: 26, width: '100%' }}></div>
                             <div
                               style={{
-                                fontSize: 8.5,
+                                fontSize: 9,
                                 fontWeight: 800,
                                 color: '#0f172a',
                                 lineHeight: 1.1,
@@ -1660,9 +1668,9 @@ export default function SiswaManagementPage() {
                         {/* Card Footer */}
                         <div
                           style={{
-                            borderTop: '0.6px solid #e2e8f0',
-                            paddingTop: 3,
-                            fontSize: 7,
+                            borderTop: '0.8px solid #cbd5e1',
+                            paddingTop: 4,
+                            fontSize: 7.5,
                             color: '#64748b',
                             display: 'flex',
                             justifyContent: 'space-between',

@@ -3135,7 +3135,7 @@ img {
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    padding: 2.8mm 3.5mm 2.2mm 3.5mm !important;
+    padding: 3mm 3.8mm 2.4mm 3.8mm !important;
     border: 1px dashed #64748b !important;
     border-radius: 3.18mm !important;
     background: #ffffff !important;
@@ -3151,8 +3151,8 @@ img {
   }
   .exam-card-header {
     border-bottom: 1.2px solid #0f172a !important;
-    padding-bottom: 1.2mm !important;
-    margin-bottom: 1.2mm !important;
+    padding-bottom: 1.4mm !important;
+    margin-bottom: 2.2mm !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -3188,14 +3188,14 @@ img {
     white-space: nowrap !important;
     box-shadow: none !important;
   }
-  /* Identitas Siswa Lebar Penuh (Anti-Terpotong) */
+  /* Identitas Siswa Lebar Penuh (Anti-Terpotong & Berjarak Rapi dari Kop) */
   .exam-card-student-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.8mm !important;
-    margin-bottom: 1.2mm !important;
+    gap: 1.2mm !important;
+    margin-bottom: 2.2mm !important;
     border-bottom: 0.6px dashed #cbd5e1 !important;
-    padding-bottom: 1mm !important;
+    padding-bottom: 1.5mm !important;
   }
   .exam-card-name-row {
     display: flex !important;
@@ -3203,16 +3203,16 @@ img {
     width: 100% !important;
   }
   .exam-card-label-wide {
-    width: 17mm !important;
+    width: 18mm !important;
     color: #475569 !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
     font-weight: 600 !important;
     flex-shrink: 0 !important;
   }
   .exam-card-val-name {
     flex: 1 !important;
     font-weight: 800 !important;
-    font-size: 8pt !important;
+    font-size: 8.2pt !important;
     color: #000000 !important;
     text-transform: uppercase !important;
     line-height: 1.15 !important;
@@ -3224,7 +3224,8 @@ img {
     justify-content: space-between !important;
     align-items: center !important;
     width: 100% !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
+    margin-top: 0.4mm !important;
   }
   .exam-card-meta-item {
     display: flex !important;
@@ -3233,41 +3234,43 @@ img {
   }
   .exam-card-label-narrow {
     color: #475569 !important;
-    font-size: 6.4pt !important;
+    font-size: 6.5pt !important;
     font-weight: 600 !important;
   }
   .exam-card-val-meta {
     font-weight: 700 !important;
     color: #0f172a !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
   }
-  /* Bagian Bawah: 2 Kolom (Kiri: Login Box, Kanan: Tanggal & TTD Guru) */
+  /* Bagian Bawah: Memenuhi ruang vertikal secara seimbang tanpa sisa kosong di footer */
   .exam-card-bottom-grid {
     display: flex !important;
     justify-content: space-between !important;
-    align-items: flex-start !important;
-    gap: 2.5mm !important;
+    align-items: stretch !important;
+    gap: 3mm !important;
     flex: 1 !important;
+    margin-bottom: 1.5mm !important;
+    min-height: 21mm !important;
   }
   .exam-card-login-col {
-    width: 37mm !important;
+    width: 38mm !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.8mm !important;
+    justify-content: space-between !important;
     flex-shrink: 0 !important;
   }
   .exam-card-login-box {
     border: 1px solid #0f172a !important;
     border-radius: 2px !important;
     background: #f8fafc !important;
-    padding: 1mm 1.8mm !important;
+    padding: 1.2mm 2mm !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.6mm !important;
+    gap: 0.7mm !important;
   }
   .exam-card-login-head {
-    font-size: 5.2pt !important;
+    font-size: 5.4pt !important;
     font-weight: 800 !important;
     color: #475569 !important;
     letter-spacing: 0.5px !important;
@@ -3282,57 +3285,59 @@ img {
     justify-content: space-between !important;
     align-items: center !important;
     font-family: 'Consolas', 'Courier New', monospace !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
     line-height: 1.1 !important;
   }
   .exam-card-login-key {
     font-weight: 700 !important;
     color: #64748b !important;
-    font-size: 5.8pt !important;
+    font-size: 6pt !important;
   }
   .exam-card-login-val {
     font-weight: 800 !important;
     color: #0f172a !important;
-    font-size: 7.2pt !important;
+    font-size: 7.4pt !important;
     letter-spacing: 0.2px !important;
   }
   .exam-card-portal-badge {
     display: flex !important;
     align-items: center !important;
     gap: 2px !important;
-    font-size: 5pt !important;
+    font-size: 5.2pt !important;
     font-weight: 700 !important;
     color: #334155 !important;
+    margin-top: 1mm !important;
   }
-  /* Kolom Sudut Bawah Sebelah Kanan: Tanggal & TTD Guru */
+  /* Kolom Sudut Bawah Kanan: Tanggal & TTD Guru dengan jarak tanda tangan proporsional */
   .exam-card-sign-col {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
+    justify-content: space-between !important;
     align-items: flex-end !important;
     text-align: right !important;
     min-width: 0 !important;
   }
   .exam-card-sign-date {
-    font-size: 5.8pt !important;
+    font-size: 6pt !important;
     font-weight: 600 !important;
     color: #334155 !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
   }
   .exam-card-sign-label {
-    font-size: 5.8pt !important;
+    font-size: 6pt !important;
     font-weight: 600 !important;
     color: #475569 !important;
     line-height: 1.2 !important;
-    margin-bottom: 0.3mm !important;
   }
   .exam-card-sign-space {
-    height: 7mm !important;
+    flex: 1 !important;
+    min-height: 8mm !important;
     width: 100% !important;
   }
   .exam-card-sign-name {
-    font-size: 6.5pt !important;
+    font-size: 6.8pt !important;
     font-weight: 800 !important;
     color: #0f172a !important;
     line-height: 1.1 !important;
@@ -3342,9 +3347,9 @@ img {
     max-width: 42mm !important;
   }
   .exam-card-footer {
-    border-top: 0.5px solid #e2e8f0 !important;
-    padding-top: 0.6mm !important;
-    font-size: 5pt !important;
+    border-top: 0.6px solid #cbd5e1 !important;
+    padding-top: 0.8mm !important;
+    font-size: 5.2pt !important;
     color: #64748b !important;
     display: flex !important;
     justify-content: space-between !important;

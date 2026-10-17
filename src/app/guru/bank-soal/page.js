@@ -8,12 +8,146 @@ import { downloadSoalTemplateFile } from '@/lib/generateSoalTemplate';
 import UpgradeModal from '@/components/UpgradeModal';
 import ConfirmModal, { useConfirmDialog } from '@/components/ConfirmModal';
 
+import JSZip from 'jszip';
+
 const TIPE_SOAL = [
   { value: 'pg', label: 'Pilihan Ganda' },
   { value: 'isian', label: 'Isian Singkat' },
   { value: 'benar_salah', label: 'Benar/Salah' },
   { value: 'uraian', label: 'Uraian' },
 ];
+
+/**
+ * Extracts embedded images directly from an Excel (.xlsx) file using JSZip.
+ * Maps drawing anchors to sheet row numbers so pictures inserted in Excel
+ * are automatically attached to their respective questions.
+ */
+async function extractEmbeddedImagesFromExcel(arrayBuffer) {
+  const imagesByRow = {};
+  const mediaFiles = {};
+  const allMediaList = [];
+
+  try {
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    // 1. Read all image files in xl/media/
+    const mediaFolder = zip.folder('xl/media');
+    if (mediaFolder) {
+      const mediaEntries = [];
+      mediaFolder.forEach((relativePath, file) => {
+        mediaEntries.push({ path: relativePath, file });
+      });
+
+      mediaEntries.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true }));
+
+      for (const entry of mediaEntries) {
+        const ext = entry.path.split('.').pop()?.toLowerCase() || 'png';
+        const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+                   : ext === 'png' ? 'image/png'
+                   : ext === 'webp' ? 'image/webp'
+                   : ext === 'gif' ? 'image/gif'
+                   : 'image/png';
+        const base64 = await entry.file.async('base64');
+        const dataUrl = `data:${mime};base64,${base64}`;
+        mediaFiles[entry.path] = dataUrl;
+        mediaFiles[`../media/${entry.path}`] = dataUrl;
+        mediaFiles[`media/${entry.path}`] = dataUrl;
+        allMediaList.push({ name: entry.path, dataUrl });
+      }
+    }
+
+    if (allMediaList.length === 0) {
+      return imagesByRow;
+    }
+
+    // 2. Parse relationships for drawings & in-cell images
+    const relsMap = {};
+    const relsFiles = Object.keys(zip.files).filter((k) =>
+      (k.includes('drawings/_rels/') || k.includes('cellimages')) && k.endsWith('.rels')
+    );
+
+    for (const relsFile of relsFiles) {
+      try {
+        const xmlStr = await zip.file(relsFile).async('string');
+        const regex = /<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/gi;
+        let m;
+        while ((m = regex.exec(xmlStr)) !== null) {
+          const rId = m[1];
+          const target = m[2].replace(/^.*media\//, '');
+          relsMap[rId] = target;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 3. Parse drawings XML (xl/drawings/drawing*.xml)
+    const drawingFiles = Object.keys(zip.files).filter((k) =>
+      k.startsWith('xl/drawings/drawing') && k.endsWith('.xml')
+    );
+
+    for (const dFile of drawingFiles) {
+      try {
+        const xmlStr = await zip.file(dFile).async('string');
+        const anchorRegex = /<xdr:(?:twoCellAnchor|oneCellAnchor)[^>]*>([\s\S]*?)<\/xdr:(?:twoCellAnchor|oneCellAnchor)>/gi;
+        let aMatch;
+        while ((aMatch = anchorRegex.exec(xmlStr)) !== null) {
+          const block = aMatch[1];
+          const rowMatch = /<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/i.exec(block);
+          const embedMatch = /<a:blip[^>]*r:embed="([^"]+)"/i.exec(block);
+
+          if (rowMatch && embedMatch) {
+            const rowIdx = parseInt(rowMatch[1], 10);
+            const rId = embedMatch[1];
+            const mediaTarget = relsMap[rId];
+            if (mediaTarget && mediaFiles[mediaTarget]) {
+              imagesByRow[rowIdx] = mediaFiles[mediaTarget];
+            } else if (allMediaList.length > 0) {
+              const num = parseInt(rId.replace(/\D/g, ''), 10) - 1;
+              if (num >= 0 && num < allMediaList.length) {
+                imagesByRow[rowIdx] = allMediaList[num].dataUrl;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 4. Parse In-Cell Images (Excel 365: xl/cellimages.xml)
+    const cellImagesFile = zip.file('xl/cellimages.xml');
+    if (cellImagesFile) {
+      try {
+        const xmlStr = await cellImagesFile.async('string');
+        const cellImgRegex = /<etc:cellImage[^>]*>([\s\S]*?)<\/etc:cellImage>/gi;
+        let cMatch;
+        let cIdx = 0;
+        while ((cMatch = cellImgRegex.exec(xmlStr)) !== null) {
+          const cBlock = cMatch[1];
+          const embedMatch = /<a:blip[^>]*r:embed="([^"]+)"/i.exec(cBlock);
+          if (embedMatch) {
+            const rId = embedMatch[1];
+            const mediaTarget = relsMap[rId];
+            const dataUrl = mediaFiles[mediaTarget] || allMediaList[cIdx]?.dataUrl;
+            if (dataUrl) {
+              imagesByRow[cIdx + 1] = dataUrl;
+            }
+          }
+          cIdx++;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    imagesByRow._allMedia = allMediaList;
+  } catch (err) {
+    console.warn('Error reading embedded images from Excel ZIP:', err);
+  }
+
+  return imagesByRow;
+}
 
 export default function BankSoal() {
   const { user, loading: authLoading, logout, authFetch } = useAuth('guru');
@@ -198,10 +332,14 @@ export default function BankSoal() {
     setExcelError(null);
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
-        const data = new Uint8Array(evt.target.result);
+        const arrayBuffer = evt.target.result;
+        const data = new Uint8Array(arrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
+
+        // Extract embedded pictures directly from the Excel ZIP archive
+        const embeddedImages = await extractEmbeddedImagesFromExcel(arrayBuffer);
 
         const targetSheetName =
           workbook.SheetNames.find((name) => name.toLowerCase().includes('soal')) ||
@@ -246,18 +384,39 @@ export default function BankSoal() {
 
           const pertanyaan = String(row['pertanyaan'] || row['soal'] || row['butirsoal'] || row['question'] || '').trim();
 
-          const gambar = String(
-            row['linkurlgambaropsional'] ||
-            row['linkurlgambar'] ||
-            row['linkgambar'] ||
-            row['urlgambar'] ||
-            row['gambar'] ||
-            row['gambarsoal'] ||
-            row['fotosoal'] ||
-            row['image'] ||
-            row['imageurl'] ||
-            ''
-          ).trim();
+          // 1. Check if an embedded image is anchored to this row in the Excel file
+          const excelXmlRow = idx + 1; // 0-indexed in XML: row 0 is header, row 1 is question 1
+          let gambar = embeddedImages[excelXmlRow] || embeddedImages[idx] || '';
+
+          // 2. Check text column if no drawing anchor was found
+          if (!gambar) {
+            const rawGambar = String(
+              row['gambarsoalopsional'] ||
+              row['gambarsoal'] ||
+              row['gambar'] ||
+              row['fotosoal'] ||
+              row['image'] ||
+              row['linkurlgambaropsional'] ||
+              row['linkurlgambar'] ||
+              row['linkgambar'] ||
+              row['urlgambar'] ||
+              row['imageurl'] ||
+              ''
+            ).trim();
+
+            if (rawGambar && !rawGambar.startsWith('[') && !rawGambar.toLowerCase().includes('sisipkan')) {
+              gambar = rawGambar;
+            }
+          }
+
+          // 3. Fallback: if user embedded images into sheet and there is only 1 image or matched sequentially
+          if (!gambar && embeddedImages._allMedia && embeddedImages._allMedia.length > 0) {
+            if (embeddedImages._allMedia.length === 1 && idx === 0) {
+              gambar = embeddedImages._allMedia[0].dataUrl;
+            } else if (embeddedImages._allMedia[idx]) {
+              gambar = embeddedImages._allMedia[idx].dataUrl;
+            }
+          }
 
           const pilA = String(row['pilihana'] || row['opsia'] || row['a'] || '').trim();
           const pilB = String(row['pilihanb'] || row['opsib'] || row['b'] || '').trim();
@@ -1132,7 +1291,7 @@ export default function BankSoal() {
                     Langkah 1: Unduh Format Template Resmi
                   </h4>
                   <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
-                    File spreadsheet resmi sudah mencakup kolom terstandar, petunjuk pengisian, dan contoh soal (Pilihan Ganda, Benar/Salah, Isian, Uraian).
+                    File spreadsheet resmi sudah mencakup kolom terstandar, petunjuk pengisian, dan dukungan <strong>upload gambar soal langsung di Excel</strong> (Pilihan Ganda, Benar/Salah, Isian, Uraian).
                   </p>
                 </div>
                 <button
@@ -1251,6 +1410,9 @@ export default function BankSoal() {
                   </p>
                   <p style={{ margin: '4px 0 0', fontSize: 11, color: '#64748b' }}>
                     Sistem akan membaca sheet &apos;Template Soal&apos; atau lembar kerja pertama yang terisi data.
+                  </p>
+                  <p style={{ margin: '6px 0 0', fontSize: 11, color: '#0369a1', fontWeight: 600 }}>
+                    💡 Tips Soal Bergambar: Anda bisa langsung menyisipkan foto/gambar ke dalam baris/sel Excel (menu Insert &gt; Pictures di Excel). Sistem otomatis mengekstrak gambar tanpa perlu link URL luar.
                   </p>
                 </div>
               </div>
