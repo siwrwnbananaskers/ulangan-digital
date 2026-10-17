@@ -28,6 +28,7 @@ export default function SuperAdminDashboard() {
   });
   const [showGuruPassword, setShowGuruPassword] = useState(false);
   const [savingGuru, setSavingGuru] = useState(false);
+  const [guruFormReadOnly, setGuruFormReadOnly] = useState(true);
 
   // Edit Teacher Modal
   const [showEditGuruModal, setShowEditGuruModal] = useState(false);
@@ -44,6 +45,30 @@ export default function SuperAdminDashboard() {
     if (!user) return;
     loadDashboard();
   }, [user]);
+
+  // Prevent browser autofill from inserting logged-in superadmin credentials
+  useEffect(() => {
+    if (showAddGuruModal) {
+      setGuruForm({ username: '', nama: '', password: '' });
+      setGuruFormReadOnly(true);
+      const timer = setTimeout(() => {
+        setGuruForm((prev) => {
+          if (prev.username.toLowerCase() === 'superadmin') {
+            return { ...prev, username: '', password: '' };
+          }
+          return prev;
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showAddGuruModal]);
+
+  const handleOpenAddGuru = () => {
+    setGuruForm({ username: '', nama: '', password: '' });
+    setShowGuruPassword(false);
+    setGuruFormReadOnly(true);
+    setShowAddGuruModal(true);
+  };
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -70,13 +95,36 @@ export default function SuperAdminDashboard() {
 
   const handleCreateGuru = async (e) => {
     e.preventDefault();
+    if (!guruForm.nama.trim()) {
+      setAlert({ type: 'danger', message: 'Nama lengkap & gelar guru wajib diisi' });
+      return;
+    }
+
+    const cleanUsername = guruForm.username.trim().toLowerCase();
+    if (!cleanUsername) {
+      setAlert({ type: 'danger', message: 'Username login guru wajib diisi' });
+      return;
+    }
+
+    if (cleanUsername === 'superadmin' || cleanUsername === 'admin') {
+      setAlert({
+        type: 'danger',
+        message: "Username 'superadmin' adalah administrator sistem. Silakan tentukan username khusus untuk akun guru (misal: nama atau NIP guru).",
+      });
+      return;
+    }
+
     setSavingGuru(true);
     setAlert(null);
 
     try {
       const res = await authFetch('/api/superadmin/guru', {
         method: 'POST',
-        body: JSON.stringify(guruForm),
+        body: JSON.stringify({
+          ...guruForm,
+          username: cleanUsername,
+          nama: guruForm.nama.trim(),
+        }),
       });
       const resData = await res.json();
       if (!res.ok) {
@@ -342,7 +390,7 @@ export default function SuperAdminDashboard() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => setShowAddGuruModal(true)}
+              onClick={handleOpenAddGuru}
               style={{
                 background: '#0a66c2',
                 borderRadius: 8,
@@ -815,17 +863,37 @@ export default function SuperAdminDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateGuru} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleCreateGuru} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Dummy hidden inputs to trap and prevent browser autofill hijacking */}
+              <input
+                type="text"
+                name="prevent_chrome_autofill_username"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                autoComplete="off"
+              />
+              <input
+                type="password"
+                name="prevent_chrome_autofill_password"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                autoComplete="new-password"
+              />
+
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
-                  Nama Lengkap & Gelar Guru *
+                  Nama Lengkap &amp; Gelar Guru *
                 </label>
                 <input
                   type="text"
+                  name="guru_nama_official"
                   placeholder="cth: Dra. Siti Rahmawati, M.Pd."
                   value={guruForm.nama}
                   onChange={(e) => setGuruForm({ ...guruForm, nama: e.target.value })}
                   required
+                  autoComplete="off"
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
@@ -849,10 +917,25 @@ export default function SuperAdminDashboard() {
                 </label>
                 <input
                   type="text"
+                  name="guru_username_official"
                   placeholder="cth: sitirahmawati atau NIP guru"
                   value={guruForm.username}
-                  onChange={(e) => setGuruForm({ ...guruForm, username: e.target.value.toLowerCase() })}
+                  onChange={(e) => setGuruForm({ ...guruForm, username: e.target.value.toLowerCase().replace(/\s+/g, '') })}
                   required
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  readOnly={guruFormReadOnly}
+                  onFocus={(e) => {
+                    setGuruFormReadOnly(false);
+                    e.currentTarget.readOnly = false;
+                    e.currentTarget.style.borderColor = '#0a66c2';
+                  }}
+                  onMouseEnter={(e) => {
+                    setGuruFormReadOnly(false);
+                    e.currentTarget.readOnly = false;
+                  }}
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
@@ -865,7 +948,6 @@ export default function SuperAdminDashboard() {
                     background: '#ffffff',
                     transition: 'border-color 0.15s ease',
                   }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
                   onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                 />
               </div>
@@ -877,9 +959,21 @@ export default function SuperAdminDashboard() {
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input
                     type={showGuruPassword ? 'text' : 'password'}
+                    name="guru_password_official"
                     placeholder="••••••"
                     value={guruForm.password}
                     onChange={(e) => setGuruForm({ ...guruForm, password: e.target.value })}
+                    autoComplete="new-password"
+                    readOnly={guruFormReadOnly}
+                    onFocus={(e) => {
+                      setGuruFormReadOnly(false);
+                      e.currentTarget.readOnly = false;
+                      e.currentTarget.style.borderColor = '#0a66c2';
+                    }}
+                    onMouseEnter={(e) => {
+                      setGuruFormReadOnly(false);
+                      e.currentTarget.readOnly = false;
+                    }}
                     style={{
                       width: '100%',
                       boxSizing: 'border-box',
@@ -893,7 +987,6 @@ export default function SuperAdminDashboard() {
                       letterSpacing: !guruForm.password && !showGuruPassword ? '0.12em' : 'normal',
                       transition: 'border-color 0.15s ease',
                     }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
                     onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                   />
                   <button

@@ -14,9 +14,10 @@ export default function SuperadminGuruManagementPage() {
 
   // Modal Tambah Guru
   const [showAddModal, setShowAddModal] = useState(false);
-  const [form, setForm] = useState({ username: '', nama: '', password: 'guru123' });
+  const [form, setForm] = useState({ username: '', nama: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formReadOnly, setFormReadOnly] = useState(true);
 
   // Modal Edit Guru
   const [showEditModal, setShowEditModal] = useState(false);
@@ -31,6 +32,30 @@ export default function SuperadminGuruManagementPage() {
     if (!user) return;
     loadTeachers();
   }, [user]);
+
+  // Anti-autofill reset
+  useEffect(() => {
+    if (showAddModal) {
+      setForm({ username: '', nama: '', password: '' });
+      setFormReadOnly(true);
+      const timer = setTimeout(() => {
+        setForm((prev) => {
+          if (prev.username.toLowerCase() === 'superadmin') {
+            return { ...prev, username: '', password: '' };
+          }
+          return prev;
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showAddModal]);
+
+  const handleOpenAddModal = () => {
+    setForm({ username: '', nama: '', password: '' });
+    setShowPassword(false);
+    setFormReadOnly(true);
+    setShowAddModal(true);
+  };
 
   const loadTeachers = async () => {
     setLoading(true);
@@ -51,13 +76,36 @@ export default function SuperadminGuruManagementPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!form.nama.trim()) {
+      setAlert({ type: 'danger', message: 'Nama lengkap & gelar guru wajib diisi' });
+      return;
+    }
+
+    const cleanUsername = form.username.trim().toLowerCase();
+    if (!cleanUsername) {
+      setAlert({ type: 'danger', message: 'Username login guru wajib diisi' });
+      return;
+    }
+
+    if (cleanUsername === 'superadmin' || cleanUsername === 'admin') {
+      setAlert({
+        type: 'danger',
+        message: "Username 'superadmin' adalah akun administrator sistem. Silakan tentukan username khusus untuk akun guru.",
+      });
+      return;
+    }
+
     setSaving(true);
     setAlert(null);
 
     try {
       const res = await authFetch('/api/superadmin/guru', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          username: cleanUsername,
+          nama: form.nama.trim(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -65,7 +113,7 @@ export default function SuperadminGuruManagementPage() {
       } else {
         setAlert({ type: 'success', message: data.message });
         setShowAddModal(false);
-        setForm({ username: '', nama: '', password: 'guru123' });
+        setForm({ username: '', nama: '', password: '' });
         loadTeachers();
       }
     } catch {
@@ -164,7 +212,7 @@ export default function SuperadminGuruManagementPage() {
           <div className="page-header-actions">
             <button
               className="btn btn-primary"
-              onClick={() => setShowAddModal(true)}
+              onClick={handleOpenAddModal}
               style={{ background: '#0a66c2', borderRadius: 8, padding: '8px 18px', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -332,17 +380,37 @@ export default function SuperadminGuruManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleCreate} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Dummy hidden inputs to trap and prevent browser autofill hijacking */}
+              <input
+                type="text"
+                name="prevent_chrome_autofill_username_guru"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                autoComplete="off"
+              />
+              <input
+                type="password"
+                name="prevent_chrome_autofill_password_guru"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                autoComplete="new-password"
+              />
+
               <div>
                 <label style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
-                  Nama Lengkap & Gelar Guru *
+                  Nama Lengkap &amp; Gelar Guru *
                 </label>
                 <input
                   type="text"
+                  name="guru_nama_official_page"
                   placeholder="cth: Dra. Siti Rahmawati, M.Pd."
                   value={form.nama}
                   onChange={(e) => setForm({ ...form, nama: e.target.value })}
                   required
+                  autoComplete="off"
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
@@ -366,10 +434,25 @@ export default function SuperadminGuruManagementPage() {
                 </label>
                 <input
                   type="text"
+                  name="guru_username_official_page"
                   placeholder="cth: sitirahmawati atau NIP guru"
                   value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
+                  onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase().replace(/\s+/g, '') })}
                   required
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  readOnly={formReadOnly}
+                  onFocus={(e) => {
+                    setFormReadOnly(false);
+                    e.currentTarget.readOnly = false;
+                    e.currentTarget.style.borderColor = '#0a66c2';
+                  }}
+                  onMouseEnter={(e) => {
+                    setFormReadOnly(false);
+                    e.currentTarget.readOnly = false;
+                  }}
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
@@ -382,7 +465,6 @@ export default function SuperadminGuruManagementPage() {
                     background: '#ffffff',
                     transition: 'border-color 0.15s ease',
                   }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
                   onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                 />
               </div>
@@ -394,9 +476,21 @@ export default function SuperadminGuruManagementPage() {
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    name="guru_password_official_page"
                     placeholder="••••••"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    autoComplete="new-password"
+                    readOnly={formReadOnly}
+                    onFocus={(e) => {
+                      setFormReadOnly(false);
+                      e.currentTarget.readOnly = false;
+                      e.currentTarget.style.borderColor = '#0a66c2';
+                    }}
+                    onMouseEnter={(e) => {
+                      setFormReadOnly(false);
+                      e.currentTarget.readOnly = false;
+                    }}
                     style={{
                       width: '100%',
                       boxSizing: 'border-box',
@@ -410,7 +504,6 @@ export default function SuperadminGuruManagementPage() {
                       letterSpacing: !form.password && !showPassword ? '0.12em' : 'normal',
                       transition: 'border-color 0.15s ease',
                     }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = '#0a66c2')}
                     onBlur={(e) => (e.currentTarget.style.borderColor = '#cbd5e1')}
                   />
                   <button
