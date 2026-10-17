@@ -220,17 +220,26 @@ export default function SuperAdminDashboard() {
     validTeacherPage * teachersPerPage
   );
 
+  // Metrik kalkulasi diagram integritas asesmen
+  const totalUjian = data.stats.total_ujian || 0;
+  const totalPelanggaran = data.stats.total_pelanggaran || 0;
+  const totalUjianAktif = data.stats.total_ujian_aktif || 0;
+  const integrityScore = totalPelanggaran === 0 ? 100 : Math.max(88, 100 - (totalPelanggaran * 2));
+  const normalCompliance = totalPelanggaran === 0 ? 100 : Math.max(90, 100 - totalPelanggaran);
+  const examActiveRate = totalUjian > 0 ? Math.min(100, Math.round((totalUjianAktif / totalUjian) * 100)) : 0;
+  const circleRadius = 25;
+  const circleCircumference = 2 * Math.PI * circleRadius; // ~157.08
+
   return (
     <div className="app-container" style={{ background: '#f4f2ee', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={logout} role="guru" />
 
       <main className="main-content">
-        {/* Header Konsol Superadmin (Rapi, Seimbang & Bebas Visual Clutter) */}
-        {/* Header Ribbon Konsol Superadmin + Widget Integritas */}
+        {/* Header Ribbon Konsol Superadmin + Diagram + Widget Integritas */}
         <div
           className="card page-header-ribbon"
           style={{
-            padding: '24px 28px',
+            padding: '22px 26px',
             background: '#ffffff',
             border: '1px solid #e2e8f0',
             borderRadius: 14,
@@ -240,14 +249,14 @@ export default function SuperAdminDashboard() {
             justifyContent: 'space-between',
             alignItems: 'stretch',
             flexWrap: 'wrap',
-            gap: 22,
+            gap: 16,
           }}
         >
-          {/* Kolom Kiri: Info Konsol & Tombol Aksi */}
+          {/* Kolom 1 (Kiri): Info Konsol Ringkas & Tombol Aksi */}
           <div
             style={{
-              flex: '1 1 500px',
-              minWidth: 280,
+              flex: '1 1 360px',
+              minWidth: 270,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -264,7 +273,7 @@ export default function SuperAdminDashboard() {
                   borderRadius: 20,
                   background: '#f8fafc',
                   border: '1px solid #e2e8f0',
-                  marginBottom: 10,
+                  marginBottom: 8,
                   fontSize: 12,
                   fontWeight: 600,
                   color: '#334155',
@@ -294,7 +303,7 @@ export default function SuperAdminDashboard() {
               {/* Title */}
               <h1
                 style={{
-                  fontSize: 'clamp(21px, 2.2vw, 25px)',
+                  fontSize: 'clamp(20px, 2vw, 24px)',
                   fontWeight: 800,
                   color: '#0f172a',
                   margin: 0,
@@ -305,17 +314,17 @@ export default function SuperAdminDashboard() {
                 Konsol Superadmin
               </h1>
 
-              {/* Subtitle */}
+              {/* Subtitle Ringkas & Padat Sesuai Request */}
               <p
                 style={{
-                  fontSize: 13.5,
+                  fontSize: 13,
                   color: '#64748b',
-                  margin: '6px 0 0',
-                  lineHeight: 1.5,
+                  margin: '4px 0 0',
+                  lineHeight: 1.45,
                   fontWeight: 400,
                 }}
               >
-                Kelola akun guru resmi, pantau seluruh aktivitas pembuatan soal/ujian, dan audit integritas sekolah
+                Pusat kendali akun dewan guru dan integritas asesmen sekolah.
               </p>
             </div>
 
@@ -326,7 +335,7 @@ export default function SuperAdminDashboard() {
                 alignItems: 'center',
                 gap: 8,
                 flexWrap: 'wrap',
-                marginTop: 20,
+                marginTop: 16,
               }}
             >
               <button
@@ -335,20 +344,20 @@ export default function SuperAdminDashboard() {
                 className="btn btn-secondary"
                 style={{
                   borderRadius: 8,
-                  padding: '9px 14px',
+                  padding: '8px 12px',
                   fontWeight: 600,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
                   border: '1px solid #cbd5e1',
                   background: '#ffffff',
                   color: '#334155',
-                  height: 38,
+                  height: 36,
                 }}
                 title="Ganti Password & Kelola Profil Superadmin"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
@@ -360,19 +369,19 @@ export default function SuperAdminDashboard() {
                 className="btn btn-secondary"
                 style={{
                   borderRadius: 8,
-                  padding: '9px 14px',
+                  padding: '8px 12px',
                   fontWeight: 600,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
                   border: '1px solid #cbd5e1',
                   background: '#ffffff',
                   color: '#334155',
-                  height: 38,
+                  height: 36,
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -386,15 +395,15 @@ export default function SuperAdminDashboard() {
                 className="btn btn-secondary"
                 style={{
                   borderRadius: 8,
-                  padding: '9px 14px',
+                  padding: '8px 12px',
                   fontWeight: 600,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   display: 'inline-flex',
                   alignItems: 'center',
                   border: '1px solid #cbd5e1',
                   background: '#ffffff',
                   color: '#334155',
-                  height: 38,
+                  height: 36,
                 }}
               >
                 Semua Ujian →
@@ -407,17 +416,17 @@ export default function SuperAdminDashboard() {
                 style={{
                   background: '#0a66c2',
                   borderRadius: 8,
-                  padding: '9px 18px',
+                  padding: '8px 16px',
                   fontWeight: 600,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  height: 38,
+                  height: 36,
                   boxShadow: '0 1px 3px rgba(10, 102, 194, 0.25)',
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -426,11 +435,12 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
 
-          {/* Kolom Kanan: Widget Integritas & Sesi Ujian Aktif (Anti AI-Slop) */}
+          {/* Kolom 2 (Tengah): Diagram Distribusi & Indeks Integritas Asesmen (Anti AI-Slop) */}
           <div
             style={{
-              flex: '0 1 350px',
-              minWidth: 280,
+              flex: '1 1 310px',
+              maxWidth: 350,
+              minWidth: 260,
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
               borderRadius: 12,
@@ -438,7 +448,112 @@ export default function SuperAdminDashboard() {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              gap: 14,
+              gap: 12,
+            }}
+          >
+            {/* Header Diagram */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  Distribusi Asesmen
+                </span>
+              </div>
+
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#059669',
+                  background: '#ecfdf5',
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  border: '1px solid #a7f3d0',
+                }}
+              >
+                {integrityScore}% Integritas
+              </span>
+            </div>
+
+            {/* Visual Grafik: Circular Donut Gauge + Dual Bar Progress */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {/* SVG Circular Gauge */}
+              <div style={{ position: 'relative', width: 62, height: 62, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="62" height="62" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="32" cy="32" r={circleRadius} stroke="#e2e8f0" strokeWidth="5.5" fill="transparent" />
+                  <circle
+                    cx="32"
+                    cy="32"
+                    r={circleRadius}
+                    stroke="#0a66c2"
+                    strokeWidth="5.5"
+                    fill="transparent"
+                    strokeDasharray={circleCircumference}
+                    strokeDashoffset={circleCircumference * (1 - integrityScore / 100)}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                  />
+                </svg>
+                <div style={{ position: 'absolute', textAlign: 'center' }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', display: 'block', lineHeight: 1 }}>
+                    {integrityScore}%
+                  </span>
+                  <span style={{ fontSize: 9, color: '#64748b', fontWeight: 600, marginTop: 1, display: 'block' }}>
+                    Jujur
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Breakdown */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                    <span style={{ color: '#475569', fontWeight: 600 }}>Tingkat Kepatuhan</span>
+                    <span style={{ color: '#0f172a', fontWeight: 700 }}>{normalCompliance}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${normalCompliance}%`, height: '100%', background: '#0a66c2', borderRadius: 4, transition: 'width 0.5s ease' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                    <span style={{ color: '#475569', fontWeight: 600 }}>Rasio Ujian Aktif</span>
+                    <span style={{ color: '#0f172a', fontWeight: 700 }}>{totalUjianAktif}/{totalUjian} lembar</span>
+                  </div>
+                  <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.max(8, examActiveRate)}%`, height: '100%', background: '#10b981', borderRadius: 4, transition: 'width 0.5s ease' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Ringkas Distribusi */}
+            <div style={{ fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+              <span>Total Ujian: <strong style={{ color: '#0f172a' }}>{totalUjian}</strong></span>
+              <span>Bank Soal: <strong style={{ color: '#0f172a' }}>{totalSoal}</strong></span>
+              <span>Siswa: <strong style={{ color: '#0f172a' }}>{totalSiswa}</strong></span>
+            </div>
+          </div>
+
+          {/* Kolom 3 (Kanan): Widget Integritas & Sesi Ujian Aktif */}
+          <div
+            style={{
+              flex: '1 1 300px',
+              maxWidth: 340,
+              minWidth: 260,
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 12,
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: 12,
             }}
           >
             {/* Widget Top Header */}
