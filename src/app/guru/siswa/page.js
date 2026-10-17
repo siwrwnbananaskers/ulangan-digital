@@ -473,7 +473,7 @@ export default function SiswaManagementPage() {
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                 <rect x="6" y="14" width="12" height="8" />
               </svg>
-              Cetak Kartu Ujian (KTP HD) ({filteredPrintStudents.length})
+              Cetak ({filteredPrintStudents.length})
             </button>
           </div>
         </div>
@@ -1134,7 +1134,7 @@ export default function SiswaManagementPage() {
         </div>
       )}
 
-      {/* PRINT-ONLY SECTION: Standar KTP 85.60 mm x 53.98 mm */}
+      {/* PRINT-ONLY SECTION (85.60 mm x 53.98 mm) */}
       <div className="print-only">
         <div className="print-cards-grid">
           {filteredPrintStudents.map((siswa, idx) => {
@@ -1221,7 +1221,7 @@ export default function SiswaManagementPage() {
         </div>
       </div>
 
-      {/* MODAL PRATINJAU CETAK KARTU SISWA (UKURAN STANDAR KTP 85.60 mm x 53.98 mm) */}
+      {/* MODAL PRATINJAU CETAK KARTU SISWA (85.60 mm x 53.98 mm) */}
       {showPrintModal && (
         <div
           className="no-print"
@@ -1298,7 +1298,7 @@ export default function SiswaManagementPage() {
                         letterSpacing: 0.3,
                       }}
                     >
-                      Ukuran KTP (8,56 cm x 5,4 cm) • HD 4K
+                      Presisi 8,56 cm x 5,4 cm • HD
                     </span>
                   </div>
                   <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
@@ -1384,7 +1384,7 @@ export default function SiswaManagementPage() {
                     <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                     <rect x="6" y="14" width="12" height="8" />
                   </svg>
-                  Cetak Sekarang (Dialog Print)
+                  Cetak
                 </button>
               </div>
             </div>
@@ -1404,7 +1404,7 @@ export default function SiswaManagementPage() {
             >
               <span>💡</span>
               <span>
-                <strong>Petunjuk Cetak HD 4K:</strong> Di jendela cetak browser (Ctrl+P), pilih <strong>Kertas A4</strong>, Skala <strong>100% (Default)</strong>, dan centang opsi <strong>"Grafik Latar Belakang / Background Graphics"</strong> untuk hasil kartu KTP yang presisi dan tajam maksimal.
+                <strong>Petunjuk Cetak:</strong> Di jendela cetak browser (Ctrl+P), pilih <strong>Kertas A4</strong>, Skala <strong>100% (Default)</strong>, dan centang opsi <strong>"Grafik Latar Belakang / Background Graphics"</strong> untuk hasil kartu yang presisi dan tajam maksimal.
               </span>
             </div>
 

@@ -3083,7 +3083,7 @@ img {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
 }
 
-/* === Print Exam Cards Styling: STANDAR KTP INDONESIA (85.60 mm x 53.98 mm) === */
+/* === Print Exam Cards Styling (85.60 mm x 53.98 mm) === */
 .print-only {
   display: none;
 }
