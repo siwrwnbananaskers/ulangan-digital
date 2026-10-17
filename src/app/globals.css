@@ -3804,7 +3804,7 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* === Running School Crowd Chasing Animation (Minimalist & Anti AI-Slop) === */
+/* === Running School Crowd & Vehicle Convoy Animation (Minimalist & Anti AI-Slop) === */
 .kids-runner-track {
   width: 100%;
   height: 38px;
@@ -3829,8 +3829,8 @@ input:-webkit-autofill:active {
   bottom: 3px;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  animation: squadChaseAcross 12s linear infinite;
+  gap: 9px;
+  animation: squadChaseAcross 18s linear infinite;
   will-change: left;
 }
 
@@ -3843,13 +3843,24 @@ input:-webkit-autofill:active {
 .runner-bob-7 { animation: runnerBob3 0.38s ease-in-out infinite alternate; }
 .runner-bob-8 { animation: runnerBob4 0.42s ease-in-out infinite alternate; }
 
+.car-rumble-1 { animation: carRumble 0.15s ease-in-out infinite alternate; }
+.car-rumble-2 { animation: carRumble 0.18s ease-in-out infinite alternate 0.04s; }
+.car-rumble-3 { animation: carRumble 0.14s ease-in-out infinite alternate 0.08s; }
+.car-rumble-4 { animation: carRumble 0.16s ease-in-out infinite alternate 0.02s; }
+.car-rumble-5 { animation: carRumble 0.17s ease-in-out infinite alternate 0.06s; }
+
 @keyframes squadChaseAcross {
   0% {
-    left: -360px;
+    left: -640px;
   }
   100% {
     left: 100%;
   }
+}
+
+@keyframes carRumble {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-0.8px); }
 }
 
 @keyframes runnerBob1 {
@@ -3878,7 +3889,8 @@ input:-webkit-autofill:active {
     left: 16px;
   }
   .runner-bob-1, .runner-bob-2, .runner-bob-3, .runner-bob-4,
-  .runner-bob-5, .runner-bob-6, .runner-bob-7, .runner-bob-8 {
+  .runner-bob-5, .runner-bob-6, .runner-bob-7, .runner-bob-8,
+  .car-rumble-1, .car-rumble-2, .car-rumble-3, .car-rumble-4, .car-rumble-5 {
     animation: none;
   }
 }
